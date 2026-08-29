@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://files.catbox.moe/m6rf3e.jpg" width="320" alt="Terminal Bot Logo"/>
+  <img src="https://files.catbox.moe/sn73hm.jpg" width="320" alt="Terminal Bot Logo"/>
 </p>
 
 <p align="center">
