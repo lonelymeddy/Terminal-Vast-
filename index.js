@@ -28,6 +28,8 @@ const {
   useMultiFileAuthState,
   DisconnectReason,
   fetchLatestBaileysVersion,
+  fetchLatestWaWebVersion,
+  Browsers,
   generateForwardMessageContent,
   prepareWAMessageMedia,
   generateWAMessageFromContent,
@@ -38,9 +40,8 @@ const {
   MessageRetryMap,
   getAggregateVotesInPollMessage,
   proto,
-  browsers,
   delay
-} = require("@whiskeysockets/baileys");
+} = require("bungoma");
 
 const pino = require('pino');
 const readline = require("readline");
@@ -231,37 +232,27 @@ async function clientstart(options = {}) {
     // Fetch latest WhatsApp Web version with fallback
     let waVersion;
     try {
-        const { version } = await fetchLatestBaileysVersion();
+        const { version } = await fetchLatestWaWebVersion();
         waVersion = version;
         console.log("Terminal Vast Connecting to WhatsApp ⏳️...");
-        
     } catch (error) {
         console.log(chalk.yellow(`[⚠️] Using stable fallback version`));
-        waVersion = [2, 3000, 1017546695];
+        waVersion = [2, 3000, 1046360197];
     }
 
-      const conn = makeWASocket({
-    printQRInTerminal: !usePairingCode,
-    syncFullHistory: false,
-    markOnlineOnConnect: true,
-    connectTimeoutMs: 60000, // Reduced for faster connection
-    defaultQueryTimeoutMs: 30000,
-    keepAliveIntervalMs: 25000,
-    maxRetries: 5,
-    
-    // Performance optimizations
-    generateHighQualityLinkPreview: false,
-    linkPreviewImageThumbnailWidth: 64,
-
-        
+    const conn = makeWASocket({
+        printQRInTerminal: !usePairingCode,
+        syncFullHistory: false,
+        markOnlineOnConnect: true,
+        connectTimeoutMs: 60000,
+        defaultQueryTimeoutMs: 30000,
+        keepAliveIntervalMs: 25000,
+        maxRetries: 5,
+        generateHighQualityLinkPreview: false,
+        linkPreviewImageThumbnailWidth: 64,
         version: waVersion,
-        
-        // Lightweight browser
-        browser: ["Ubuntu", "Chrome", "120.0.0.0"],
-        
-        // Minimal logging
+        browser: Browsers.ubuntu("Chrome"),
         logger: pino({ level: 'silent' }),
-        
         auth: {
             creds: state.creds,
             keys: makeCacheableSignalKeyStore(state.keys, pino().child({
@@ -269,12 +260,10 @@ async function clientstart(options = {}) {
                 stream: 'store'
             })),
         },
-        
         fireInitQueries: false, 
         emitOwnEvents: true,
         defaultCongestionControl: 1,
     });
-
 
     conn.decodeJid = (jid) => {
         if (!jid) return jid;
@@ -284,22 +273,65 @@ async function clientstart(options = {}) {
         } else return jid;
     };
 
-const botNumber = conn.decodeJid(conn.user?.id) || 'default';
+    const botNumber = conn.decodeJid(conn.user?.id) || 'default';
 
-    
+    conn.requestPairingCodeWithWait = async (phone) => {
+        if (conn.authState.creds.registered) return null;
+        if (conn._terminalVastPairingCode) return conn._terminalVastPairingCode;
+
+        return new Promise((resolve, reject) => {
+            let done = false;
+            const handler = async (update) => {
+                if (conn.authState.creds.registered) {
+                    conn.ev.off('connection.update', handler);
+                    resolve(null);
+                    return;
+                }
+                if (!done && (update.qr || update.connection === 'connecting')) {
+                    setTimeout(async () => {
+                        if (done) return;
+                        try {
+                            const code = await conn.requestPairingCode(phone);
+                            conn._terminalVastPairingCode = code;
+                            done = true;
+                            conn.ev.off('connection.update', handler);
+                            resolve(code);
+                        } catch (err) {
+                            console.error('Inner pairing attempt error:', err.message);
+                        }
+                    }, 1000);
+                }
+            };
+            conn.ev.on('connection.update', handler);
+
+            setTimeout(async () => {
+                if (!done) {
+                    try {
+                        const code = await conn.requestPairingCode(phone);
+                        conn._terminalVastPairingCode = code;
+                        done = true;
+                        conn.ev.off('connection.update', handler);
+                        resolve(code);
+                    } catch (err) {
+                        conn.ev.off('connection.update', handler);
+                        reject(err);
+                    }
+                }
+            }, 5000);
+        });
+    };
+
     if (!conn.authState.creds.registered && pairingPhone) {
-      const code = await conn.requestPairingCode(pairingPhone);
-      conn._terminalVastPairingCode = code;
-      console.log(chalk.cyan(`[PAIRING] ${pairingPhone}: ${code}`));
+        const code = await conn.requestPairingCodeWithWait(pairingPhone);
+        console.log(chalk.cyan(`[PAIRING] ${pairingPhone}: ${code}`));
     } else if (!webSession && !conn.authState.creds.registered) {
-      const primaryPhone = String(process.env.PRIMARY_PHONE || '').replace(/\D/g, '');
-      if (!primaryPhone) {
-        console.log(chalk.yellow('[PRIMARY] No PRIMARY_PHONE configured. Web number pairing remains available.'));
-        return conn;
-      }
-      const code = await conn.requestPairingCode(primaryPhone);
-      conn._terminalVastPairingCode = code;
-      console.log(chalk.cyan(`[PRIMARY PAIRING] ${primaryPhone}: ${code}`));
+        const primaryPhone = String(process.env.PRIMARY_PHONE || '').replace(/\D/g, '');
+        if (!primaryPhone) {
+            console.log(chalk.yellow('[PRIMARY] No PRIMARY_PHONE configured. Web number pairing remains available.'));
+            return conn;
+        }
+        const code = await conn.requestPairingCodeWithWait(primaryPhone);
+        console.log(chalk.cyan(`[PRIMARY PAIRING] ${primaryPhone}: ${code}`));
     }
           
     const { makeInMemoryStore } = require("./start/lib/store/");

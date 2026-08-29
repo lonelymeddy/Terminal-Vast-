@@ -16,7 +16,7 @@ const fg = require('api-dylux')
 const PDFDocument = require('pdfkit')
 const {translate} = require('@vitalets/google-translate-api')
 const path = require('path')
-const { getDevice } = require('@whiskeysockets/baileys')
+const { getDevice } = require('bungoma')
 const fsp = fs.promises;
 const lolcatjs = require('lolcatjs')
 const speed = require('performance-now')
@@ -29,7 +29,7 @@ const timezones = global.timezones || "Africa/Kampala"; // Default to Uganda tim
 const acrcloud = require ('acrcloud')
 const moment = require("moment-timezone")
 const { spawn, exec, execSync } = require('child_process')
-const { default: baileys, proto, jidNormalizedUser, generateWAMessage, generateWAMessageFromContent, getContentType, downloadContentFromMessage,prepareWAMessageMedia } = require("@whiskeysockets/baileys")
+const { default: baileys, proto, jidNormalizedUser, generateWAMessage, generateWAMessageFromContent, getContentType, downloadContentFromMessage,prepareWAMessageMedia } = require("bungoma")
 
 const { 
   smsg, 

@@ -4,7 +4,7 @@ const {
   proto,
   downloadContentFromMessage,
   downloadMedaiMesaage
-} = require("@whiskeysockets/baileys");
+} = require("bungoma");
 const { exec, spawn, execSync } = require("child_process")
 const util = require('util')
 const fetch = require('node-fetch')
