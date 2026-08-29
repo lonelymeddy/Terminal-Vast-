@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: terminal-vast
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /uptime
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: PRIMARY_PHONE
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: WA_AUTH_DIR
+        value: ./sessions
