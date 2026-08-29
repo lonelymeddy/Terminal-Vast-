@@ -1,69 +1,511 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Terminal Vast</title>
-<style>
-*{box-sizing:border-box}body{margin:0;background:#050505;color:white;font-family:Inter,system-ui,sans-serif}
-.hero{min-height:100vh;display:flex;align-items:end;padding:60px;position:relative;overflow:hidden}
-.hero:before{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,transparent,#050505),url("https://files.catbox.moe/sn73hm.jpg") center/cover}
-.content{position:relative;z-index:2;max-width:900px}
-h1{font-size:clamp(70px,12vw,150px);line-height:.85;margin:0;letter-spacing:-.08em}
-p{color:#aaa;font-size:20px;max-width:600px}
-.about{padding:120px 40px;background:#050505}
-.quote{font-size:clamp(40px,7vw,90px);font-weight:900;letter-spacing:-.05em}
-.connect{padding:100px 40px;background:#050505}
-.box{position:relative;max-width:600px;padding:40px;border-radius:25px;overflow:hidden;background:#25d366;color:#041009}
-.box:before{content:"";position:absolute;inset:0;background:url("https://files.catbox.moe/lgd6pn.jpg") center/cover;opacity:.25}
-.box>*{position:relative}
-input,button{width:100%;height:55px;margin-top:15px;padding:0 15px;font-size:16px}
-button{background:#050505;color:white;border:0;font-weight:bold}
-footer{padding:30px;background:#050505;color:#555}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#050505">
+  <meta name="description" content="Terminal Vast — WhatsApp pairing">
+  <title>Terminal Vast</title>
+  <style>
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth;background:#050505}
+    body{
+      margin:0;
+      background:#050505;
+      color:#fff;
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      overflow-x:hidden
+    }
+    .hero{
+      position:relative;
+      min-height:100svh;
+      display:flex;
+      align-items:flex-end;
+      padding:clamp(28px,7vw,90px);
+      overflow:hidden;
+      isolation:isolate
+    }
+    .hero-image{
+      position:absolute;
+      inset:0;
+      z-index:-3;
+      background:url("https://files.catbox.moe/sn73hm.jpg") center/cover no-repeat;
+      transform:scale(1.04);
+      animation:slowZoom 18s ease-out forwards
+    }
+    .hero-image:after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:
+        linear-gradient(to bottom,rgba(0,0,0,.08) 0%,rgba(0,0,0,.15) 35%,#050505 92%,#050505 100%),
+        linear-gradient(to right,rgba(0,0,0,.38),transparent 65%)
+    }
+    .hero-glow{
+      position:absolute;
+      inset:auto 0 0;
+      height:48%;
+      z-index:-2;
+      background:linear-gradient(to top,#050505,transparent);
+      pointer-events:none
+    }
+    @keyframes slowZoom{from{transform:scale(1.04)}to{transform:scale(1)}}
+    .nav{
+      position:absolute;
+      top:0;left:0;right:0;
+      padding:25px clamp(24px,6vw,75px);
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      z-index:3
+    }
+    .brand{
+      font-size:15px;
+      font-weight:800;
+      letter-spacing:.08em;
+      text-transform:uppercase
+    }
+    .nav-link{
+      color:#fff;
+      text-decoration:none;
+      font-size:13px;
+      opacity:.75
+    }
+    .hero-content{max-width:780px}
+    .eyebrow{
+      margin-bottom:15px;
+      font-size:12px;
+      text-transform:uppercase;
+      letter-spacing:.22em;
+      color:#d2d2d2
+    }
+    h1{
+      margin:0;
+      font-size:clamp(58px,11vw,145px);
+      line-height:.86;
+      letter-spacing:-.075em;
+      font-weight:900
+    }
+    .hero-copy{
+      max-width:560px;
+      margin:25px 0 0;
+      color:#c7c7c7;
+      font-size:clamp(15px,2vw,19px);
+      line-height:1.55
+    }
+    .scroll{
+      display:inline-flex;
+      margin-top:35px;
+      color:#fff;
+      text-decoration:none;
+      font-size:12px;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      border-bottom:1px solid #ffffff55;
+      padding-bottom:7px
+    }
+    section{position:relative}
+    .about{
+      min-height:80svh;
+      padding:clamp(80px,12vw,160px) clamp(24px,8vw,110px);
+      display:flex;
+      align-items:center;
+      background:
+        radial-gradient(circle at 75% 30%,#ffffff08,transparent 28%),
+        #050505
+    }
+    .about-inner{max-width:1000px}
+    .label{
+      color:#777;
+      font-size:11px;
+      letter-spacing:.2em;
+      text-transform:uppercase;
+      margin-bottom:25px
+    }
+    .quote{
+      margin:0;
+      max-width:900px;
+      font-size:clamp(38px,7vw,88px);
+      line-height:.98;
+      letter-spacing:-.055em;
+      font-weight:800
+    }
+    .quote em{font-style:normal;color:#777}
+    .about-text{
+      max-width:560px;
+      margin-top:35px;
+      color:#929292;
+      font-size:15px;
+      line-height:1.7
+    }
+    .connect{
+      position:relative;
+      min-height:100svh;
+      padding:clamp(80px,10vw,130px) clamp(20px,6vw,75px);
+      background:
+        linear-gradient(to bottom,#080808 0%,#080808 72%,rgba(8,8,8,.88) 84%,#050505 100%);
+      overflow:hidden;
+    }
+    .connect::after{
+      content:"";
+      position:absolute;
+      left:0;
+      right:0;
+      bottom:0;
+      height:34%;
+      background:
+        linear-gradient(to bottom,transparent,#050505 92%),
+        url("https://files.catbox.moe/lgd6pn.jpg") center bottom/cover no-repeat;
+      opacity:.12;
+      pointer-events:none;
+      z-index:0;
+    }
+    .connect > *{position:relative;z-index:1}
+    .connect-head{
+      max-width:850px;
+      margin-bottom:55px
+    }
+    .connect h2{
+      margin:0;
+      font-size:clamp(45px,7vw,88px);
+      line-height:.95;
+      letter-spacing:-.06em
+    }
+    .connect-sub{
+      margin-top:20px;
+      color:#858585;
+      max-width:500px;
+      line-height:1.6
+    }
+    .connect-grid{
+      max-width:1000px;
+      display:grid;
+      grid-template-columns:minmax(0,1fr) minmax(260px,360px);
+      gap:70px;
+      align-items:start
+    }
+    .form-area{max-width:600px}
+    label{
+      display:block;
+      color:#aaa;
+      font-size:12px;
+      margin-bottom:10px
+    }
+    .input{
+      width:100%;
+      height:62px;
+      border:0;
+      border-bottom:1px solid #ffffff25;
+      outline:0;
+      background:transparent;
+      color:#fff;
+      font-size:21px;
+      padding:0 4px;
+      transition:border-color .2s
+    }
+    .input:focus{border-color:#fff}
+    .input::placeholder{color:#4d4d4d}
+    .hint{color:#555;font-size:12px;margin-top:10px}
+    button{
+      margin-top:30px;
+      min-height:54px;
+      padding:0 25px;
+      border:1px solid #fff;
+      background:#fff;
+      color:#050505;
+      border-radius:0;
+      font-weight:800;
+      cursor:pointer;
+      transition:.2s
+    }
+    button:hover{background:#ddd}
+    button:disabled{opacity:.5;cursor:wait}
+    .status{
+      display:none;
+      margin-top:22px;
+      border-left:2px solid #fff;
+      padding:13px 15px;
+      color:#aaa;
+      font-size:13px;
+      line-height:1.5
+    }
+    .status.show{display:block}
+    .status.error{border-color:#ff5d5d;color:#ff9a9a}
+    .code{
+      display:none;
+      margin-top:25px
+    }
+    .code.show{display:block}
+    .code-label{color:#555;font-size:11px;text-transform:uppercase;letter-spacing:.15em}
+    .code-value{
+      margin-top:8px;
+      font-size:34px;
+      letter-spacing:.18em;
+      font-weight:900
+    }
+    .side{
+      position:relative;
+      overflow:hidden;
+      border-radius:24px;
+      padding:30px 28px;
+      min-height:330px;
+      background:
+        linear-gradient(135deg,rgba(37,211,102,.98),rgba(18,140,126,.96));
+      box-shadow:0 25px 70px rgba(37,211,102,.13);
+      isolation:isolate
+    }
+    .side::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:
+        linear-gradient(to bottom,transparent 45%,#080808 100%),
+        linear-gradient(to right,rgba(37,211,102,.08),rgba(37,211,102,.35));
+      z-index:-1;
+      pointer-events:none;
+    }
+    .side::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:url("https://files.catbox.moe/lgd6pn.jpg") center/cover no-repeat;
+      opacity:.58;
+      z-index:-2;
+      pointer-events:none;
+    }
+    .side-title{
+      font-size:14px;
+      font-weight:900;
+      margin-bottom:28px;
+      color:#061009;
+      letter-spacing:.01em
+    }
+    .step{
+      display:flex;
+      gap:15px;
+      margin-bottom:20px;
+      color:rgba(4,25,13,.78);
+      font-size:12px;
+      line-height:1.55
+    }
+    .num{
+      color:#061009;
+      font-weight:900;
+      min-width:24px
+    }
+    footer{
+      padding:30px clamp(24px,6vw,75px);
+      border-top:1px solid #ffffff0d;
+      color:#444;
+      font-size:11px;
+      display:flex;
+      justify-content:space-between
+    }
+    @media(max-width:760px){
+      .hero{min-height:92svh;padding:28px 22px 55px}
+      .nav{padding:20px 22px}
+      .connect-grid{grid-template-columns:1fr;gap:35px}
+      .side{min-height:300px;padding:28px 24px}
+      .about{min-height:75svh;padding:90px 22px}
+      .connect{padding:85px 22px}
+      footer{padding:25px 22px}
+    }
+    @media(prefers-reduced-motion:reduce){.hero-image{animation:none}}
+  </style>
 </head>
 <body>
-<section class="hero"><div class="content"><h1>Terminal<br>Vast.</h1><p>A place to connect your WhatsApp session.</p></div></section>
 
-<section class="about">
-<div class="quote">"I give no fuck ✌️,<br>I just watch with silence."</div>
+<header class="hero">
+  <div class="hero-image" aria-hidden="true"></div>
+  <div class="hero-glow" aria-hidden="true"></div>
+
+  <nav class="nav">
+    <div class="brand">Terminal Vast</div>
+    <a class="nav-link" href="#connect">Connect WhatsApp</a>
+  </nav>
+
+  <div class="hero-content">
+    <div class="eyebrow">WhatsApp connection</div>
+    <h1>Terminal<br>Vast.</h1>
+    <p class="hero-copy">
+      A simple place to connect your WhatsApp number and start your session.
+      No clutter. No unnecessary panels.
+    </p>
+    <a class="scroll" href="#about">Scroll to enter</a>
+  </div>
+</header>
+
+<section class="about" id="about">
+  <div class="about-inner">
+    <div class="label">About lonely Meddy</div>
+    <p class="quote">
+      “I give no fuck ✌️,<br>
+      <em>I just watch with silence.</em>”
+    </p>
+    <p class="about-text">
+      Quiet by choice. Watching everything without needing to explain
+      everything. This is the space behind Terminal Vast.
+    </p>
+  </div>
 </section>
 
-<section class="connect">
-<div class="box">
-<h2>How to connect</h2>
-<p>Enter your WhatsApp number and generate your pairing code.</p>
-<form id="pairForm">
-<input id="phone" name="phone" inputmode="numeric" autocomplete="tel" placeholder="2348012345678" required>
-<button id="pairButton" type="submit">Generate pairing code</button>
-<div id="status" aria-live="polite" style="margin-top:18px;color:#17351f"></div>
-<div id="pairCode" style="display:none;margin-top:14px;font-size:30px;font-weight:900;letter-spacing:.16em"></div>
-</form>
-</div>
+<section class="connect" id="connect">
+  <div class="connect-head">
+    <div class="label">Connect</div>
+    <h2>Pair your<br>WhatsApp.</h2>
+    <p class="connect-sub">
+      Enter your number in international format. The pairing request is
+      handled by the Terminal Vast server.
+    </p>
+  </div>
+
+  <div class="connect-grid">
+    <div class="form-area">
+      <form id="pairForm" novalidate>
+        <label for="phone">WhatsApp number</label>
+        <input
+          id="phone"
+          class="input"
+          type="tel"
+          inputmode="numeric"
+          autocomplete="tel"
+          placeholder="2348012345678"
+          maxlength="20"
+          required
+        >
+        <div class="hint">
+          International format, without + or spaces.
+        </div>
+
+        <button id="pairButton" type="submit">
+          Generate pairing code
+        </button>
+      </form>
+
+      <div id="status" class="status" role="status" aria-live="polite"></div>
+
+      <div id="code" class="code">
+        <div class="code-label">Pairing code</div>
+        <div id="codeValue" class="code-value">--------</div>
+      </div>
+    </div>
+
+    <aside class="side">
+      <div class="side-title">How to connect</div>
+
+      <div class="step">
+        <span class="num">01</span>
+        <span>Enter the WhatsApp number you want to connect.</span>
+      </div>
+
+      <div class="step">
+        <span class="num">02</span>
+        <span>Generate your pairing code.</span>
+      </div>
+
+      <div class="step">
+        <span class="num">03</span>
+        <span>Open WhatsApp and enter the code from Linked Devices.</span>
+      </div>
+
+      <div class="step">
+        <span class="num">04</span>
+        <span>Once linked, your Terminal Vast session can come online.</span>
+      </div>
+    </aside>
+  </div>
 </section>
 
-<footer>Terminal Vast — Armwise LLC</footer>
+<footer>
+  <span>Terminal Vast</span>
+  <span>Armwise LLC</span>
+</footer>
+
 <script>
-const form=document.getElementById('pairForm');
-const phone=document.getElementById('phone');
-const button=document.getElementById('pairButton');
-const status=document.getElementById('status');
-const pairCode=document.getElementById('pairCode');
-form.addEventListener('submit',async e=>{
- e.preventDefault();
- const number=phone.value.replace(/\D/g,'');
- pairCode.style.display='none';
- if(!/^\d{7,15}$/.test(number)){status.textContent='Enter a valid international WhatsApp number.';return}
- button.disabled=true; button.textContent='Generating...'; status.textContent='Connecting to Terminal Vast...';
- try{
-  const r=await fetch('/api/pair',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:number})});
-  const data=await r.json();
-  if(!r.ok) throw new Error(data.error||'Pairing failed.');
-  if(data.code){pairCode.textContent=data.code;pairCode.style.display='block';status.textContent='Pairing code generated. Open WhatsApp and link this device.'}
-  else status.textContent=data.message||'Session is connecting. Try again shortly.';
- }catch(err){status.textContent=err.message||'Unable to create pairing session.'}
- finally{button.disabled=false;button.textContent='Generate pairing code'}
+const API_ENDPOINT = "/api/pair";
+
+const form = document.getElementById("pairForm");
+const phone = document.getElementById("phone");
+const button = document.getElementById("pairButton");
+const statusBox = document.getElementById("status");
+const codeBox = document.getElementById("code");
+const codeValue = document.getElementById("codeValue");
+
+function setStatus(text, error = false) {
+  statusBox.textContent = text;
+  statusBox.className = "status show" + (error ? " error" : "");
+}
+
+function setLoading(value) {
+  button.disabled = value;
+  button.textContent = value
+    ? "Generating..."
+    : "Generate pairing code";
+}
+
+form.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  const number = phone.value.replace(/\D/g, "");
+
+  codeBox.classList.remove("show");
+
+  if (number.length < 7 || number.length > 15) {
+    setStatus("Enter a valid international WhatsApp number.", true);
+    phone.focus();
+    return;
+  }
+
+  setLoading(true);
+  setStatus("Requesting a pairing code...");
+
+  try {
+    const response = await fetch(API_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      credentials: "same-origin",
+      body: JSON.stringify({ phone: number })
+    });
+
+    let data;
+
+    try {
+      data = await response.json();
+    } catch {
+      throw new Error("The pairing server returned an invalid response.");
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        data.error || "The pairing request could not be completed."
+      );
+    }
+
+    if (!data.code) {
+      throw new Error("No pairing code was returned by the server.");
+    }
+
+    codeValue.textContent = String(data.code)
+      .replace(/\s+/g, "")
+      .toUpperCase();
+
+    codeBox.classList.add("show");
+    setStatus("Pairing code generated. Complete the linking process in WhatsApp.");
+
+  } catch (error) {
+    console.error(error);
+    setStatus(
+      error.message || "Unable to reach the pairing service.",
+      true
+    );
+  } finally {
+    setLoading(false);
+  }
 });
 </script>
+
 </body>
 </html>
