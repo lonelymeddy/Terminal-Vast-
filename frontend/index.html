@@ -1,1 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Terminal Vast</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#050505;color:white;font-family:Inter,system-ui,sans-serif}
+.hero{min-height:100vh;display:flex;align-items:end;padding:60px;position:relative;overflow:hidden}
+.hero:before{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,transparent,#050505),url("https://files.catbox.moe/sn73hm.jpg") center/cover}
+.content{position:relative;z-index:2;max-width:900px}
+h1{font-size:clamp(70px,12vw,150px);line-height:.85;margin:0;letter-spacing:-.08em}
+p{color:#aaa;font-size:20px;max-width:600px}
+.about{padding:120px 40px;background:#050505}
+.quote{font-size:clamp(40px,7vw,90px);font-weight:900;letter-spacing:-.05em}
+.connect{padding:100px 40px;background:#050505}
+.box{position:relative;max-width:600px;padding:40px;border-radius:25px;overflow:hidden;background:#25d366;color:#041009}
+.box:before{content:"";position:absolute;inset:0;background:url("https://files.catbox.moe/lgd6pn.jpg") center/cover;opacity:.25}
+.box>*{position:relative}
+input,button{width:100%;height:55px;margin-top:15px;padding:0 15px;font-size:16px}
+button{background:#050505;color:white;border:0;font-weight:bold}
+footer{padding:30px;background:#050505;color:#555}
+</style>
+</head>
+<body>
+<section class="hero"><div class="content"><h1>Terminal<br>Vast.</h1><p>A place to connect your WhatsApp session.</p></div></section>
 
+<section class="about">
+<div class="quote">"I give no fuck ✌️,<br>I just watch with silence."</div>
+</section>
+
+<section class="connect">
+<div class="box">
+<h2>How to connect</h2>
+<p>Enter your WhatsApp number and generate your pairing code.</p>
+<form id="pairForm">
+<input id="phone" name="phone" inputmode="numeric" autocomplete="tel" placeholder="2348012345678" required>
+<button id="pairButton" type="submit">Generate pairing code</button>
+<div id="status" aria-live="polite" style="margin-top:18px;color:#17351f"></div>
+<div id="pairCode" style="display:none;margin-top:14px;font-size:30px;font-weight:900;letter-spacing:.16em"></div>
+</form>
+</div>
+</section>
+
+<footer>Terminal Vast — Armwise LLC</footer>
+<script>
+const form=document.getElementById('pairForm');
+const phone=document.getElementById('phone');
+const button=document.getElementById('pairButton');
+const status=document.getElementById('status');
+const pairCode=document.getElementById('pairCode');
+form.addEventListener('submit',async e=>{
+ e.preventDefault();
+ const number=phone.value.replace(/\D/g,'');
+ pairCode.style.display='none';
+ if(!/^\d{7,15}$/.test(number)){status.textContent='Enter a valid international WhatsApp number.';return}
+ button.disabled=true; button.textContent='Generating...'; status.textContent='Connecting to Terminal Vast...';
+ try{
+  const r=await fetch('/api/pair',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:number})});
+  const data=await r.json();
+  if(!r.ok) throw new Error(data.error||'Pairing failed.');
+  if(data.code){pairCode.textContent=data.code;pairCode.style.display='block';status.textContent='Pairing code generated. Open WhatsApp and link this device.'}
+  else status.textContent=data.message||'Session is connecting. Try again shortly.';
+ }catch(err){status.textContent=err.message||'Unable to create pairing session.'}
+ finally{button.disabled=false;button.textContent='Generate pairing code'}
+});
+</script>
+</body>
+</html>
