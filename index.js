@@ -132,13 +132,13 @@ async function loadSession() {
     return null;
 }
 
-const storeFile = "./start/lib/database/store.json";
 const maxMessageAge = 24 * 60 * 60; //24 hours
 
-function loadStoredMessages() {
-    if (fs.existsSync(storeFile)) {
+function loadStoredMessages(sessionDir = './start/lib/database') {
+    const sFile = path.join(sessionDir, 'store.json');
+    if (fs.existsSync(sFile)) {
         try {
-            return JSON.parse(fs.readFileSync(storeFile));
+            return JSON.parse(fs.readFileSync(sFile));
         } catch (err) {
             console.error("⚠️ Error loading store.json:", err);
             return {};
@@ -147,23 +147,26 @@ function loadStoredMessages() {
     return {};
 }
 
-function saveStoredMessages(chatId, messageId, messageData) {
-    let storedMessages = loadStoredMessages(); // Now this will work
+function saveStoredMessages(chatId, messageId, messageData, sessionDir = './start/lib/database') {
+    const sFile = path.join(sessionDir, 'store.json');
+    let storedMessages = loadStoredMessages(sessionDir);
 
     if (!storedMessages[chatId]) storedMessages[chatId] = {};
     if (!storedMessages[chatId][messageId]) {
         storedMessages[chatId][messageId] = messageData;
-        fs.writeFileSync(storeFile, JSON.stringify(storedMessages, null, 2));
+        fs.mkdirSync(sessionDir, { recursive: true });
+        fs.writeFileSync(sFile, JSON.stringify(storedMessages, null, 2));
     }
 }
 
-function cleanupOldMessages() {
+function cleanupOldMessages(sessionDir = './start/lib/database') {
+    const sFile = path.join(sessionDir, 'store.json');
     let now = Math.floor(Date.now() / 1000);
     let storedMessages = {};
 
-    if (fs.existsSync(storeFile)) {
+    if (fs.existsSync(sFile)) {
         try {
-            storedMessages = JSON.parse(fs.readFileSync(storeFile));
+            storedMessages = JSON.parse(fs.readFileSync(sFile));
         } catch (err) {
             console.error("❌ Error reading store.json:", err);
             return;
@@ -201,7 +204,8 @@ function cleanupOldMessages() {
         }
     }
 
-    fs.writeFileSync(storeFile, JSON.stringify(storedMessages, null, 2));
+    fs.mkdirSync(sessionDir, { recursive: true });
+    fs.writeFileSync(sFile, JSON.stringify(storedMessages, null, 2));
 
     console.log("Terminal Vast 🧹 Cleaning up:");
     console.log(`- Total messages processed: ${totalMessages}`);
@@ -223,7 +227,9 @@ async function clientstart(options = {}) {
     if (!webSession) {
         cleaningSession(activeSessionDir);
         await loadSession();
-        await cleanupOldMessages();
+        await cleanupOldMessages(activeSessionDir);
+    } else {
+        await cleanupOldMessages(activeSessionDir);
     }
 
     const { state, saveCreds } = await useMultiFileAuthState(activeSessionDir);
@@ -762,7 +768,7 @@ conn.sendStatusMention = async (content, jids = []) => {
   }
 
   conn.prefa = settings.prefa;
-  conn.public = config.autoviewstatus || true;
+  conn.public = true;
   conn.serializeM = (m) => smsg(conn, m, store);
 
   conn.ev.on('connection.update', async (update) => {
@@ -1326,6 +1332,10 @@ app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
 });
 
+app.get("/dashboard", (req, res) => {
+    res.sendFile(path.join(__dirname, 'data', 'terminal-vast.html'));
+});
+
 app.get("/uptime", (req, res) => {
     res.json({ uptime: getUptime(), sessions: webSessions.size });
 });
@@ -1374,7 +1384,7 @@ app.post('/api/pair', async (req, res) => {
             return res.json({ status: 'connecting', message: 'Session is connecting. Try again shortly.' });
         }
 
-        return res.json({ status: 'pairing', code });
+        return res.json({ status: 'pairing', code, sessionId: id });
     } catch (error) {
         webSessions.delete(id);
         console.error('[PAIRING] Failed:', error);

@@ -548,7 +548,13 @@ form.addEventListener("submit", async (event) => {
       .toUpperCase();
 
     codeBox.classList.add("show");
-    setStatus("Pairing code generated. Complete the linking process in WhatsApp.");
+    setStatus("Pairing code generated. Enter the code in WhatsApp to link. Waiting for connection...");
+
+    if (data.sessionId) {
+      startSessionPolling(data.sessionId);
+    } else if (data.status === 'connected') {
+      window.location.href = "/dashboard";
+    }
 
   } catch (error) {
     console.error(error);
@@ -560,6 +566,27 @@ form.addEventListener("submit", async (event) => {
     setLoading(false);
   }
 });
+
+let pollInterval = null;
+function startSessionPolling(sessionId) {
+  if (pollInterval) clearInterval(pollInterval);
+  pollInterval = setInterval(async () => {
+    try {
+      const res = await fetch(`/api/session/${sessionId}`);
+      if (!res.ok) return;
+      const sessionData = await res.json();
+      if (sessionData.status === 'connected') {
+        clearInterval(pollInterval);
+        setStatus("Connected! Redirecting to dashboard...");
+        setTimeout(() => {
+          window.location.href = "/dashboard";
+        }, 1000);
+      }
+    } catch (e) {
+      console.error("Session poll error:", e);
+    }
+  }, 2000);
+}
 </script>
 
 </body>

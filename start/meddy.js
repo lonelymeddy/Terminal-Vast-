@@ -159,6 +159,7 @@ const botNumber = await conn.decodeJid(conn.user.id)
 
 
 function checkAccess(sender) {
+    if (!sender) return false;
     // Normalize the sender number
     const normalizedSender = sender.replace(/[^0-9]/g, "") + "@s.whatsapp.net";
     
@@ -171,7 +172,7 @@ function checkAccess(sender) {
         devMeddy,
         ...(global.owner || []),
         ...sudoUsers // Get from database.json instead of global.sudo
-    ].map(num => num.replace(/[^0-9]/g, "") + "@s.whatsapp.net");
+    ].filter(Boolean).map(num => String(num).replace(/[^0-9]/g, "") + "@s.whatsapp.net");
     
     // Check if sender is in authorized list
     return authorizedNumbers.includes(normalizedSender);
@@ -264,7 +265,7 @@ if (m.isGroup) {
     }
 }
 
-const peler = fs.readFileSync('./start/lib/media/Terminal Vast.jpg')
+const peler = fs.existsSync('./start/lib/media/Terminal-Vast.jpg') ? fs.readFileSync('./start/lib/media/Terminal-Vast.jpg') : fs.readFileSync('./start/lib/media/Meddy.jpg');
 const cina = fs.readFileSync('./start/lib/media/Meddy.jpg')
 function getRandomImage() {
 const randomIndex = Math.floor(Math.random() * cina.length)
