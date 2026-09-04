@@ -28,7 +28,7 @@
         "@ffmpeg-installer/ffmpeg": "^1.1.0",
         "@vitalets/google-translate-api": "^9.2.1",
         "@hapi/boom": "^10.0.0",
-        "@whiskeysockets/baileys": "git+https://lyfe00011-admin@bitbucket.org/lyfe00011/baileys.git",
+        "@whiskeysockets/baileys": "^7.0.0-rc.9",
         "acrcloud": "^1.4.0",
         "adm-zip": "^0.5.16",
         "api-dylux": "latest",
