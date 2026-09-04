@@ -286,20 +286,35 @@ async function clientstart(options = {}) {
 
 const botNumber = conn.decodeJid(conn.user?.id) || 'default';
 
-    
+    conn.ev.on('creds.update', saveCreds);
+
     if (!conn.authState.creds.registered && pairingPhone) {
-      const code = await conn.requestPairingCode(pairingPhone);
-      conn._terminalVastPairingCode = code;
-      console.log(chalk.cyan(`[PAIRING] ${pairingPhone}: ${code}`));
+      await delay(3000);
+      try {
+        const code = await conn.requestPairingCode(pairingPhone);
+        conn._terminalVastPairingCode = code;
+        console.log(chalk.cyan(`[PAIRING] ${pairingPhone}: ${code}`));
+      } catch (err) {
+        console.error(chalk.yellow(`[PAIRING WARNING] ${pairingPhone}: ${err.message}, retrying...`));
+        await delay(2000);
+        const code = await conn.requestPairingCode(pairingPhone);
+        conn._terminalVastPairingCode = code;
+        console.log(chalk.cyan(`[PAIRING RETRY] ${pairingPhone}: ${code}`));
+      }
     } else if (!webSession && !conn.authState.creds.registered) {
       const primaryPhone = String(process.env.PRIMARY_PHONE || '').replace(/\D/g, '');
       if (!primaryPhone) {
         console.log(chalk.yellow('[PRIMARY] No PRIMARY_PHONE configured. Web number pairing remains available.'));
         return conn;
       }
-      const code = await conn.requestPairingCode(primaryPhone);
-      conn._terminalVastPairingCode = code;
-      console.log(chalk.cyan(`[PRIMARY PAIRING] ${primaryPhone}: ${code}`));
+      await delay(3000);
+      try {
+        const code = await conn.requestPairingCode(primaryPhone);
+        conn._terminalVastPairingCode = code;
+        console.log(chalk.cyan(`[PRIMARY PAIRING] ${primaryPhone}: ${code}`));
+      } catch (err) {
+        console.error(chalk.yellow(`[PRIMARY PAIRING WARNING] ${primaryPhone}: ${err.message}`));
+      }
     }
           
     const { makeInMemoryStore } = require("./start/lib/store/");
@@ -390,7 +405,7 @@ const botNumber = conn.decodeJid(conn.user?.id) || 'default';
         }
   
         
-        require("./start/kevin")(conn, m, chatUpdate, mek, store);
+        require("./start/meddy")(conn, m, chatUpdate, mek, store);
     } catch (err) {
         console.log(chalk.yellow.bold("[ ERROR ] meddy.js :\n") + chalk.redBright(util.format(err)));
     }
