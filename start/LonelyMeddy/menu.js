@@ -92,7 +92,7 @@ async function generateMenu(conn, m, prefix, global) {
         pairingSite: {
             title: ' *PAIRING SITE* ',
             commands: [
-                'whatsapp.com/channel/0029VbDD5xgBlHpjUBmayj30'
+                'https://terminal-vast-platform.onrender.com/'
             ],
         },
         
