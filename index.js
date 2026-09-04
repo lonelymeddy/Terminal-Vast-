@@ -295,32 +295,45 @@ const botNumber = conn.decodeJid(conn.user?.id) || 'default';
     conn.ev.on('creds.update', saveCreds);
 
     if (!conn.authState.creds.registered && pairingPhone) {
-      await delay(3000);
-      try {
-        const code = await conn.requestPairingCode(pairingPhone);
-        conn._terminalVastPairingCode = code;
-        console.log(chalk.cyan(`[PAIRING] ${pairingPhone}: ${code}`));
-      } catch (err) {
-        console.error(chalk.yellow(`[PAIRING WARNING] ${pairingPhone}: ${err.message}, retrying...`));
-        await delay(2000);
-        const code = await conn.requestPairingCode(pairingPhone);
-        conn._terminalVastPairingCode = code;
-        console.log(chalk.cyan(`[PAIRING RETRY] ${pairingPhone}: ${code}`));
-      }
+      const obtainPairingCode = async () => {
+        for (let i = 0; i < 10; i++) {
+          try {
+            await delay(1500 + i * 500);
+            const code = await conn.requestPairingCode(pairingPhone);
+            if (code) {
+              conn._terminalVastPairingCode = code;
+              console.log(chalk.cyan(`[PAIRING] ${pairingPhone}: ${code}`));
+              return code;
+            }
+          } catch (err) {
+            console.log(chalk.yellow(`[PAIRING ATTEMPT ${i + 1}] ${pairingPhone}: ${err.message}`));
+          }
+        }
+        return null;
+      };
+      conn._pairingPromise = obtainPairingCode();
     } else if (!webSession && !conn.authState.creds.registered) {
       const primaryPhone = String(process.env.PRIMARY_PHONE || '').replace(/\D/g, '');
       if (!primaryPhone) {
         console.log(chalk.yellow('[PRIMARY] No PRIMARY_PHONE configured. Web number pairing remains available.'));
         return conn;
       }
-      await delay(3000);
-      try {
-        const code = await conn.requestPairingCode(primaryPhone);
-        conn._terminalVastPairingCode = code;
-        console.log(chalk.cyan(`[PRIMARY PAIRING] ${primaryPhone}: ${code}`));
-      } catch (err) {
-        console.error(chalk.yellow(`[PRIMARY PAIRING WARNING] ${primaryPhone}: ${err.message}`));
-      }
+      const obtainPrimaryCode = async () => {
+        for (let i = 0; i < 5; i++) {
+          try {
+            await delay(2000 + i * 500);
+            const code = await conn.requestPairingCode(primaryPhone);
+            if (code) {
+              conn._terminalVastPairingCode = code;
+              console.log(chalk.cyan(`[PRIMARY PAIRING] ${primaryPhone}: ${code}`));
+              return code;
+            }
+          } catch (err) {
+            console.error(chalk.yellow(`[PRIMARY PAIRING WARNING] ${primaryPhone}: ${err.message}`));
+          }
+        }
+      };
+      conn._pairingPromise = obtainPrimaryCode();
     }
           
     const { makeInMemoryStore } = require("./start/lib/store/");
@@ -348,14 +361,12 @@ const botNumber = conn.decodeJid(conn.user?.id) || 'default';
                 webSessions.set(options.userId, { conn, status: 'connected', sessionDir: activeSessionDir, phone: pairingPhone || null });
             } else if (status === 'close') {
                 const code = new Boom(update.lastDisconnect?.error)?.output?.statusCode;
-                if (code === DisconnectReason.loggedOut || code === DisconnectReason.badSession || code === DisconnectReason.connectionReplaced) {
-                    webSessions.delete(options.userId);
-                    return;
-                }
-                if (webSessions.has(options.userId)) {
-                    webSessions.set(options.userId, { ...webSessions.get(options.userId), status: 'reconnecting' });
-                    setTimeout(() => clientstart({ ...options, webSession: true }).catch(err => console.error('[SESSION] reconnect failed:', err)), 3000);
-                }
+                console.log(`[SESSION] ${options.userId || 'user'} closed (code: ${code}). Reconnecting...`);
+                const existingRec = webSessions.get(options.userId) || { sessionDir: activeSessionDir, phone: pairingPhone || null };
+                webSessions.set(options.userId, { ...existingRec, status: 'reconnecting' });
+                setTimeout(() => {
+                    clientstart({ ...options, webSession: true }).catch(err => console.error('[SESSION] reconnect failed:', err));
+                }, 3000);
             }
         });
     }
@@ -1346,8 +1357,8 @@ app.post('/api/pair', async (req, res) => {
     const now = Date.now();
     const previous = pairingAttempts.get(ip) || 0;
 
-    if (now - previous < 15000) {
-        return res.status(429).json({ error: 'Please wait before requesting another pairing code.' });
+    if (now - previous < 3000) {
+        return res.status(429).json({ error: 'Please wait a moment before requesting another pairing code.' });
     }
     pairingAttempts.set(ip, now);
 
@@ -1361,7 +1372,11 @@ app.post('/api/pair', async (req, res) => {
         return res.json({ status: 'connected', message: 'This WhatsApp session is already connected.' });
     }
     if (existing?.status === 'pairing' && existing.code) {
-        return res.json({ status: 'pairing', code: existing.code });
+        return res.json({ status: 'pairing', code: existing.code, sessionId: id });
+    }
+
+    if (existing?.conn) {
+        try { existing.conn.ws?.close(); } catch (_) {}
     }
 
     const sessionPath = path.join(__dirname, 'sessions', 'web', id);
@@ -1377,11 +1392,24 @@ app.post('/api/pair', async (req, res) => {
             userId: id
         });
 
-        const code = conn._terminalVastPairingCode;
+        if (conn._pairingPromise) {
+            await conn._pairingPromise;
+        }
+
+        let code = conn._terminalVastPairingCode;
+        if (!code) {
+            for (let i = 0; i < 10; i++) {
+                await delay(1000);
+                code = conn._terminalVastPairingCode;
+                if (code) break;
+            }
+        }
+
         webSessions.set(id, { ...entry, conn, code: code || null });
 
         if (!code) {
-            return res.json({ status: 'connecting', message: 'Session is connecting. Try again shortly.' });
+            webSessions.delete(id);
+            return res.status(500).json({ error: 'Server did not receive a pairing code from WhatsApp. Please check the number and try again.' });
         }
 
         return res.json({ status: 'pairing', code, sessionId: id });

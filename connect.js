@@ -1,4 +1,4 @@
-  const chalk = require("chalk");  
+const chalk = require("chalk");
 const moment = require('moment-timezone');  
 
 // Links
@@ -37,33 +37,24 @@ const Connecting = async ({
     const { connection, lastDisconnect } = update;  
 
     if (connection === 'close') {  
-        const reason = new Boom(lastDisconnect?.error)?.output.statusCode;  
-        console.log(color(lastDisconnect.error, 'deeppink'));  
+        const reason = new Boom(lastDisconnect?.error)?.output?.statusCode;
+        console.log(color(lastDisconnect?.error || 'Connection closed', 'deeppink'));
 
-        if (lastDisconnect.error == 'Error: Stream Errored (unknown)') {  
-            process.exit();  
-        } else if (reason === DisconnectReason.badSession) {  
-            console.log(chalk.red.bold(`bad session file, delete session and scan again`));  
-            process.exit();  
-        } else if (reason === DisconnectReason.connectionClosed) {  
-            console.log(chalk.red.bold('connection closed, reconnecting...'));  
-            process.exit();  
-        } else if (reason === DisconnectReason.connectionLost) {  
-            console.log(chalk.red.bold('connection lost, reconnecting...'));  
-            process.exit();  
-        } else if (reason === DisconnectReason.connectionReplaced) {  
-            console.log(chalk.red.bold('connection replaced, close other session'));  
-            conn.logout();  
-        } else if (reason === DisconnectReason.loggedOut) {  
-            console.log(chalk.red.bold(`logged out, scan again`));  
-            conn.logout();  
-        } else if (reason === DisconnectReason.restartRequired) {  
-            console.log(chalk.yellow.bold('restart required...'));  
-            await clientstart();  
-        } else if (reason === DisconnectReason.timedOut) {  
-            console.log(chalk.yellow.bold('timed out, reconnecting...'));  
-            clientstart();  
-        }  
+        if (reason === DisconnectReason.loggedOut) {
+            console.log(chalk.red.bold(`Session connection closed (logged out / invalid). Reconnecting in 5s...`));
+            setTimeout(() => {
+                if (typeof clientstart === 'function') {
+                    clientstart().catch(err => console.error('[PRIMARY RECONNECT ERROR]', err));
+                }
+            }, 5000);
+        } else {
+            console.log(chalk.yellow.bold(`Connection closed (reason: ${reason || 'unknown'}). Reconnecting in 3s...`));
+            setTimeout(() => {
+                if (typeof clientstart === 'function') {
+                    clientstart().catch(err => console.error('[PRIMARY RECONNECT ERROR]', err));
+                }
+            }, 3000);
+        }
 
     } else if (connection === "connecting") {  
         console.log(chalk.blue.bold('Connecting...'));  
@@ -93,24 +84,28 @@ const Connecting = async ({
 ┗━━━━━━━━━━━━━━━━━━━`;  
 
         // Final status message with context info
-        await conn.sendMessage(conn.user.id, {
-            text: statusMessage,
+        try {
+            await conn.sendMessage(conn.user.id, {
+                text: statusMessage,
 
-            contextInfo: {
-                mentionedJid: [conn.user.id],
-                forwardedNewsletterMessageInfo: {
-                    newsletterName: '❖ ᴊᴏɪɴ Armwise LLC Collections❖',
-                    newsletterJid: '120363425476255595@newsletter',
-                },
-                isForwarded: true,
-                showAdAttribution: true,
-                title: "Terminal Vast",
-                body: "✬Armwise LLC Collections✬",
-                mediaType: 1,
-                renderLargerThumbnail: false,
-                sourceUrl: "https://whatsapp.com/channel/0029VbCYW1aKbYMDuH00Gq0d",
-            }
-        });
+                contextInfo: {
+                    mentionedJid: [conn.user.id],
+                    forwardedNewsletterMessageInfo: {
+                        newsletterName: '❖ ᴊᴏɪɴ Armwise LLC Collections❖',
+                        newsletterJid: '120363425476255595@newsletter',
+                    },
+                    isForwarded: true,
+                    showAdAttribution: true,
+                    title: "Terminal Vast",
+                    body: "✬Armwise LLC Collections✬",
+                    mediaType: 1,
+                    renderLargerThumbnail: false,
+                    sourceUrl: "https://whatsapp.com/channel/0029VbCYW1aKbYMDuH00Gq0d",
+                }
+            });
+        } catch (err) {
+            console.error('Error sending connected status message:', err);
+        }
     }  
 };  
 
