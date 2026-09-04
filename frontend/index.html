@@ -237,11 +237,39 @@
     }
     .code.show{display:block}
     .code-label{color:#555;font-size:11px;text-transform:uppercase;letter-spacing:.15em}
-    .code-value{
+    .code-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:15px;
       margin-top:8px;
+      flex-wrap:wrap
+    }
+    .code-value{
+      margin-top:0;
       font-size:34px;
       letter-spacing:.18em;
       font-weight:900
+    }
+    .copy-btn{
+      margin-top:0;
+      min-height:42px;
+      padding:0 18px;
+      font-size:12px;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      border:1px solid rgba(255,255,255,.3);
+      background:transparent;
+      color:#fff;
+      border-radius:0;
+      font-weight:700;
+      cursor:pointer;
+      transition:all .2s
+    }
+    .copy-btn:hover{
+      background:#fff;
+      color:#050505;
+      border-color:#fff
     }
     .side{
       position:relative;
@@ -386,7 +414,10 @@
 
       <div id="code" class="code">
         <div class="code-label">Pairing code</div>
-        <div id="codeValue" class="code-value">--------</div>
+        <div class="code-row">
+          <div id="codeValue" class="code-value">--------</div>
+          <button id="copyButton" type="button" class="copy-btn">Copy Code</button>
+        </div>
       </div>
     </div>
 
@@ -430,6 +461,30 @@ const button = document.getElementById("pairButton");
 const statusBox = document.getElementById("status");
 const codeBox = document.getElementById("code");
 const codeValue = document.getElementById("codeValue");
+const copyButton = document.getElementById("copyButton");
+
+copyButton.addEventListener("click", async () => {
+  const codeText = codeValue.textContent.trim().replace(/[^A-Z0-9]/gi, "");
+  if (!codeText) return;
+  try {
+    await navigator.clipboard.writeText(codeText);
+    copyButton.textContent = "Copied!";
+    setTimeout(() => {
+      copyButton.textContent = "Copy Code";
+    }, 2000);
+  } catch (err) {
+    const textarea = document.createElement("textarea");
+    textarea.value = codeText;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand("copy");
+    document.body.removeChild(textarea);
+    copyButton.textContent = "Copied!";
+    setTimeout(() => {
+      copyButton.textContent = "Copy Code";
+    }, 2000);
+  }
+});
 
 function setStatus(text, error = false) {
   statusBox.textContent = text;
