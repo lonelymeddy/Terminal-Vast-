@@ -247,19 +247,19 @@ async function clientstart(options = {}) {
     }
 
       const conn = makeWASocket({
-    printQRInTerminal: !usePairingCode,
-    syncFullHistory: false,
-    markOnlineOnConnect: true,
-    connectTimeoutMs: 60000, // Reduced for faster connection
-    defaultQueryTimeoutMs: 30000,
-    keepAliveIntervalMs: 25000,
-    maxRetries: 5,
-    
-    // Performance optimizations
-    generateHighQualityLinkPreview: false,
-    linkPreviewImageThumbnailWidth: 64,
-
+        printQRInTerminal: !usePairingCode,
+        syncFullHistory: false,
+        markOnlineOnConnect: true,
+        connectTimeoutMs: 60000,
+        defaultQueryTimeoutMs: 30000,
+        keepAliveIntervalMs: 15000,
+        retryRequestDelayMs: 500,
+        maxRetries: 10,
         
+        // Performance optimizations
+        generateHighQualityLinkPreview: false,
+        linkPreviewImageThumbnailWidth: 64,
+
         version: waVersion,
         
         // Lightweight browser
@@ -353,7 +353,20 @@ async function clientstart(options = {}) {
             if (status === 'open') {
                 console.log(`[SESSION] ${options.userId || 'user'} connected`);
                 webSessions.set(options.userId, { conn, status: 'connected', sessionDir: activeSessionDir, phone: pairingPhone || null });
+                if (!conn._presenceInterval) {
+                    conn._presenceInterval = setInterval(async () => {
+                        try {
+                            if (conn.ws?.socket?.readyState === 1) {
+                                await conn.sendPresenceUpdate('available');
+                            }
+                        } catch (_) {}
+                    }, 20000);
+                }
             } else if (status === 'close') {
+                if (conn._presenceInterval) {
+                    clearInterval(conn._presenceInterval);
+                    delete conn._presenceInterval;
+                }
                 const code = new Boom(update.lastDisconnect?.error)?.output?.statusCode;
                 console.log(`[SESSION] ${options.userId || 'user'} closed (code: ${code}).`);
 
@@ -371,7 +384,7 @@ async function clientstart(options = {}) {
                 webSessions.set(options.userId, { ...existingRec, status: 'reconnecting' });
                 setTimeout(() => {
                     clientstart({ ...options, webSession: true }).catch(err => console.error('[SESSION] reconnect failed:', err));
-                }, 3000);
+                }, 2000);
             }
         });
     }
