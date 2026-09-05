@@ -868,4 +868,69 @@ async function handleMediafireDownload(conn, chatId, message) {
     }
 }
 
-module.exports = { playCommand, InstagramCommand, handleMediafireDownload, ytplayCommand, videoCommand, takeCommand }
+async function telestickerCommand(conn, chatId, message, args) {
+    try {
+        const text = args.join(' ').trim();
+        if (!text) {
+            return await conn.sendMessage(chatId, { text: '❌ Please provide a Telegram sticker pack URL or pack name.\nExample: .telesticker https://t.me/addstickers/spongebob' }, { quoted: message });
+        }
+
+        await conn.sendMessage(chatId, { react: { text: '⏳', key: message.key } });
+
+        let packName = text.replace(/https?:\/\/t\.me\/addstickers\//i, '').trim();
+        const apiUrl = `https://api.nekolabs.web.id/downloader/telesticker?pack=${encodeURIComponent(packName)}`;
+
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+
+        if (data && data.success && data.result && data.result.length > 0) {
+            const stickers = data.result.slice(0, 10);
+            for (const stikerUrl of stickers) {
+                try {
+                    await conn.sendImageAsSticker(chatId, stikerUrl, message, {
+                        packname: global.packname || 'Terminal Vast',
+                        author: global.author || 'Lonely Meddy'
+                    });
+                    await new Promise(r => setTimeout(r, 1000));
+                } catch (e) {
+                    console.error('Sticker send error:', e);
+                }
+            }
+            await conn.sendMessage(chatId, { react: { text: '✅', key: message.key } });
+        } else {
+            const fallbackUrl = `https://api.giftedtech.co.ke/api/tools/telesticker?apikey=gifted&url=${encodeURIComponent(text)}`;
+            const fbRes = await fetch(fallbackUrl);
+            const fbData = await fbRes.json();
+
+            if (fbData && (fbData.result || fbData.stickers)) {
+                const stickers = (fbData.result || fbData.stickers).slice(0, 10);
+                for (const stikerUrl of stickers) {
+                    try {
+                        await conn.sendImageAsSticker(chatId, stikerUrl, message, {
+                            packname: global.packname || 'Terminal Vast',
+                            author: global.author || 'Lonely Meddy'
+                        });
+                        await new Promise(r => setTimeout(r, 1000));
+                    } catch (e) {
+                        console.error('Sticker send error:', e);
+                    }
+                }
+                await conn.sendMessage(chatId, { react: { text: '✅', key: message.key } });
+            } else {
+                await conn.sendMessage(chatId, { text: '❌ Failed to fetch Telegram stickers. Please check the pack name or URL.' }, { quoted: message });
+                await conn.sendMessage(chatId, { react: { text: '❌', key: message.key } });
+            }
+        }
+    } catch (error) {
+        console.error('Telesticker error:', error);
+        await conn.sendMessage(chatId, { text: '❌ Error processing Telegram stickers: ' + error.message }, { quoted: message });
+        await conn.sendMessage(chatId, { react: { text: '❌', key: message.key } });
+    }
+}
+
+async function musicCommand(conn, chatId, message, args) {
+    const text = args.join(' ').trim();
+    return ytplayCommand(conn, chatId, text, message);
+}
+
+module.exports = { playCommand, InstagramCommand, handleMediafireDownload, ytplayCommand, videoCommand, takeCommand, telestickerCommand, musicCommand }
