@@ -3,7 +3,8 @@ async function isAdminMeddy(conn, chatId, senderId) {
         const groupMetadata = await conn.groupMetadata(chatId);
         
         // Get bot ID properly
-        const botId = conn.user.id.split(':')[0] + '@s.whatsapp.net';
+        const botId = conn.user?.id ? conn.decodeJid(conn.user.id) : '';
+        if (!botId) return { isSenderAdmin: false, isBotAdmin: false };
         
         const participant = groupMetadata.participants.find(p => 
             p.id === senderId || 

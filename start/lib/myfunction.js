@@ -197,15 +197,16 @@ exports.logic = (check, inp, out) => {
 }
 
 exports.generateProfilePicture = async (buffer) => {
-  const jimp = await Jimp.read(buffer)
-  const min = jimp.getWidth()
-  const max = jimp.getHeight()
-  const cropped = jimp.crop(0, 0, min, max)
+  const Jimp = require('jimp');
+  const image = await Jimp.read(buffer);
+  const min = Math.min(image.getWidth(), image.getHeight());
+  const cropped = image.crop(0, 0, min, min);
   return {
     img: await cropped.scaleToFit(720, 720).getBufferAsync(Jimp.MIME_JPEG),
     preview: await cropped.scaleToFit(720, 720).getBufferAsync(Jimp.MIME_JPEG)
-  }
-}
+  };
+};
+exports.generateFullProfilePic = exports.generateProfilePicture;
 
 exports.sendGmail = async (senderEmail, message) => {
   try {
