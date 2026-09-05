@@ -290,7 +290,8 @@ async function clientstart(options = {}) {
         } else return jid;
     };
 
-const botNumber = conn.decodeJid(conn.user?.id) || 'default';
+    conn.public = true;
+    const botNumber = conn.user?.id ? conn.decodeJid(conn.user.id) : 'default';
 
     conn.ev.on('creds.update', saveCreds);
 
@@ -390,7 +391,8 @@ const botNumber = conn.decodeJid(conn.user?.id) || 'default';
         let m = smsg(conn, mek, store);
        
         m.isGroup = m.chat.endsWith('@g.us')
-        m.sender = await conn.decodeJid(m.fromMe && conn.user.id || m.participant || m.key.participant || m.chat || '')
+        m.sender = await conn.decodeJid((m.fromMe && conn.user?.id) || m.participant || m.key.participant || m.chat || '')
+        const currentBotNumber = conn.user?.id ? conn.decodeJid(conn.user.id) : botNumber;
         
         if (m.isGroup) {
             m.metadata = await conn.groupMetadata(m.chat).catch(_ => ({})) || {}
@@ -414,7 +416,7 @@ const botNumber = conn.decodeJid(conn.user?.id) || 'default';
                 )
             
             m.isAdmin = checkAdmin(m.sender, m.admins)
-            m.isBotAdmin = checkAdmin(botNumber, m.admins)
+            m.isBotAdmin = checkAdmin(currentBotNumber, m.admins)
             m.participant = m.key.participant || ""
         } else {
             m.isAdmin = false

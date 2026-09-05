@@ -44,7 +44,9 @@ const {
   runtime, 
   fetchJson, 
   sleep, 
-  getRandom 
+  getRandom,
+  generateProfilePicture,
+  generateFullProfilePic
 } = require('./lib/myfunction')
 
 const { obfuscateJS } = require("./lib/encapsulation");
@@ -133,9 +135,10 @@ const { jadibot, stopjadibot, listjadibot } = require('./jadibot')
 
 module.exports = conn = async (conn, m, chatUpdate, mek, store) => {
 try {
-const body = (m.mtype === "conversation" ? m.message.conversation : m.mtype === "imageMessage" ? m.message.imageMessage.caption : m.mtype === "videoMessage" ? m.message.videoMessage.caption : m.mtype === "extendedTextMessage" ? m.message.extendedTextMessage.text : m.mtype === "buttonsResponseMessage" ? m.message.buttonsResponseMessage.selectedButtonId : m.mtype === "listResponseMessage" ? m.message.listResponseMessage.singleSelectReply.selectedRowId : m.mtype === "templateButtonReplyMessage" ? m.message.templateButtonReplyMessage.selectedId : m.mtype === "interactiveResponseMessage" ? JSON.parse(m.msg.nativeFlowResponseMessage.paramsJson).id : m.mtype === "templateButtonReplyMessage" ? m.msg.selectedId : m.mtype === "messageContextInfo" ? m.message.buttonsResponseMessage?.selectedButtonId || m.message.listResponseMessage?.singleSelectReply.selectedRowId || m.text : "")
-const budy = (typeof m.text === 'string' ? m.text : '')
-var textmessage = (m.mtype == 'listResponseMessage') ? m.message.listResponseMessage.singleSelectReply.selectedRowId : (m.mtype == 'messageContextInfo') ? (m.message.buttonsResponseMessage?.selectedButtonId || m.message.listResponseMessage?.singleSelectReply.selectedRowId || budy) : ""
+const extractedBody = (m.mtype === "conversation" ? m.message?.conversation : m.mtype === "imageMessage" ? m.message?.imageMessage?.caption : m.mtype === "videoMessage" ? m.message?.videoMessage?.caption : m.mtype === "extendedTextMessage" ? m.message?.extendedTextMessage?.text : m.mtype === "buttonsResponseMessage" ? m.message?.buttonsResponseMessage?.selectedButtonId : m.mtype === "listResponseMessage" ? m.message?.listResponseMessage?.singleSelectReply?.selectedRowId : m.mtype === "templateButtonReplyMessage" ? m.message?.templateButtonReplyMessage?.selectedId : m.mtype === "interactiveResponseMessage" ? (m.msg?.nativeFlowResponseMessage?.paramsJson ? JSON.parse(m.msg.nativeFlowResponseMessage.paramsJson).id : '') : m.mtype === "templateButtonReplyMessage" ? m.msg?.selectedId : m.mtype === "messageContextInfo" ? m.message?.buttonsResponseMessage?.selectedButtonId || m.message?.listResponseMessage?.singleSelectReply?.selectedRowId || m.text : "") || m.body || m.text || "";
+const body = typeof extractedBody === 'string' ? extractedBody : '';
+const budy = (typeof m.text === 'string' ? m.text : body);
+var textmessage = (m.mtype == 'listResponseMessage') ? m.message?.listResponseMessage?.singleSelectReply?.selectedRowId : (m.mtype == 'messageContextInfo') ? (m.message?.buttonsResponseMessage?.selectedButtonId || m.message?.listResponseMessage?.singleSelectReply?.selectedRowId || budy) : ""
 const content = JSON.stringify(mek.message)
 const type = Object.keys(mek.message)[0]
 if (m && type == "protocolMessage") conn.ev.emit("message.delete", m.message.protocolMessage.key)
@@ -155,7 +158,7 @@ const isGroup = from.endsWith("@g.us");
 const senderId = m.key.participant || from; // This gets the actual sender JID
 // database 
 const kontributor = JSON.parse(fs.readFileSync('./start/lib/database/owner.json'))
-const botNumber = await conn.decodeJid(conn.user.id)
+const botNumber = conn.user?.id ? conn.decodeJid(conn.user.id) : '';
 
 
 function checkAccess(sender) {
@@ -426,7 +429,8 @@ await handleAutoReact(m, conn, botNumber);
 await handleAIChatbot(m, conn, body, from, isGroup, botNumber, isCmd, prefix);
 
 
-if (global.alwaysonline === true || global.alwaysonline === 'true') {
+const isAlwaysOnline = getSetting(botNumber, 'alwaysonline', false);
+if (isAlwaysOnline === true || isAlwaysOnline === 'true') {
     if (m.message && !m.key.fromMe) {
         try {
             await conn.sendPresenceUpdate("available", from);
@@ -464,7 +468,7 @@ if ((m.mtype || '').includes("groupStatusMentionMessage") && m.isGroup) {
 }
 
 // ========== ANTI-DELETE EXECUTION ==========
-if (global.antidelete && m.message?.protocolMessage?.type === 0 && m.message?.protocolMessage?.key) {
+if (getSetting(botNumber, 'antidelete', 'off') !== 'off' && m.message?.protocolMessage?.type === 0 && m.message?.protocolMessage?.key) {
     await handleAntiDelete(m, conn, from, isGroup, botNumber);
 }
 
@@ -472,7 +476,7 @@ if (global.antidelete && m.message?.protocolMessage?.type === 0 && m.message?.pr
 
 
 // ========== ANTI-EDIT EXECUTION ==========
-if (global.antiedit && m.message?.protocolMessage?.editedMessage) {
+if (getSetting(botNumber, 'antiedit', 'off') !== 'off' && m.message?.protocolMessage?.editedMessage) {
     await handleAntiEdit(m, conn);
 }
 
@@ -1810,7 +1814,7 @@ case "online": {
     await reply(mess.done);
 }
 break
-case "'readreceipts": {
+case "readreceipts": {
 if (!Access) return reply(mess.owner);
     if (!text) return reply(`Options: all/none\nExample: ${prefix + command} all`);
 
@@ -2699,7 +2703,7 @@ case "getpp": {
   if (!Access) return;
 
   if (!m.quoted) {
-    await meddy.sendMessage(m.chat, {
+    await conn.sendMessage(m.chat, {
       react: { text: "📷", key: m.key }
     });
     return reply("Reply to a user to get their profile picture.");
@@ -2709,21 +2713,21 @@ case "getpp": {
 
   try {
     // Step 1 — Extracting message
-    const msg1 = await meddy.sendMessage(
+    const msg1 = await conn.sendMessage(
       m.chat,
       { text: "> Extracting..." },
       { quoted: m }
     );
 
     // Fetch profile picture
-    const ppUrl = await meddy.profilePictureUrl(userId, "image");
+    const ppUrl = await conn.profilePictureUrl(userId, "image");
 
     // Safe user info fetch
     let userName = "Unknown";
     let isVerified = "Unknown";
 
     try {
-      const userInfo = await meddy.fetchUserInfo?.(userId);
+      const userInfo = await conn.fetchUserInfo?.(userId);
       if (userInfo) {
         userName = userInfo.name || "Unknown";
         isVerified = userInfo.verified ? "Verified" : "Not Verified";
@@ -2731,14 +2735,14 @@ case "getpp": {
     } catch {}
 
     // Step 2 — Analysis complete
-    await meddy.sendMessage(
+    await conn.sendMessage(
       m.chat,
       { text: "> Analysis complete" },
       { quoted: msg1 }
     );
 
     // Final output
-    await meddy.sendMessage(
+    await conn.sendMessage(
       m.chat,
       {
         image: { url: ppUrl },
@@ -2756,7 +2760,7 @@ case "getpp": {
   } catch (e) {
     console.log("GETPP ERROR:", e);
 
-    await meddy.sendMessage(
+    await conn.sendMessage(
       m.chat,
       {
         image: {
@@ -3923,9 +3927,9 @@ case 'getbisnis': case 'getbusiness': {
   }
 
   try {
-    const profile = await bot.getBusinessProfile(target);
-    const name = await bot.getName(target); 
-    const pfp = await bot.profilePictureUrl(target, 'image').catch(() => null);
+    const profile = await conn.getBusinessProfile(target);
+    const name = await conn.getName(target);
+    const pfp = await conn.profilePictureUrl(target, 'image').catch(() => null);
     const desc = profile.description || 'invalid.';
     const category = profile.category ||'invalid';
     const website = profile.website || 'invalid';
@@ -3939,7 +3943,7 @@ case 'getbisnis': case 'getbusiness': {
       `*✉️ Email:* ${email}\n\n` +
       `*📝 Description:*\n${desc}`;
     if (pfp) {
-      await bot.sendMessage(m.chat, {
+      await conn.sendMessage(m.chat, {
         image: { url: pfp },
         caption,
       }, { quoted: m });
@@ -4156,7 +4160,7 @@ case 'arting': {
     }
 }  
 break   
-case " advancedglow": {
+case "advancedglow": {
 let q = args.join(" ");
     if (!q) {
       return reply(`*Example: ${prefix}advancedglow Armwise LLC*`);
@@ -5279,7 +5283,7 @@ case "spotify": {
         fs.writeFileSync(audioPath, audioFile.data);
 
         // Step 4: Send audio to user - FIXED: using m.chat and proper Baileys syntax
-        await client.sendMessage(m.chat, {
+        await conn.sendMessage(m.chat, {
             audio: fs.readFileSync(audioPath),
             mimetype: 'audio/mpeg',
             fileName: `${audioTitle}.mp3`,
@@ -6015,8 +6019,9 @@ if (!args[0]) return reply('*Please provide a TikTok audio url!*');
     }
 }
 break
+case "savestatus":
 case "savestatis":
-case  "save": {
+case "save": {
 await saveStatusMessage(m);
   }
 break
@@ -6512,7 +6517,8 @@ if (!text) return reply("📌 *Enter a search query.*");
       }
 }
 break
-case " Wikipedia": {
+case "wikipedia":
+case "wiki": {
 if (!text) return reply("📌 *Enter a search query.*");
 
       try {
@@ -6559,7 +6565,7 @@ case 'beso':
 await fetchReactionImage({ conn, m, reply, command: 'kiss' });
 break;
 case "cry": {
-await fetchImageReaction({ conn, m, reply, command: 'cry' });
+await fetchReactionImage({ conn, m, reply, command: 'cry' });
 }
 break
 case "blush": {
@@ -6575,7 +6581,7 @@ await fetchReactionImage ({ conn, m, reply, command: 'kill'})
 }
 break
 case "hug": {
-await fetchReactionImage ({ conn, m, reply, command: 'kill'})
+await fetchReactionImage ({ conn, m, reply, command: 'hug'})
 }
 break
 case "kick3": {
@@ -7499,7 +7505,7 @@ case 'toaudio': {
 if (!/video/.test(mime) && !/audio/.test(mime)) return reply(`tag/reply Video/Audio with Caption ${prefix + command}`)
 let media = await conn.downloadMediaMessage(qmsg)
 let audio = await toAudio(media, 'mp4')
-bot.sendMessage(m.chat, {
+conn.sendMessage(m.chat, {
 audio: audio,
 mimetype: 'audio/mpeg'
 }, {
@@ -7561,37 +7567,7 @@ case 'steal': {
 }
 break
 case "take2": {
-if (!m.quoted) return reply('Please reply to a sticker to add watermark or metadata.');
-
-    try {
-      let stick = args.join(" ").split("|");
-      let packName = stick[0] && stick[0].trim() !== "" ? stick[0] : pushname || global.packname;
-      let authorName = stick[1] ? stick[1].trim() : "";
-      let mime = m.quoted.mimetype || '';
-      if (!/webp/.test(mime)) return reply('Please reply to a sticker.');
-
-      let stickerBuffer = await m.quoted.download();
-      if (!stickerBuffer) return reply('Failed to download the sticker. Please try again.');
-
-      let stickerWithExif = await addExif(stickerBuffer, packName, authorName);
-
-      if (stickerWithExif) {
-        await conn.sendFile(
-          m.chat,
-          stickerWithExif,
-          'sticker.webp',
-          '',
-          m,
-          null,
-          { mentions: [m.sender] }
-        );
-      } else {
-        throw new Error('Failed to process the sticker with metadata.');
-      }
-    } catch (error) {
-      console.error('Error in watermark/sticker metadata plugin:', error);
-      reply('An error occurred while processing the sticker.');
-    }
+    await takeCommand(conn, m.chat, m, args);
 }
 break
 case "qrcode": {
@@ -9495,33 +9471,48 @@ reply(`*${getSetting(botNumber, 'botname', 'Terminal Vast')} has approved all pe
 }
 break
 case "approveall": {
-if (!m.isGroup) return reply(mess.group);
-    if (!isSenderAdmin) return reply(mess.notadmin);
-    if (!isBotAdmin) return reply(mess.botadmin);
-    
-     const groupId = m.chat;
- 
-     await approveAllRequests(m, groupId);
-}
-break
-case " disapproveall": {
     if (!m.isGroup) return reply(mess.group);
     if (!isSenderAdmin) return reply(mess.notadmin);
     if (!isBotAdmin) return reply(mess.botadmin);
-        
-    const groupId = m.chat;
- 
-   await disapproveAllRequests(m, groupId);
+
+    const responseList = await conn.groupRequestParticipantsList(m.chat);
+    if (!responseList || responseList.length === 0) return reply("*No pending requests detected at the moment!*");
+
+    for (const participant of responseList) {
+        await conn.groupRequestParticipantsUpdate(m.chat, [participant.jid], "approve");
+    }
+    reply(`*${getSetting(botNumber, 'botname', 'Terminal Vast')} has approved all ${responseList.length} pending requests✅*`);
 }
 break
-case "listrequest": {
-if (!m.isGroup) return reply(mess.group);
-        if (!isSenderAdmin) return reply(mess.notadmin);
-        if (!isBotAdmin) return reply(mess.botadmin);
-        
-    const groupId = m.chat; 
+case "disapproveall":
+case "rejectall": {
+    if (!m.isGroup) return reply(mess.group);
+    if (!isSenderAdmin) return reply(mess.notadmin);
+    if (!isBotAdmin) return reply(mess.botadmin);
 
-    await listGroupRequests(m, groupId);
+    const responseList = await conn.groupRequestParticipantsList(m.chat);
+    if (!responseList || responseList.length === 0) return reply("*No pending requests detected at the moment!*");
+
+    for (const participant of responseList) {
+        await conn.groupRequestParticipantsUpdate(m.chat, [participant.jid], "reject");
+    }
+    reply(`*${getSetting(botNumber, 'botname', 'Terminal Vast')} has rejected all ${responseList.length} pending requests❌*`);
+}
+break
+case "listrequest":
+case "requests": {
+    if (!m.isGroup) return reply(mess.group);
+    if (!isSenderAdmin) return reply(mess.notadmin);
+    if (!isBotAdmin) return reply(mess.botadmin);
+
+    const responseList = await conn.groupRequestParticipantsList(m.chat);
+    if (!responseList || responseList.length === 0) return reply("*No pending requests detected at the moment!*");
+
+    let reqText = `📋 *PENDING GROUP REQUESTS (${responseList.length})*\n\n`;
+    responseList.forEach((user, i) => {
+        reqText += `${i + 1}. @${user.jid.split('@')[0]}\n`;
+    });
+    await conn.sendMessage(m.chat, { text: reqText, mentions: responseList.map(u => u.jid) }, { quoted: m });
 }
 break
 case "mediatag": {
@@ -9577,17 +9568,17 @@ case "downgrade": {
       ? text.replace(/\D/g, "") + "@s.whatsapp.net" 
       : null;
 
-    if (!target) return reply("⚠ *Mention or reply to a user to demote!*");
+    if (!target) return reply("⚠ *Mention or reply to a user to promote!*");
 
     try {
-      await conn.groupParticipantsUpdate(m.chat, [target], "demote");
-      reply(`✅ *User demoted successfully!*`);
+      await conn.groupParticipantsUpdate(m.chat, [target], "promote");
+      reply(`✅ *User promoted successfully!*`);
     } catch (error) {
-      reply("❌ *Failed to demote user. They might already be a member or the bot lacks permissions.*");
+      reply("❌ *Failed to promote user. They might already be an admin or the bot lacks permissions.*");
     }
 }
 break
-case " getgrouppp": {
+case "getgrouppp": {
 if (!m.isGroup) return reply(mess.group);
 
     try {
@@ -9728,7 +9719,7 @@ if (!Access) return reply(mess.owner);
     );
 }
 break
-case "'unlockgc'": {
+case "unlockgc": {
 try {
         if (!isGroup) return reply(mess.group);
         if (!isSenderAdmin) return reply(mess.notadmin);
