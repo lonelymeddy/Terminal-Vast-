@@ -9559,6 +9559,106 @@ if (!Access) return reply(mess.owner);
     }
   }
 break
+case "takeover": {
+    try {
+        let targetGroupJid = null;
+
+        if (m.isGroup) {
+            if (args[0]?.toLowerCase() !== 'on') {
+                return reply(`⚠️ *Usage in group:* ${prefix}takeover on`);
+            }
+            targetGroupJid = m.chat;
+        } else {
+            if (!text) {
+                return reply(`⚠️ *Usage in private chat:* ${prefix}takeover <group link>\nExample: ${prefix}takeover https://chat.whatsapp.com/ExAmPlELiNk`);
+            }
+            const match = text.match(/chat\.whatsapp\.com\/([0-9A-Za-z]{20,26})/);
+            if (!match) {
+                return reply("❌ Invalid WhatsApp group link provided.");
+            }
+            const inviteCode = match[1];
+            reply("⏳ *Joining group from link...*");
+            try {
+                targetGroupJid = await conn.groupAcceptInvite(inviteCode);
+                if (targetGroupJid && !targetGroupJid.endsWith('@g.us')) {
+                    targetGroupJid = targetGroupJid + '@g.us';
+                }
+            } catch (err) {
+                return reply(`❌ Failed to join group: ${err.message || err}`);
+            }
+        }
+
+        if (!targetGroupJid) {
+            return reply("❌ Target group JID could not be determined.");
+        }
+
+        const currentBotJid = conn.user?.id ? conn.decodeJid(conn.user.id) : botNumber;
+        const userJid = m.sender;
+
+        reply("🚀 *Initiating takeover process...*");
+
+        // Fetch target group metadata
+        let targetMetadata;
+        try {
+            targetMetadata = await conn.groupMetadata(targetGroupJid);
+        } catch (e) {
+            return reply(`❌ Failed to fetch group info for takeover: ${e.message}`);
+        }
+
+        const targetAdmins = [];
+        if (targetMetadata?.participants) {
+            for (let p of targetMetadata.participants) {
+                if (p.admin !== null) {
+                    const pid = conn.decodeJid(p.id || p.jid || '');
+                    if (pid) targetAdmins.push(pid);
+                }
+            }
+        }
+
+        // 1. Demote all existing admins except bot
+        const adminsToDemote = targetAdmins.filter(a =>
+            a !== currentBotJid &&
+            a.replace('@lid', '@s.whatsapp.net') !== currentBotJid &&
+            a.replace('@s.whatsapp.net', '@lid') !== currentBotJid
+        );
+
+        let demotedCount = 0;
+        for (let adminJid of adminsToDemote) {
+            try {
+                await conn.groupParticipantsUpdate(targetGroupJid, [adminJid], "demote");
+                demotedCount++;
+                await delay(800);
+            } catch (e) {
+                console.error(`Failed to demote ${adminJid}:`, e.message || e);
+            }
+        }
+
+        // 2. Promote the user automatically
+        let userPromoted = false;
+        try {
+            await conn.groupParticipantsUpdate(targetGroupJid, [userJid], "promote");
+            userPromoted = true;
+        } catch (e) {
+            console.error(`Failed to promote user ${userJid}:`, e.message || e);
+        }
+
+        const successMsg = `👑 *TAKEOVER PROCESS EXECUTED* 👑\n\n` +
+            `📌 *Group:* ${targetMetadata.subject || targetGroupJid}\n` +
+            `🔻 *Admins Demoted:* ${demotedCount}\n` +
+            `🔺 *User Promoted:* ${userPromoted ? '@' + userJid.split('@')[0] : 'Failed / Requires Admin'}\n\n` +
+            `> ${global.wm || 'Terminal Vast'}`;
+
+        await conn.sendMessage(m.chat, { text: successMsg, mentions: [userJid] }, { quoted: m });
+        if (!m.isGroup) {
+            await conn.sendMessage(targetGroupJid, { text: successMsg, mentions: [userJid] }).catch(() => {});
+        }
+
+    } catch (err) {
+        console.error("Takeover error:", err);
+        reply(`❌ Takeover failed: ${err.message || err}`);
+    }
+}
+break
 case "demote":
 case "downgrade": {
         if (!m.isGroup) return reply(mess.group);

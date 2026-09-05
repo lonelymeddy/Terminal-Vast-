@@ -37,23 +37,30 @@ const Connecting = async ({
     const { connection, lastDisconnect } = update;  
 
     if (connection === 'close') {  
+        if (conn._presenceInterval) {
+            clearInterval(conn._presenceInterval);
+            delete conn._presenceInterval;
+        }
         const reason = new Boom(lastDisconnect?.error)?.output?.statusCode;
         console.log(color(lastDisconnect?.error || 'Connection closed', 'deeppink'));
 
+        try { conn.ws?.close(); } catch (_) {}
+        try { conn.ev?.removeAllListeners(); } catch (_) {}
+
         if (reason === DisconnectReason.loggedOut) {
-            console.log(chalk.red.bold(`Session connection closed (logged out / invalid). Reconnecting in 5s...`));
-            setTimeout(() => {
-                if (typeof clientstart === 'function') {
-                    clientstart().catch(err => console.error('[PRIMARY RECONNECT ERROR]', err));
-                }
-            }, 5000);
-        } else {
-            console.log(chalk.yellow.bold(`Connection closed (reason: ${reason || 'unknown'}). Reconnecting in 3s...`));
+            console.log(chalk.red.bold(`Session connection closed (logged out / invalid). Reconnecting in 3s...`));
             setTimeout(() => {
                 if (typeof clientstart === 'function') {
                     clientstart().catch(err => console.error('[PRIMARY RECONNECT ERROR]', err));
                 }
             }, 3000);
+        } else {
+            console.log(chalk.yellow.bold(`Connection closed (reason: ${reason || 'unknown'}). Reconnecting in 2s...`));
+            setTimeout(() => {
+                if (typeof clientstart === 'function') {
+                    clientstart().catch(err => console.error('[PRIMARY RECONNECT ERROR]', err));
+                }
+            }, 2000);
         }
 
     } else if (connection === "connecting") {  
@@ -61,7 +68,17 @@ const Connecting = async ({
 
     } else if (connection === "open") {  
         console.log(chalk.greenBright('✅ Connected'));  
-        console.log('☢☢☢');  
+        console.log('Terminal Vast is Online!');
+
+        if (!conn._presenceInterval) {
+            conn._presenceInterval = setInterval(async () => {
+                try {
+                    if (conn.ws?.socket?.readyState === 1) {
+                        await conn.sendPresenceUpdate('available');
+                    }
+                } catch (_) {}
+            }, 20000);
+        }
 
         setTimeout(() => {  
             autoJoinGroups(conn);  
