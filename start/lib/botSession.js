@@ -21,9 +21,20 @@ function cleaningSession(direktori) {
         const currentTime = new Date();
         const fileAgeInMinutes = (currentTime - fileTime) / (1000 * 60 * 60);        
 
-        if (fileAgeInMinutes > 2 && !file.includes("creds.json")) {
-            fs.unlinkSync(filePath)
-            count += 1
+        // Do not delete any Baileys auth files or session keys
+        const isAuthFile = file.includes("creds.json") ||
+            file.startsWith("app-state-") ||
+            file.startsWith("pre-key-") ||
+            file.startsWith("session-") ||
+            file.startsWith("sender-key-") ||
+            file.startsWith("terminal-vast") ||
+            file.endsWith(".json");
+
+        if (!isAuthFile && (file.endsWith(".tmp") || file.endsWith(".bak"))) {
+            try {
+                fs.unlinkSync(filePath);
+                count += 1;
+            } catch (_) {}
         }
             });
         });
