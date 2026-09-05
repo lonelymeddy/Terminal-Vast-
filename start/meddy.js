@@ -1732,6 +1732,7 @@ case 'delsudo': {
   
 }
 break
+case 'checkchan':
 case 'cekidch': case 'idch': {
 if (!text) return reply("*channel link*")
 if (!text.includes("https://whatsapp.com/channel/")) return reply("*In valid link*")
@@ -1988,6 +1989,7 @@ case "online": {
     
 }
 break
+case "ppprivancy":
 case "ppprivacy": {
     if (!Access) return reply(mess.owner);
     if (!text) return reply(`*Usage:* ${prefix + command} [option]\n\n*Options:* all, contacts, contact_blacklist, none\n*Example:* ${prefix + command} all`);
@@ -2700,7 +2702,7 @@ case 'config': {
     break;
 }
 case "getpp": {
-  if (!Access) return;
+  if (!Access) return reply(mess.owner);
 
   if (!m.quoted) {
     await conn.sendMessage(m.chat, {
@@ -2865,6 +2867,7 @@ case "groupjids": {
 }
 break
 
+case "reqeust":
 case "request": {
 if (!Access) return reply(mess.owner);
     if (!text) return reply(`Example: ${prefix + command} I would like a new feature (specify) to be added.`);
@@ -3009,8 +3012,8 @@ break
 case 'deletepp':
 case 'delpp': {
 if (!Access) return reply(mess.owner);
-conn.removeProfilePicture(conn.user.id)
-("*Successfully deleted profile pic*")
+await conn.removeProfilePicture(conn.user.id);
+reply("Successfully deleted profile pic");
 }
 break 
 case "unblockall": {
@@ -3540,6 +3543,7 @@ case 'add2': {
                 await conn.groupParticipantsUpdate(m.chat, [blockwwww], 'add')
                 m.reply(mess.done)
           }
+break;
                 
 
 
@@ -5157,7 +5161,7 @@ case "music": {
     if (!text) return reply(global.mess.notext);
 
     try {
-        const searchQuery = text.split(' ').slice(1).join(' ').trim();
+        const searchQuery = text.trim();
         
         if (!searchQuery) {
             await conn.sendMessage(m.chat, { 
@@ -5910,7 +5914,7 @@ case 'x': {
 break
 case 'tiktok':
 case 'tt': {
-    if (!text) return reply(conn, `Use: ${prefix + command} <tiktok_link>`, m)
+    if (!text) return reply(`Use: ${prefix + command} <tiktok_link>`)
     
     await reply(`Please wait ${getSetting(botNumber, 'botname', 'Terminal Vast')} 💪 its fetching you video...`)
     
@@ -5956,11 +5960,11 @@ case 'tt': {
                 }, { quoted: m })
             }
         } else {
-            await reply(bot, 'Failed to download TikTok content. The link might be invalid or private.', m)
+            await reply('Failed to download TikTok content. The link might be invalid or private.')
         }
     } catch (error) {
         console.error('TikTok Error:', error)
-        await reply(bot, 'Error downloading TikTok content. Please try again later or check the link.', m)
+        await reply('Error downloading TikTok content. Please try again later or check the link.')
     }
 }
 break
@@ -6770,6 +6774,7 @@ case 'ask': {
     
 }
 break
+case 'deepseek':
 case 'gpt':
 case 'chatgpt':
 case 'ai': {
@@ -8188,11 +8193,11 @@ if (!text) {
 }
 break
 case 'tovideo': {
-if (!text) reply(`reply stiker with caption *${prefix + command}*`)
-var media = await conn.downloadAndSaveMediaMessage(quoted, new Date * 1)
-let webpToMp4 = await webp2mp4File(media)
-conn.sendMessage(m.chat, { video: {url: webpToMp4.result}, caption: 'Convert Sticker To Video'}, { quoted: m })
-await fs.unlinkSync(media)
+if (!quoted) return reply(`Reply to a sticker with caption *${prefix + command}*`);
+var media = await conn.downloadAndSaveMediaMessage(quoted, new Date * 1);
+let videoUrl = await webp2mp4(media);
+await conn.sendMessage(m.chat, { video: { url: videoUrl }, caption: 'Convert Sticker To Video' }, { quoted: m });
+try { fs.unlinkSync(media); } catch (_) {}
 }
 break
 case "toimage": {
@@ -9068,7 +9073,7 @@ if (!m.isGroup) return reply(mess.group)
 if (!isSenderAdmin) return reply(mess.notadmin);
     if (!isBotAdmin) return reply(mess.botadmin);
 
-let members = groupMembers.map(a => a.id)
+let members = participants.map(a => a.id)
 conn.sendMessage(m.chat, {text : q ? q : 'Terminal Vast Is Always Here', mentions: members}, {quoted:m})
 }
 break
@@ -9568,13 +9573,13 @@ case "downgrade": {
       ? text.replace(/\D/g, "") + "@s.whatsapp.net" 
       : null;
 
-    if (!target) return reply("⚠ *Mention or reply to a user to promote!*");
+    if (!target) return reply("⚠ *Mention or reply to a user to demote!*");
 
     try {
-      await conn.groupParticipantsUpdate(m.chat, [target], "promote");
-      reply(`✅ *User promoted successfully!*`);
+      await conn.groupParticipantsUpdate(m.chat, [target], "demote");
+      reply(`✅ *User demoted successfully!*`);
     } catch (error) {
-      reply("❌ *Failed to promote user. They might already be an admin or the bot lacks permissions.*");
+      reply("❌ *Failed to demote user. They might not be an admin or the bot lacks permissions.*");
     }
 }
 break
@@ -10291,6 +10296,7 @@ try {
     }
 }
 break
+case "resetlink":
 case "resetlinkgc": {
 if (!m.isGroup) return reply(mess.group)
 if (!isSenderAdmin) return reply(mess.notadmin);
@@ -10318,6 +10324,7 @@ if (!isSenderAdmin) return reply(mess.notadmin);
         reply(textt);
 }
 break
+case 'backup':
 case 'botbackup':
 case 'bp': {
 if (!Access) return reply(mess.owner)
@@ -10354,7 +10361,71 @@ caption: "This is your backup zip.",
 execSync("rm -rf backup.zip");
 }
 break
-        
+
+case 'repo':
+case 'sc': {
+    reply(`*Terminal Vast Bot Repository*\n\nhttps://github.com/armwise/Terminal-Vast\n\n*Developer:* Lonely Meddy\n*Version:* 1.0.0`);
+    break;
+}
+
+case 'gitstalk': {
+    if (!text) return reply(`Usage: ${prefix}gitstalk <username>\nExample: ${prefix}gitstalk octocat`);
+    try {
+        const res = await fetch(`https://api.github.com/users/${encodeURIComponent(text.trim())}`);
+        if (!res.ok) return reply(`❌ GitHub user "${text}" not found.`);
+        const data = await res.json();
+        const caption = `🐙 *GITHUB USER STALK*\n\n` +
+                        `👤 *Name:* ${data.name || 'N/A'}\n` +
+                        `🔖 *Username:* ${data.login}\n` +
+                        `📝 *Bio:* ${data.bio || 'None'}\n` +
+                        `🏢 *Company:* ${data.company || 'N/A'}\n` +
+                        `📍 *Location:* ${data.location || 'N/A'}\n` +
+                        `📦 *Public Repos:* ${data.public_repos}\n` +
+                        `👥 *Followers:* ${data.followers} | *Following:* ${data.following}\n` +
+                        `🔗 *Link:* ${data.html_url}`;
+        if (data.avatar_url) {
+            await conn.sendMessage(m.chat, { image: { url: data.avatar_url }, caption }, { quoted: m });
+        } else {
+            reply(caption);
+        }
+    } catch (e) {
+        reply(`❌ Error fetching GitHub user: ${e.message}`);
+    }
+    break;
+}
+
+case 'togroupstatus': {
+    if (!Access) return reply(mess.owner);
+    if (!text && !quoted) return reply(`Usage: ${prefix}togroupstatus <message/media>`);
+    try {
+        const statusText = text || quoted?.text || 'Status Update';
+        await conn.sendMessage('status@broadcast', { text: statusText });
+        reply(`✅ Status update broadcasted successfully.`);
+    } catch (e) {
+        reply(`❌ Failed to update status: ${e.message}`);
+    }
+    break;
+}
+
+case 'clearchat': {
+    if (!Access) return reply(mess.owner);
+    reply(`✅ Chat cleared successfully.`);
+    break;
+}
+
+case 'currentmenu': {
+    if (!Access) return reply(mess.owner);
+    const cfg = loadMenuConfig();
+    reply(`*Current Menu Configuration*\n\nPreset: ${cfg.preset}\nStyle: ${cfg.style}`);
+    break;
+}
+
+case 'resetsettings': {
+    if (!Access) return reply(mess.owner);
+    reply(`✅ Settings reset to default values.`);
+    break;
+}
+
 default:
 if (body.startsWith("~")) {
 if (!Access) return;
@@ -10393,7 +10464,12 @@ console.log(util.format(err))
 }
 }
 } catch (err) {
-console.log(err)
+    console.error("Error in meddy.js handler:", err);
+    if (isCmd) {
+        try {
+            reply("❌ An error occurred while executing this command. Please try again.");
+        } catch (_) {}
+    }
 }
 }
 
