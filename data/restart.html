@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Restart & Pairing — Terminal Vast</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+:root{
+--accent:#00ff99;
+--primary:#6c5ce7;
+--danger:#ff5555;
+--glass:rgba(255,255,255,.1);
+}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI';}
+body{
+background:linear-gradient(rgba(15,15,26,.9),rgba(22,34,62,.9)),
+url("https://i.ibb.co/bFWtkv0/1734465645315.jpg") center/cover fixed;
+color:white;
+min-height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+padding:20px;
+overflow-x:hidden;
+}
+.menu-btn{
+position:fixed;
+top:20px;
+left:20px;
+font-size:26px;
+background:var(--glass);
+padding:12px;
+border-radius:12px;
+cursor:pointer;
+z-index:1001;
+backdrop-filter:blur(10px);
+}
+.sidebar{
+position:fixed;
+left:-260px;
+top:0;
+height:100%;
+width:260px;
+background:rgba(0,0,0,.6);
+backdrop-filter:blur(15px);
+padding:80px 20px;
+transition:.4s;
+z-index:1000;
+}
+.sidebar.active{left:0;}
+.sidebar a{
+display:flex;
+align-items:center;
+gap:10px;
+padding:15px;
+margin:5px 0;
+color:white;
+text-decoration:none;
+border-radius:10px;
+transition:.3s;
+}
+.sidebar a:hover, .sidebar a.active{
+background:rgba(0,255,153,.2);
+transform:translateX(5px);
+}
+.overlay{
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.5);
+display:none;
+z-index:900;
+}
+.overlay.active{display:block;}
+.dashboard{
+max-width:900px;
+width:100%;
+background:var(--glass);
+backdrop-filter:blur(12px);
+padding:30px;
+border-radius:20px;
+box-shadow:0 0 30px rgba(0,255,153,.2);
+}
+.bot-logo{
+width:100px;
+height:100px;
+border-radius:50%;
+display:block;
+margin:0 auto 15px;
+border:3px solid var(--accent);
+box-shadow:0 0 25px rgba(0,255,153,.6);
+}
+h1{
+text-align:center;
+margin-bottom:20px;
+background:linear-gradient(to right,var(--accent),var(--primary));
+-webkit-background-clip:text;
+color:transparent;
+}
+.section-card{
+background:rgba(0,0,0,.4);
+padding:20px;
+border-radius:14px;
+margin-bottom:20px;
+}
+.section-title{
+font-size:1.2rem;
+font-weight:bold;
+margin-bottom:15px;
+color:var(--accent);
+display:flex;
+align-items:center;
+gap:10px;
+}
+.form-group{margin-bottom:15px;}
+label{display:block;color:#aaa;margin-bottom:6px;font-size:0.9rem;}
+input[type="text"], input[type="tel"]{
+width:100%;
+padding:12px;
+background:rgba(255,255,255,0.08);
+border:1px solid rgba(255,255,255,0.2);
+border-radius:8px;
+color:white;
+font-size:1rem;
+outline:none;
+}
+input:focus{border-color:var(--accent);}
+.btn{
+padding:12px 24px;
+border:none;
+border-radius:8px;
+font-weight:bold;
+cursor:pointer;
+transition:0.3s;
+font-size:0.95rem;
+display:inline-flex;
+align-items:center;
+gap:8px;
+}
+.btn-primary{background:var(--accent);color:#000;}
+.btn-primary:hover{background:#00cc7a;}
+.btn-danger{background:var(--danger);color:white;}
+.btn-danger:hover{background:#e04343;}
+.code-box{
+background:rgba(0,0,0,0.6);
+padding:15px;
+border-radius:8px;
+border:1px dashed var(--accent);
+text-align:center;
+font-size:1.5rem;
+letter-spacing:4px;
+color:var(--accent);
+font-weight:bold;
+margin-top:15px;
+display:none;
+}
+.footer{text-align:center;margin-top:20px;color:#ccc;}
+@media(max-width:500px){
+h1{font-size:1.4rem;}
+.bot-logo{width:80px;height:80px;}
+}
+</style>
+</head>
+<body>
+
+<div class="menu-btn" id="menuBtn"><i class="fas fa-bars"></i></div>
+
+<div class="sidebar" id="sidebar">
+<a href="/dashboard"><i class="fas fa-home"></i> Dashboard</a>
+<a href="/bot-control"><i class="fas fa-robot"></i> Bot Control</a>
+<a href="/analytics"><i class="fas fa-chart-line"></i> Analytics</a>
+<a href="/users"><i class="fas fa-users"></i> Users</a>
+<a href="/settings-page"><i class="fas fa-cog"></i> Settings</a>
+<a href="/restart-page" class="active"><i class="fas fa-power-off"></i> Restart Bot</a>
+</div>
+
+<div class="overlay" id="overlay"></div>
+
+<div class="dashboard">
+<img class="bot-logo" src="https://files.catbox.moe/jvx0ya.jpg">
+<h1>⚡ RESTART & PAIR AGAIN</h1>
+
+<div class="section-card">
+<div class="section-title"><i class="fas fa-power-off"></i> Restart Bot Process</div>
+<p style="color:#ccc;margin-bottom:15px;">Safely reboot the Terminal Vast bot server. Active connections will reconnect automatically.</p>
+<button class="btn btn-danger" onclick="restartBot()"><i class="fas fa-redo"></i> Trigger Bot Restart</button>
+</div>
+
+<div class="section-card">
+<div class="section-title"><i class="fas fa-key"></i> Pair WhatsApp Again</div>
+<p style="color:#ccc;margin-bottom:15px;">Enter your phone number to generate a fresh WhatsApp pairing code.</p>
+<div class="form-group">
+<label for="pairPhone">WhatsApp Number (e.g. 256702662846)</label>
+<input type="tel" id="pairPhone" placeholder="Enter international number without +">
+</div>
+<button class="btn btn-primary" onclick="requestPairing()"><i class="fas fa-mobile-alt"></i> Generate Pairing Code</button>
+<div id="codeDisplay" class="code-box"></div>
+<div id="pairStatus" style="margin-top:10px;color:#aaa;"></div>
+</div>
+
+<div class="footer">Made with ❤️ by Lonely Meddy</div>
+</div>
+
+<script>
+const btn=document.getElementById("menuBtn");
+const sidebar=document.getElementById("sidebar");
+const overlay=document.getElementById("overlay");
+btn.onclick=()=>{sidebar.classList.toggle("active");overlay.classList.toggle("active");};
+overlay.onclick=()=>{sidebar.classList.remove("active");overlay.classList.remove("active");};
+
+async function restartBot(){
+if(!confirm('Confirm restarting the bot process?')) return;
+try{
+await fetch('/api/restart', { method:'POST' });
+alert('Bot process restart initiated. Please wait 10 seconds.');
+}catch(e){ alert('Restart initiated.'); }
+}
+
+async function requestPairing(){
+const phone = document.getElementById('pairPhone').value.trim();
+if(!phone){ alert('Please enter a WhatsApp phone number'); return; }
+document.getElementById('pairStatus').textContent = 'Generating pairing code...';
+try{
+const res = await fetch('/api/pair', {
+method:'POST',
+headers:{'Content-Type':'application/json'},
+body: JSON.stringify({ phone })
+});
+const data = await res.json();
+if(data.code){
+document.getElementById('codeDisplay').style.display = 'block';
+document.getElementById('codeDisplay').textContent = data.code;
+document.getElementById('pairStatus').textContent = 'Code generated! Enter this code in WhatsApp Linked Devices.';
+}else{
+alert(data.error || 'Failed to generate code');
+document.getElementById('pairStatus').textContent = data.error || 'Error';
+}
+}catch(e){
+alert('Error requesting pairing code');
+document.getElementById('pairStatus').textContent = 'Error';
+}
+}
+</script>
+</body>
+</html>

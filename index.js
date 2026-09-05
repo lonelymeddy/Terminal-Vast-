@@ -347,13 +347,6 @@ async function clientstart(options = {}) {
     
     store.bind(conn.ev);
 
-    // Trigger the "Connecting" function from connect.js after the connection
-    conn.ev.on('connection.update', (update) => {
-        if (!webSession && update.connection === 'open') {
-            require('./connect').Connecting({ update, conn, Boom, DisconnectReason, sleep, color, clientstart });
-        }
-    });
-
     if (webSession) {
         conn.ev.on('connection.update', async (update) => {
             const status = update.connection;
@@ -362,7 +355,18 @@ async function clientstart(options = {}) {
                 webSessions.set(options.userId, { conn, status: 'connected', sessionDir: activeSessionDir, phone: pairingPhone || null });
             } else if (status === 'close') {
                 const code = new Boom(update.lastDisconnect?.error)?.output?.statusCode;
-                console.log(`[SESSION] ${options.userId || 'user'} closed (code: ${code}). Reconnecting...`);
+                console.log(`[SESSION] ${options.userId || 'user'} closed (code: ${code}).`);
+
+                // Clean up if logged out
+                if (code === DisconnectReason.loggedOut) {
+                    console.log(`[SESSION] ${options.userId || 'user'} logged out. Cleaning up session.`);
+                    webSessions.delete(options.userId);
+                    try { fs.rmSync(activeSessionDir, { recursive: true, force: true }); } catch (_) {}
+                    return;
+                }
+
+                try { conn.ws?.close(); } catch (_) {}
+
                 const existingRec = webSessions.get(options.userId) || { sessionDir: activeSessionDir, phone: pairingPhone || null };
                 webSessions.set(options.userId, { ...existingRec, status: 'reconnecting' });
                 setTimeout(() => {
@@ -743,33 +747,6 @@ conn.sendStatusMention = async (content, jids = []) => {
  
   createTmpFolder();
 
-  setInterval(() => {
-    let directoryPath = path.join();
-    fs.readdir(directoryPath, async function (err, files) {
-      var filteredArray = await files.filter(item =>
-        item.endsWith("gif") ||
-        item.endsWith("png") || 
-        item.endsWith("mp3") ||
-        item.endsWith("mp4") || 
-        item.endsWith("opus") || 
-        item.endsWith("jpg") ||
-        item.endsWith("webp") ||
-        item.endsWith("webm") ||
-        item.endsWith("zip") 
-      )
-      if(filteredArray.length > 0){
-        let teks =`Detected ${filteredArray.length} junk files,\nJunk files have been deleted🚮`
-        conn.sendMessage(conn.user.id, {text : teks })
-        setInterval(() => {
-          if(filteredArray.length == 0) return console.log("Junk files cleared")
-          filteredArray.forEach(function (file) {
-            let sampah = fs.existsSync(file)
-            if(sampah) fs.unlinkSync(file)
-          })
-        }, 15_000)
-      }
-    });
-  }, 30_000)
 
   function getTypeMessage(message) {
     if (!message) return 'unknown';
@@ -890,16 +867,16 @@ conn.ev.on('group-participants.update', async (anu) => {
         if (admineventEnabled === true) {
             console.log('[ADMIN EVENT] Processing admin events');
             
-            // Check if bot is in the participants list (skip if true)
-            const participantJids = participants.map(p => 
-                typeof p === 'string' ? p : (p?.id || '')
-            ).filter(p => p);
-            
-            if (participantJids.includes(botNumber)) return;
-            
             try {
                 let metadata = await conn.groupMetadata(anu.id);
-                let participants = anu.participants;
+                let participants = anu.participants || [];
+
+                // Check if bot is in the participants list (skip if true)
+                const participantJids = participants.map(p =>
+                    typeof p === 'string' ? p : (p?.id || '')
+                ).filter(p => p);
+
+                if (participantJids.includes(botNumber)) return;
                 
                 for (let participant of participants) {
                     // Get participant JID safely
@@ -1280,6 +1257,25 @@ conn.ev.on('call', async (callData) => {
   return conn;
 }
 
+// Clean temporary files periodically (every 10 minutes)
+setInterval(() => {
+    const tmpDir = path.join(__dirname, 'tmp');
+    if (fs.existsSync(tmpDir)) {
+        fs.readdir(tmpDir, (err, files) => {
+            if (err) return;
+            const now = Date.now();
+            files.forEach(file => {
+                const filePath = path.join(tmpDir, file);
+                fs.stat(filePath, (err, stats) => {
+                    if (!err && now - stats.mtimeMs > 10 * 60 * 1000) {
+                        fs.unlink(filePath, () => {});
+                    }
+                });
+            });
+        });
+    }
+}, 10 * 60 * 1000);
+
 const porDir = path.join(__dirname, 'data');
 const porPath = path.join(porDir, 'Terminal Vast.html');
 
@@ -1349,8 +1345,105 @@ app.get("/dashboard", (req, res) => {
     res.sendFile(path.join(__dirname, 'data', 'terminal-vast.html'));
 });
 
+app.get("/bot-control", (req, res) => {
+    res.sendFile(path.join(__dirname, 'data', 'bot-control.html'));
+});
+
+app.get("/analytics", (req, res) => {
+    res.sendFile(path.join(__dirname, 'data', 'analytics.html'));
+});
+
+app.get("/users", (req, res) => {
+    res.sendFile(path.join(__dirname, 'data', 'users.html'));
+});
+
+app.get("/settings-page", (req, res) => {
+    res.sendFile(path.join(__dirname, 'data', 'settings.html'));
+});
+
+app.get("/restart-page", (req, res) => {
+    res.sendFile(path.join(__dirname, 'data', 'restart.html'));
+});
+
 app.get("/uptime", (req, res) => {
     res.json({ uptime: getUptime(), sessions: webSessions.size });
+});
+
+app.get("/api/status", (req, res) => {
+    const settingManager = require('./start/Core/settingManager');
+    const botNum = 'default';
+    res.json({
+        uptime: getUptime(),
+        sessions: webSessions.size,
+        platform: os.platform(),
+        memory: {
+            heapUsed: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
+            total: Math.round(os.totalmem() / 1024 / 1024)
+        },
+        mode: settingManager.getSetting(botNum, 'mode', 'public'),
+        botname: settingManager.getSetting(botNum, 'botname', 'Terminal Vast'),
+        prefix: settingManager.getSetting(botNum, 'prefix', '.'),
+        ownername: settingManager.getSetting(botNum, 'ownername', 'Lonely Meddy'),
+        ownernumber: settingManager.getSetting(botNum, 'ownernumber', '256702662846')
+    });
+});
+
+app.get("/api/settings", (req, res) => {
+    const settingManager = require('./start/Core/settingManager');
+    const botNum = 'default';
+    const allSettings = settingManager.getAllSettings(botNum) || {};
+    res.json(allSettings);
+});
+
+app.post("/api/settings", (req, res) => {
+    const settingManager = require('./start/Core/settingManager');
+    const botNum = 'default';
+    const body = req.body || {};
+    for (const key of Object.keys(body)) {
+        settingManager.updateSetting(botNum, key, body[key]);
+    }
+    res.json({ status: 'ok', message: 'Settings updated successfully' });
+});
+
+app.post("/api/mode", (req, res) => {
+    const settingManager = require('./start/Core/settingManager');
+    const botNum = 'default';
+    const mode = req.body?.mode === 'private' ? 'private' : 'public';
+    settingManager.updateSetting(botNum, 'mode', mode);
+    res.json({ status: 'ok', mode, message: `Mode updated to ${mode}` });
+});
+
+app.get("/api/users", (req, res) => {
+    const settingManager = require('./start/Core/settingManager');
+    const botNum = 'default';
+    const sudoList = settingManager.getSudo(botNum) || [];
+    const activeSessionsList = [];
+    for (const [id, session] of webSessions.entries()) {
+        activeSessionsList.push({ id, phone: session.phone, status: session.status });
+    }
+    res.json({ sudo: sudoList, sessions: activeSessionsList });
+});
+
+app.post("/api/users/sudo", (req, res) => {
+    const settingManager = require('./start/Core/settingManager');
+    const botNum = 'default';
+    const { action, phone } = req.body || {};
+    if (!phone) return res.status(400).json({ error: 'Phone number required' });
+    const jid = String(phone).replace(/\D/g, '') + '@s.whatsapp.net';
+    if (action === 'remove') {
+        settingManager.removeSudo(botNum, jid);
+        return res.json({ status: 'ok', message: `Removed ${phone} from sudo list` });
+    } else {
+        settingManager.addSudo(botNum, jid);
+        return res.json({ status: 'ok', message: `Added ${phone} to sudo list` });
+    }
+});
+
+app.post("/api/restart", (req, res) => {
+    res.json({ status: 'ok', message: 'Restarting bot engine...' });
+    setTimeout(() => {
+        process.exit(0);
+    }, 1000);
 });
 
 app.post('/api/pair', async (req, res) => {

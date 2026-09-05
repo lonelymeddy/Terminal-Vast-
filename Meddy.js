@@ -262,16 +262,27 @@ function loadStoredMessages() {
     return {};
 }
 
+let saveStoredMessagesTimeout = null;
+let pendingStoredMessages = null;
+
 function saveStoredMessages(messages) {
-    try {
-        const dir = './start/lib/database';
-        if (!fs.existsSync(dir)) {
-            fs.mkdirSync(dir, { recursive: true });
+    pendingStoredMessages = messages;
+    if (saveStoredMessagesTimeout) return;
+    saveStoredMessagesTimeout = setTimeout(async () => {
+        saveStoredMessagesTimeout = null;
+        if (!pendingStoredMessages) return;
+        const dataToSave = pendingStoredMessages;
+        pendingStoredMessages = null;
+        try {
+            const dir = './start/lib/database';
+            if (!fs.existsSync(dir)) {
+                await fs.promises.mkdir(dir, { recursive: true });
+            }
+            await fs.promises.writeFile('./start/lib/database/deleted_messages.json', JSON.stringify(dataToSave));
+        } catch (error) {
+            console.error('Error saving stored messages:', error);
         }
-        fs.writeFileSync('./start/lib/database/deleted_messages.json', JSON.stringify(messages, null, 2));
-    } catch (error) {
-        console.error('Error saving stored messages:', error);
-    }
+    }, 1000);
 }
 
 function storeMessage(chatId, messageId, messageData) {
@@ -437,8 +448,15 @@ ${readmore}
 // Function to handle status updates
 async function handleStatusUpdate(conn, status) {
     try {
+        // Quick check if update is actually a status broadcast
+        const isStatus = (status.messages?.[0]?.key?.remoteJid === 'status@broadcast') ||
+                         (status.key?.remoteJid === 'status@broadcast') ||
+                         (status.reaction?.key?.remoteJid === 'status@broadcast');
+        if (!isStatus) return;
+
         // Get bot number
-        const botNumber = await conn.decodeJid(conn.user.id);
+        const botNumber = conn.user?.id ? conn.decodeJid(conn.user.id) : '';
+        if (!botNumber) return;
         
         // Get settings from database
         const autoviewstatus = global.settingsManager?.getSetting(botNumber, 'autoviewstatus', false);

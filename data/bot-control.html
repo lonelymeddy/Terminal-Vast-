@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bot Control — Terminal Vast</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+:root{
+--accent:#00ff99;
+--primary:#6c5ce7;
+--danger:#ff5555;
+--glass:rgba(255,255,255,.1);
+}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI';}
+body{
+background:linear-gradient(rgba(15,15,26,.9),rgba(22,34,62,.9)),
+url("https://i.ibb.co/bFWtkv0/1734465645315.jpg") center/cover fixed;
+color:white;
+min-height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+padding:20px;
+overflow-x:hidden;
+}
+.menu-btn{
+position:fixed;
+top:20px;
+left:20px;
+font-size:26px;
+background:var(--glass);
+padding:12px;
+border-radius:12px;
+cursor:pointer;
+z-index:1001;
+backdrop-filter:blur(10px);
+}
+.sidebar{
+position:fixed;
+left:-260px;
+top:0;
+height:100%;
+width:260px;
+background:rgba(0,0,0,.6);
+backdrop-filter:blur(15px);
+padding:80px 20px;
+transition:.4s;
+z-index:1000;
+}
+.sidebar.active{left:0;}
+.sidebar a{
+display:flex;
+align-items:center;
+gap:10px;
+padding:15px;
+margin:5px 0;
+color:white;
+text-decoration:none;
+border-radius:10px;
+transition:.3s;
+}
+.sidebar a:hover, .sidebar a.active{
+background:rgba(0,255,153,.2);
+transform:translateX(5px);
+}
+.overlay{
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.5);
+display:none;
+z-index:900;
+}
+.overlay.active{display:block;}
+.dashboard{
+max-width:900px;
+width:100%;
+background:var(--glass);
+backdrop-filter:blur(12px);
+padding:30px;
+border-radius:20px;
+box-shadow:0 0 30px rgba(0,255,153,.2);
+}
+.bot-logo{
+width:100px;
+height:100px;
+border-radius:50%;
+display:block;
+margin:0 auto 15px;
+border:3px solid var(--accent);
+box-shadow:0 0 25px rgba(0,255,153,.6);
+}
+h1{
+text-align:center;
+margin-bottom:20px;
+background:linear-gradient(to right,var(--accent),var(--primary));
+-webkit-background-clip:text;
+color:transparent;
+}
+.section-card{
+background:rgba(0,0,0,.4);
+padding:20px;
+border-radius:14px;
+margin-bottom:20px;
+}
+.section-title{
+font-size:1.2rem;
+font-weight:bold;
+margin-bottom:15px;
+color:var(--accent);
+display:flex;
+align-items:center;
+gap:10px;
+}
+.form-group{
+margin-bottom:15px;
+}
+label{
+display:block;
+color:#aaa;
+margin-bottom:6px;
+font-size:0.9rem;
+}
+input[type="text"], input[type="tel"]{
+width:100%;
+padding:12px;
+background:rgba(255,255,255,0.08);
+border:1px solid rgba(255,255,255,0.2);
+border-radius:8px;
+color:white;
+font-size:1rem;
+outline:none;
+}
+input:focus{
+border-color:var(--accent);
+}
+.btn{
+padding:12px 24px;
+border:none;
+border-radius:8px;
+font-weight:bold;
+cursor:pointer;
+transition:0.3s;
+font-size:0.95rem;
+display:inline-flex;
+align-items:center;
+gap:8px;
+}
+.btn-primary{
+background:var(--accent);
+color:#000;
+}
+.btn-primary:hover{
+background:#00cc7a;
+}
+.btn-danger{
+background:var(--danger);
+color:white;
+}
+.btn-danger:hover{
+background:#e04343;
+}
+.btn-secondary{
+background:var(--primary);
+color:white;
+}
+.btn-secondary:hover{
+background:#5849c7;
+}
+.flex-gap{
+display:flex;
+gap:10px;
+flex-wrap:wrap;
+}
+.code-box{
+background:rgba(0,0,0,0.6);
+padding:15px;
+border-radius:8px;
+border:1px dashed var(--accent);
+text-align:center;
+font-size:1.5rem;
+letter-spacing:4px;
+color:var(--accent);
+font-weight:bold;
+margin-top:15px;
+display:none;
+}
+.status-badge{
+display:inline-block;
+padding:6px 12px;
+border-radius:20px;
+font-size:0.85rem;
+font-weight:bold;
+}
+.badge-online{background:rgba(0,255,153,0.2);color:var(--accent);}
+.badge-offline{background:rgba(255,85,85,0.2);color:var(--danger);}
+.footer{text-align:center;margin-top:20px;color:#ccc;}
+@media(max-width:500px){
+h1{font-size:1.4rem;}
+.bot-logo{width:80px;height:80px;}
+}
+</style>
+</head>
+<body>
+
+<div class="menu-btn" id="menuBtn"><i class="fas fa-bars"></i></div>
+
+<div class="sidebar" id="sidebar">
+<a href="/dashboard"><i class="fas fa-home"></i> Dashboard</a>
+<a href="/bot-control" class="active"><i class="fas fa-robot"></i> Bot Control</a>
+<a href="/analytics"><i class="fas fa-chart-line"></i> Analytics</a>
+<a href="/users"><i class="fas fa-users"></i> Users</a>
+<a href="/settings-page"><i class="fas fa-cog"></i> Settings</a>
+<a href="/restart-page"><i class="fas fa-power-off"></i> Restart Bot</a>
+</div>
+
+<div class="overlay" id="overlay"></div>
+
+<div class="dashboard">
+<img class="bot-logo" src="https://files.catbox.moe/jvx0ya.jpg">
+<h1>🤖 BOT CONTROL</h1>
+
+<div class="section-card">
+<div class="section-title"><i class="fas fa-toggle-on"></i> Mode Control</div>
+<p style="color:#ccc;margin-bottom:15px;">Current Bot Mode: <span id="currentMode" class="status-badge badge-online">PUBLIC</span></p>
+<div class="flex-gap">
+<button class="btn btn-primary" onclick="setMode('public')"><i class="fas fa-globe"></i> Set Public Mode</button>
+<button class="btn btn-danger" onclick="setMode('private')"><i class="fas fa-lock"></i> Set Private Mode</button>
+</div>
+</div>
+
+<div class="section-card">
+<div class="section-title"><i class="fas fa-qrcode"></i> Pair WhatsApp Again</div>
+<p style="color:#ccc;margin-bottom:15px;">Connect or link another WhatsApp phone number to the bot.</p>
+<div class="form-group">
+<label for="pairPhone">WhatsApp Phone Number (International format without +)</label>
+<input type="tel" id="pairPhone" placeholder="e.g. 256702662846">
+</div>
+<button class="btn btn-primary" onclick="requestPairing()"><i class="fas fa-key"></i> Request Pairing Code</button>
+<div id="codeDisplay" class="code-box"></div>
+<div id="pairStatus" style="margin-top:10px;color:#aaa;"></div>
+</div>
+
+<div class="section-card">
+<div class="section-title"><i class="fas fa-sync-alt"></i> Session Management</div>
+<p style="color:#ccc;margin-bottom:15px;">Restart or refresh current active sessions.</p>
+<div class="flex-gap">
+<button class="btn btn-secondary" onclick="restartSession()"><i class="fas fa-redo"></i> Refresh Web Sessions</button>
+<button class="btn btn-danger" onclick="restartBot()"><i class="fas fa-power-off"></i> Restart Bot Engine</button>
+</div>
+</div>
+
+<div class="footer">Made with ❤️ by Lonely Meddy</div>
+</div>
+
+<script>
+const btn=document.getElementById("menuBtn");
+const sidebar=document.getElementById("sidebar");
+const overlay=document.getElementById("overlay");
+btn.onclick=()=>{sidebar.classList.toggle("active");overlay.classList.toggle("active");};
+overlay.onclick=()=>{sidebar.classList.remove("active");overlay.classList.remove("active");};
+
+async function loadStatus(){
+try{
+const res = await fetch('/api/status');
+const data = await res.json();
+document.getElementById('currentMode').textContent = (data.mode || 'public').toUpperCase();
+document.getElementById('currentMode').className = 'status-badge ' + (data.mode === 'public' ? 'badge-online' : 'badge-offline');
+}catch(e){}
+}
+loadStatus();
+
+async function setMode(mode){
+try{
+const res = await fetch('/api/mode', {
+method:'POST',
+headers:{'Content-Type':'application/json'},
+body: JSON.stringify({ mode })
+});
+const data = await res.json();
+alert(data.message || 'Mode updated');
+loadStatus();
+}catch(e){ alert('Error setting mode'); }
+}
+
+async function requestPairing(){
+const phone = document.getElementById('pairPhone').value.trim();
+if(!phone){ alert('Please enter phone number'); return; }
+document.getElementById('pairStatus').textContent = 'Generating code...';
+try{
+const res = await fetch('/api/pair', {
+method:'POST',
+headers:{'Content-Type':'application/json'},
+body: JSON.stringify({ phone })
+});
+const data = await res.json();
+if(data.code){
+document.getElementById('codeDisplay').style.display = 'block';
+document.getElementById('codeDisplay').textContent = data.code;
+document.getElementById('pairStatus').textContent = 'Code generated! Enter code in WhatsApp Linked Devices.';
+}else{
+alert(data.error || 'Failed to get code');
+document.getElementById('pairStatus').textContent = data.error || 'Error';
+}
+}catch(e){
+alert('Failed to request pairing code');
+document.getElementById('pairStatus').textContent = 'Error requesting code';
+}
+}
+
+async function restartSession(){
+try{
+const res = await fetch('/api/restart', { method:'POST' });
+const data = await res.json();
+alert(data.message || 'Sessions restarted');
+}catch(e){ alert('Error restarting session'); }
+}
+
+async function restartBot(){
+if(!confirm('Are you sure you want to restart the bot process?')) return;
+try{
+await fetch('/api/restart', { method:'POST' });
+alert('Restart command sent. The bot will reboot in a few seconds.');
+}catch(e){ alert('Restarting bot...'); }
+}
+</script>
+</body>
+</html>
