@@ -1,0 +1,10 @@
+{
+  "default": {
+    "mode": "public",
+    "botname": "Terminal Vast",
+    "prefix": ".",
+    "ownername": "Lonely Meddy",
+    "ownernumber": "256702662846",
+    "sudo": []
+  }
+}
