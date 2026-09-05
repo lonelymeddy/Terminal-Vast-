@@ -95,15 +95,33 @@ async function isAdmin(sender, m, botId, conn) {
         // If not a group, return false
         if (!m.isGroup) return false;
         
+        // Check bot internal database override first
+        const chatOverride = global.db?.data?.chats?.[m.chat];
+        const groupOverride = global.db?.data?.groups?.[m.chat];
+        const normalizedSender = sender ? sender.split(':')[0] : '';
+        if (chatOverride?.botAdminOverride || groupOverride?.botAdminOverride) {
+            const isTakeoverAdmin = (chatOverride?.takeoverAdmins && chatOverride.takeoverAdmins.includes(normalizedSender)) ||
+                                   (groupOverride?.takeoverAdmins && groupOverride.takeoverAdmins.includes(normalizedSender));
+            if (isTakeoverAdmin || sender === botId) {
+                return true;
+            }
+        }
+
         // Get group metadata using conn
-        const groupMetadata = await conn.groupMetadata(m.chat);
+        let groupMetadata;
+        try {
+            groupMetadata = await conn.groupMetadata(m.chat);
+        } catch (e) {
+            groupMetadata = null;
+        }
+
         if (!groupMetadata) return false;
         
         // Get participants/admins
         const participants = groupMetadata.participants || [];
         
         // Find the sender in participants
-        const senderParticipant = participants.find(p => p.id === sender);
+        const senderParticipant = participants.find(p => p.id === sender || p.id === sender.replace('@s.whatsapp.net', '@lid'));
         
         // Check if sender is admin
         if (senderParticipant && 
@@ -127,7 +145,7 @@ async function checkAdminStatus(m, conn) {
     if (!m.isGroup) return false;
     
     try {
-        const botNumber = await conn.decodeJid(conn.user.id);
+        const botNumber = conn.user?.id ? (conn.decodeJid ? await conn.decodeJid(conn.user.id) : conn.user.id.split(':')[0] + '@s.whatsapp.net') : '';
         return await isAdmin(m.sender, m, botNumber, conn);
     } catch (error) {
         console.error('Error in checkAdminStatus:', error);
