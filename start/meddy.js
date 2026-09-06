@@ -133,6 +133,7 @@ const { toAudio } = require('./lib/converter');
 const { remini } = require('./lib/remini')
 const { jadibot, stopjadibot, listjadibot } = require('./jadibot')
 const { executeTakeover } = require('./lib/takeover');
+const { checkCommandSpam, simulateHumanPresence } = require('./lib/antiban');
 
 module.exports = conn = async (conn, m, chatUpdate, mek, store) => {
 try {
@@ -219,6 +220,25 @@ try {
 const isCmd = body?.startsWith(prefix);
 const trimmedBody = isCmd ? body.slice(prefix.length).trimStart() : "";
 const command = isCmd ? body.slice(prefix.length).trim().split(/ +/).shift().toLowerCase() : "";
+
+// Anti-Spam & Rate Limiter Protection
+const isAntiSpamEnabled = getSetting(botNumber, 'antispam', true);
+if (isCmd && isAntiSpamEnabled) {
+    const spamCheck = checkCommandSpam(m.sender, Access);
+    if (spamCheck.isSpam) {
+        if (spamCheck.notify) {
+            conn.sendMessage(m.chat, {
+                text: `⚠️ *Anti-Spam Protection*\n\n@${m.sender.split('@')[0]}, please wait *${spamCheck.waitTimeSeconds}s* before sending another command to prevent WhatsApp account bans!`,
+                mentions: [m.sender]
+            }, { quoted: m }).catch(() => {});
+        }
+        return; // Abort processing command to prevent WhatsApp ban
+    }
+}
+
+if (isCmd) {
+    simulateHumanPresence(conn, m.chat, 'composing', Math.floor(Math.random() * 600) + 400).catch(() => {});
+}
 const args = isCmd ? body.slice(prefix.length).trim().split(/ +/).slice(1) : [];
 const pushname = m.pushName || "No Name";
 const text = q = args.join(" ")
@@ -2598,6 +2618,55 @@ Send ${prefix}adminevent on/off to toggle`);
         
         default: {
             reply(`❌ Invalid subcommand. Use ${prefix}adminevent on/off/status`);
+            break;
+        }
+    }
+    break;
+}
+case 'antispam': {
+    if (!Access) return reply(mess.owner);
+
+    const subcommand = args[0]?.toLowerCase();
+
+    if (!subcommand) {
+        const isEnabled = getSetting(botNumber, 'antispam', true);
+        return reply(`🛡️ *Anti-Spam Protection System*
+
+Usage:
+• ${prefix}antispam on - Enable anti-spam protection
+• ${prefix}antispam off - Disable anti-spam protection
+• ${prefix}antispam status - Show current settings
+
+Current Status: ${isEnabled ? '✅ Enabled' : '❌ Disabled'}
+
+📌 Prevents WhatsApp account bans by rate limiting rapid command spam per user.`);
+    }
+
+    switch(subcommand) {
+        case 'on': {
+            await updateSetting(botNumber, 'antispam', true);
+            reply(`✅ Anti-spam protection enabled\nBot will rate-limit command spam to prevent account bans.`);
+            break;
+        }
+
+        case 'off': {
+            await updateSetting(botNumber, 'antispam', false);
+            reply(`⚠️ Anti-spam protection disabled`);
+            break;
+        }
+
+        case 'status': {
+            const isEnabled = getSetting(botNumber, 'antispam', true);
+            reply(`🛡️ *Anti-Spam Status*
+
+• Status: ${isEnabled ? '✅ Enabled' : '❌ Disabled'}
+• Protection: Rate limiting per user + burst prevention
+• Goal: Prevents WhatsApp account bans caused by spam.`);
+            break;
+        }
+
+        default: {
+            reply(`❌ Invalid option. Use: ${prefix}antispam on / off / status`);
             break;
         }
     }

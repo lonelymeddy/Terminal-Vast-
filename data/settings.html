@@ -230,6 +230,13 @@ h1{font-size:1.4rem;}
 <option value="false">Disabled</option>
 </select>
 </div>
+<div class="form-group">
+<label for="antispam">Anti-Spam & Anti-Ban Protection</label>
+<select id="antispam">
+<option value="true">Enabled</option>
+<option value="false">Disabled</option>
+</select>
+</div>
 </div>
 <button class="btn btn-primary" onclick="saveSettings()"><i class="fas fa-save"></i> Save Security Settings</button>
 </div>
@@ -257,6 +264,7 @@ if(data.antilinkaction) document.getElementById('antilink').value = data.antilin
 if(data.antidelete) document.getElementById('antidelete').value = data.antidelete;
 if(data.antiedit) document.getElementById('antiedit').value = data.antiedit;
 if(data.alwaysonline !== undefined) document.getElementById('alwaysonline').value = String(data.alwaysonline);
+if(data.antispam !== undefined) document.getElementById('antispam').value = String(data.antispam);
 }
 }catch(e){ console.error(e); }
 }
@@ -270,7 +278,8 @@ prefix: document.getElementById('prefix').value.trim(),
 antilinkaction: document.getElementById('antilink').value,
 antidelete: document.getElementById('antidelete').value,
 antiedit: document.getElementById('antiedit').value,
-alwaysonline: document.getElementById('alwaysonline').value === 'true'
+alwaysonline: document.getElementById('alwaysonline').value === 'true',
+antispam: document.getElementById('antispam').value === 'true'
 };
 try{
 const res = await fetch('/api/settings', {
