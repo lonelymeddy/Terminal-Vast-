@@ -360,7 +360,7 @@ async function clientstart(options = {}) {
                                 await conn.sendPresenceUpdate('available');
                             }
                         } catch (_) {}
-                    }, 20000);
+                    }, 60000);
                 }
             } else if (status === 'close') {
                 if (conn._presenceInterval) {
@@ -1397,7 +1397,8 @@ app.get("/api/status", (req, res) => {
         botname: settingManager.getSetting(botNum, 'botname', 'Terminal Vast'),
         prefix: settingManager.getSetting(botNum, 'prefix', '.'),
         ownername: settingManager.getSetting(botNum, 'ownername', 'Lonely Meddy'),
-        ownernumber: settingManager.getSetting(botNum, 'ownernumber', '256702662846')
+        ownernumber: settingManager.getSetting(botNum, 'ownernumber', '256702662846'),
+        antispam: settingManager.getSetting(botNum, 'antispam', true)
     });
 });
 

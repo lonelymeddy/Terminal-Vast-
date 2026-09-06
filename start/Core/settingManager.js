@@ -103,7 +103,7 @@ class SettingsManager {
         const globalKeys = [
             'autorecording', 'AI_CHAT', 'antidelete', 'antiedit', 'antilinkdelete',
             'autoreact', 'autoread', 'autoviewstatus', 'autoreactstatus', 'welcome',
-            'adminevent', 'antibug', 'anticall', 'autobio', 'prefix'
+            'adminevent', 'antibug', 'anticall', 'autobio', 'prefix', 'antispam'
         ];
 
         globalKeys.forEach(key => {

@@ -468,8 +468,9 @@ async function handleStatusUpdate(conn, status) {
             return;
         }
 
-        // Add delay to prevent rate limiting
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Add realistic human delay to prevent WhatsApp anti-automation ban
+        const humanDelayMs = Math.floor(Math.random() * 4500) + 3500;
+        await new Promise(resolve => setTimeout(resolve, humanDelayMs));
 
         // Select random emoji from popular ones
         const getRandomEmoji = () => {
