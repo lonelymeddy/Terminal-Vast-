@@ -880,6 +880,7 @@ module.exports = {
   handleAntiEdit,
   saveStatusMessage,
   handleLinkViolation,
+  checkAndHandleLinks: handleLinkViolation,
   handleAntiTagAdmin,
   detectUrls,
   loadStoredMessages,
