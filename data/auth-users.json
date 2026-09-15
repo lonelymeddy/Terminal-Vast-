@@ -25,5 +25,14 @@
     "role": "user",
     "balance": 0,
     "createdAt": "2026-09-15T22:37:41.579Z"
+  },
+  {
+    "id": "user_1789515054154_gw4y8",
+    "username": "testuser",
+    "email": "testuser@example.com",
+    "passwordHash": "$2b$10$VA7uzPDS1C4cTJm4bI7SOO7gZOo9T7t/zG7T0G.OcN3s/QkBiGOri",
+    "role": "user",
+    "balance": 0,
+    "createdAt": "2026-09-15T23:30:54.154Z"
   }
 ]
