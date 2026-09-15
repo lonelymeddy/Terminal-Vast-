@@ -58,7 +58,17 @@ function loadUsers() {
 }
 
 function saveUsers(users) {
-    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+    const tempFile = `${USERS_FILE}.tmp.${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    try {
+        fs.writeFileSync(tempFile, JSON.stringify(users, null, 2), 'utf8');
+        fs.renameSync(tempFile, USERS_FILE);
+    } catch (err) {
+        if (fs.existsSync(tempFile)) {
+            try { fs.unlinkSync(tempFile); } catch (_) {}
+        }
+        console.error('⚠️ Atomic write failed for auth-users.json, fallback to direct write:', err);
+        fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2), 'utf8');
+    }
 }
 
 function checkRateLimit(ip) {
