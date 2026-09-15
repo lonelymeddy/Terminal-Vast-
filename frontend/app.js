@@ -1,10 +1,51 @@
 let currentUser = null;
-let currentActivePage = localStorage.getItem('tv_active_page') || 'topup';
+let currentActivePage = getPageFromPath() || localStorage.getItem('tv_active_page') || 'topup';
+
+function getPageFromPath() {
+    const pathname = window.location.pathname.replace(/^\/+|\/+$/g, '');
+    const validPages = ['topup', 'connect', 'settings', 'profile'];
+    if (validPages.includes(pathname.toLowerCase())) {
+        return pathname.toLowerCase();
+    }
+    return null;
+}
 
 document.addEventListener("DOMContentLoaded", () => {
+    disablePageZoomGestures();
     initLandingPageEvents();
     initClock();
     checkSession();
+});
+
+function disablePageZoomGestures() {
+    // Prevent multi-touch gesture zoom (iOS Safari)
+    document.addEventListener('gesturestart', (e) => {
+        e.preventDefault();
+    });
+
+    // Prevent double-tap zoom
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', (e) => {
+        const now = Date.now();
+        if (now - lastTouchEnd <= 300) {
+            e.preventDefault();
+        }
+        lastTouchEnd = now;
+    }, false);
+
+    // Prevent Ctrl + Wheel zoom
+    document.addEventListener('wheel', (e) => {
+        if (e.ctrlKey) {
+            e.preventDefault();
+        }
+    }, { passive: false });
+}
+
+window.addEventListener("popstate", () => {
+    const page = getPageFromPath() || 'topup';
+    if (currentUser) {
+        navigateToPage(page, false);
+    }
 });
 
 /* ==========================================================================
@@ -145,9 +186,11 @@ function renderAuthenticatedUI() {
     document.getElementById("landingView").style.display = "none";
     document.getElementById("dashboardContainer").classList.add("active");
 
-    // Restore saved page if available
+    const pathPage = getPageFromPath();
     const savedPage = localStorage.getItem('tv_active_page');
-    if (savedPage) {
+    if (pathPage) {
+        currentActivePage = pathPage;
+    } else if (savedPage) {
         currentActivePage = savedPage;
     }
 
@@ -242,7 +285,7 @@ function toggleAuthMode(mode) {
     } else {
         loginForm.style.display = "block";
         regForm.style.display = "none";
-        modalSubtitle.textContent = "Internal Offline Authentication System";
+        modalSubtitle.textContent = "Account Authentication";
     }
 }
 
@@ -544,10 +587,17 @@ function closeSidebar() {
     document.getElementById("sidebarDrawer").classList.remove("open");
 }
 
-function navigateToPage(pageId) {
+function navigateToPage(pageId, updateHistory = true) {
     currentActivePage = pageId;
     localStorage.setItem('tv_active_page', pageId);
     closeSidebar();
+
+    if (updateHistory && window.history) {
+        const targetPath = `/${pageId}`;
+        if (window.location.pathname !== targetPath) {
+            window.history.pushState({ page: pageId }, '', targetPath);
+        }
+    }
 
     // Show skeleton loading effect briefly
     showSkeletonLoading();

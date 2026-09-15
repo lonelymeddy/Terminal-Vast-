@@ -69,17 +69,18 @@ const port = Number(process.env.PORT) || 3000;
 const session = require('express-session');
 const auth = require('./auth');
 
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: false, limit: '10mb' }));
+app.set('trust proxy', 1);
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 app.use(session({
     secret: process.env.SESSION_SECRET || 'terminal_vast_secure_session_secret_2026',
     resave: false,
     saveUninitialized: false,
     cookie: {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: process.env.NODE_ENV === 'production' && process.env.SECURE_COOKIE === 'true',
         sameSite: 'lax',
-        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+        maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
     }
 }));
 app.use(express.static(path.join(__dirname, 'frontend')));
@@ -1472,7 +1473,7 @@ async function restoreWebSessions() {
     }
 }
 
-app.get(["/", "/dashboard", "/bot-control", "/analytics", "/users", "/settings-page", "/restart-page"], (req, res) => {
+app.get(["/", "/dashboard", "/bot-control", "/analytics", "/users", "/settings-page", "/restart-page", "/topup", "/connect", "/settings", "/profile"], (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
 });
 

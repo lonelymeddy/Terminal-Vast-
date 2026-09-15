@@ -32,11 +32,15 @@
     html {
       background: var(--bg);
       scroll-behavior: smooth;
+      touch-action: manipulation;
+      -webkit-text-size-adjust: 100%;
+      -ms-text-size-adjust: 100%;
     }
 
     body {
       min-height: 100vh;
       overflow-x: hidden;
+      touch-action: manipulation;
       background:
         radial-gradient(
           ellipse 80% 35% at 50% -8%,
@@ -996,7 +1000,7 @@
   border-radius: var(--radius);
   color: var(--text);
   font-family: var(--body);
-  font-size: 14px;
+  font-size: 16px; /* Prevents auto-zoom on iOS when focusing inputs */
   outline: none;
   transition: var(--transition);
 }
