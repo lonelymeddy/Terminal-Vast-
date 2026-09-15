@@ -1,543 +1,428 @@
-// ==========================================================================
-// TERMINAL VAST BOT - FRONTEND APPLICATION LOGIC
-// ==========================================================================
-
 let currentUser = null;
-let currentLang = 'ES';
+let currentActivePage = 'topup';
 
-document.addEventListener('DOMContentLoaded', () => {
-  initMobileDrawer();
-  initLanguageSelector();
-  initThemeToggle();
-  initAuthModal();
-  initPairingFlow();
-  initDashboardControls();
-  checkAuthSession();
+document.addEventListener("DOMContentLoaded", () => {
+    initLandingPageEvents();
+    initClock();
+    checkSession();
 });
 
-// Mobile Menu Drawer
-function initMobileDrawer() {
-  const toggleBtn = document.getElementById('mobileToggleBtn');
-  const closeBtn = document.getElementById('mobileDrawerClose');
-  const drawer = document.getElementById('mobileDrawer');
+/* ==========================================================================
+   LANDING PAGE EVENTS & INTERACTIVITY
+   ========================================================================== */
+function initLandingPageEvents() {
+    const menuButton = document.getElementById("menuButton");
+    const mobileMenu = document.getElementById("mobileMenu");
+    const menuLinks = document.querySelectorAll(".menu-link");
 
-  if (toggleBtn && drawer) {
-    toggleBtn.addEventListener('click', () => drawer.classList.add('open'));
-  }
-  if (closeBtn && drawer) {
-    closeBtn.addEventListener('click', () => drawer.classList.remove('open'));
-  }
+    if (menuButton && mobileMenu) {
+        menuButton.addEventListener("click", () => {
+            const isOpen = mobileMenu.classList.toggle("open");
+            menuButton.classList.toggle("active", isOpen);
+            menuButton.setAttribute("aria-expanded", String(isOpen));
+        });
 
-  document.querySelectorAll('.mobile-nav-item').forEach(link => {
-    link.addEventListener('click', () => {
-      if (drawer) drawer.classList.remove('open');
+        menuLinks.forEach(link => {
+            link.addEventListener("click", () => {
+                menuLinks.forEach(item => item.classList.remove("active"));
+                link.classList.add("active");
+                mobileMenu.classList.remove("open");
+                menuButton.classList.remove("active");
+            });
+        });
+    }
+
+    const faqItems = document.querySelectorAll(".faq-item");
+    faqItems.forEach(item => {
+        const question = item.querySelector(".faq-question");
+        const answer = item.querySelector(".faq-answer");
+
+        if (question && answer) {
+            question.addEventListener("click", () => {
+                const wasOpen = item.classList.contains("open");
+                faqItems.forEach(otherItem => {
+                    otherItem.classList.remove("open");
+                    const otherAnswer = otherItem.querySelector(".faq-answer");
+                    if (otherAnswer) otherAnswer.style.maxHeight = null;
+                });
+
+                if (!wasOpen) {
+                    item.classList.add("open");
+                    answer.style.maxHeight = answer.scrollHeight + "px";
+                }
+            });
+        }
     });
-  });
+
+    const yearSpan = document.getElementById("year");
+    if (yearSpan) yearSpan.textContent = new Date().getFullYear();
 }
 
-// Language Selector Dropdown
-function initLanguageSelector() {
-  const langBtn = document.getElementById('langSelectorBtn');
-  const wrapper = langBtn?.closest('.dropdown-wrapper');
-
-  if (langBtn && wrapper) {
-    langBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      wrapper.classList.toggle('open');
-    });
-
-    document.addEventListener('click', () => {
-      wrapper.classList.remove('open');
-    });
-  }
+/* ==========================================================================
+   LIVE CLOCK WITH DATE & TIME
+   ========================================================================== */
+function initClock() {
+    function updateClock() {
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString();
+        const dateStr = now.toLocaleDateString();
+        const clockValue = document.getElementById("clockValue");
+        if (clockValue) {
+            clockValue.textContent = `${timeStr} • ${dateStr}`;
+        }
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
 }
 
-window.setLanguage = (lang) => {
-  currentLang = lang;
-  const label = document.getElementById('currentLangLabel');
-  if (label) label.textContent = lang;
-
-  document.querySelectorAll('.dropdown-item').forEach(item => {
-    item.classList.toggle('active', item.textContent.includes(`(${lang})`));
-  });
-};
-
-// Theme Toggle Button
-function initThemeToggle() {
-  const themeBtn = document.getElementById('themeToggleBtn');
-  if (themeBtn) {
-    themeBtn.addEventListener('click', () => {
-      const icon = themeBtn.querySelector('i');
-      if (icon.classList.contains('fa-moon')) {
-        icon.className = 'fas fa-sun';
-      } else {
-        icon.className = 'fas fa-moon';
-      }
-    });
-  }
+/* ==========================================================================
+   SESSION CHECK & AUTHENTICATION
+   ========================================================================== */
+async function checkSession() {
+    try {
+        const res = await fetch('/api/auth/me');
+        const data = await res.json();
+        if (data.authenticated && data.user) {
+            currentUser = data.user;
+            renderAuthenticatedUI();
+        } else {
+            currentUser = null;
+            renderUnauthenticatedUI();
+        }
+    } catch (err) {
+        console.error("Session check error:", err);
+        renderUnauthenticatedUI();
+    }
 }
 
-// Connection Tab Switcher (Pair Code vs QR Code)
-window.switchConnectionTab = (tab) => {
-  const tabPair = document.getElementById('tabPairCodeBtn');
-  const tabQr = document.getElementById('tabQrCodeBtn');
-  const panelPair = document.getElementById('panelPairCode');
-  const panelQr = document.getElementById('panelQrCode');
+function renderAuthenticatedUI() {
+    document.getElementById("landingView").style.display = "none";
+    document.getElementById("dashboardContainer").classList.add("active");
 
-  if (tab === 'pair') {
-    tabPair.classList.add('active');
-    tabQr.classList.remove('active');
-    panelPair.style.display = 'block';
-    panelQr.style.display = 'none';
-  } else {
-    tabQr.classList.add('active');
-    tabPair.classList.remove('active');
-    panelQr.style.display = 'block';
-    panelPair.style.display = 'none';
-  }
-};
+    // Update Topbar Info
+    const avatarLetter = (currentUser.username || 'U').charAt(0).toUpperCase();
+    document.getElementById("topbarProfileAvatar").textContent = avatarLetter;
+    document.getElementById("profileBigAvatar").textContent = avatarLetter;
 
-// WhatsApp Pairing Flow via Backend /api/pair
-function initPairingFlow() {
-  const form = document.getElementById('pairCodeForm');
-  const phoneInput = document.getElementById('phoneInput');
-  const statusBadge = document.getElementById('pairStatusBadge');
-  const codeBox = document.getElementById('codeDisplayBox');
-  const codeVal = document.getElementById('pairingCodeVal');
-  const copyBtn = document.getElementById('copyCodeBtn');
+    document.getElementById("profileUsernameDisplay").textContent = currentUser.username;
+    document.getElementById("profileEmailDisplay").textContent = currentUser.email || 'N/A';
+    document.getElementById("profileRoleBadge").textContent = currentUser.role || 'user';
 
-  if (form) {
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const phone = phoneInput.value.replace(/\D/g, '');
+    updateWalletDisplay(currentUser.balance || 0);
 
-      if (phone.length < 7 || phone.length > 15) {
-        showStatusBadge('Por favor ingresa un número telefónico internacional válido (ej. 256702662846).', 'error');
-        return;
-      }
+    // Initial load for dashboard pages
+    loadBotSettings();
+    navigateToPage(currentActivePage);
+}
 
-      showStatusBadge('Generando código de vinculación con WhatsApp...', 'loading');
-      codeBox.style.display = 'none';
+function renderUnauthenticatedUI() {
+    document.getElementById("landingView").style.display = "block";
+    document.getElementById("dashboardContainer").classList.remove("active");
+    closeSidebar();
+}
 
-      try {
-        const res = await fetch('/api/pair', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phone })
+function updateWalletDisplay(balance) {
+    const formatted = `$${parseFloat(balance || 0).toFixed(2)}`;
+    const landingWallet = document.getElementById("landingWalletBalance");
+    const topbarWallet = document.getElementById("topbarBalance");
+    const dashWallet = document.getElementById("dashWalletBalanceDisplay");
+    const profileWallet = document.getElementById("profileBalanceDisplay");
+
+    if (landingWallet) landingWallet.textContent = formatted;
+    if (topbarWallet) topbarWallet.textContent = formatted;
+    if (dashWallet) dashWallet.textContent = formatted;
+    if (profileWallet) profileWallet.textContent = formatted;
+}
+
+/* Modal Helpers */
+function openAuthModal(mode = 'login') {
+    toggleAuthMode(mode);
+    document.getElementById("authModal").classList.add("open");
+    hideAuthAlert();
+}
+
+function closeAuthModal() {
+    document.getElementById("authModal").classList.remove("open");
+}
+
+function toggleAuthMode(mode) {
+    const loginForm = document.getElementById("loginForm");
+    const regForm = document.getElementById("registerForm");
+    const modalSubtitle = document.getElementById("authModalSubtitle");
+
+    hideAuthAlert();
+
+    if (mode === 'register') {
+        loginForm.style.display = "none";
+        regForm.style.display = "block";
+        modalSubtitle.textContent = "Create a new Terminal Vast account";
+    } else {
+        loginForm.style.display = "block";
+        regForm.style.display = "none";
+        modalSubtitle.textContent = "Internal Offline Authentication System";
+    }
+}
+
+function showAuthAlert(msg, type = 'error') {
+    const alertBox = document.getElementById("authAlert");
+    alertBox.style.display = "block";
+    alertBox.textContent = msg;
+    if (type === 'error') {
+        alertBox.style.background = "rgba(239, 68, 68, 0.15)";
+        alertBox.style.border = "1px solid rgba(239, 68, 68, 0.4)";
+        alertBox.style.color = "#fca5a5";
+    } else {
+        alertBox.style.background = "rgba(34, 197, 94, 0.15)";
+        alertBox.style.border = "1px solid rgba(34, 197, 94, 0.4)";
+        alertBox.style.color = "#86efac";
+    }
+}
+
+function hideAuthAlert() {
+    const alertBox = document.getElementById("authAlert");
+    if (alertBox) alertBox.style.display = "none";
+}
+
+/* Auth Actions */
+async function handleLogin(e) {
+    e.preventDefault();
+    const loginInput = document.getElementById("loginIdentifier").value.trim();
+    const password = document.getElementById("loginPassword").value;
+
+    try {
+        const res = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ loginInput, password })
         });
         const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Login failed');
 
-        if (!res.ok) throw new Error(data.error || 'Error al generar el código.');
+        currentUser = data.user;
+        closeAuthModal();
+        renderAuthenticatedUI();
+    } catch (err) {
+        showAuthAlert(err.message, 'error');
+    }
+}
+
+async function handleRegister(e) {
+    e.preventDefault();
+    const username = document.getElementById("regUsername").value.trim();
+    const email = document.getElementById("regEmail").value.trim();
+    const password = document.getElementById("regPassword").value;
+
+    try {
+        const res = await fetch('/api/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, email, password })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Registration failed');
+
+        currentUser = data.user;
+        closeAuthModal();
+        renderAuthenticatedUI();
+    } catch (err) {
+        showAuthAlert(err.message, 'error');
+    }
+}
+
+async function handleLogout() {
+    try {
+        await fetch('/api/auth/logout', { method: 'POST' });
+    } catch (_) {}
+    currentUser = null;
+    renderUnauthenticatedUI();
+}
+
+async function handlePasswordChange(e) {
+    e.preventDefault();
+    const oldPassword = document.getElementById("oldPasswordInput").value;
+    const newPassword = document.getElementById("newPasswordInput").value;
+
+    try {
+        const res = await fetch('/api/auth/password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ oldPassword, newPassword })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to update password');
+
+        alert("Password updated successfully!");
+        document.getElementById("oldPasswordInput").value = "";
+        document.getElementById("newPasswordInput").value = "";
+    } catch (err) {
+        alert("Error: " + err.message);
+    }
+}
+
+/* ==========================================================================
+   SIDEBAR & DASHBOARD NAVIGATION
+   ========================================================================== */
+function toggleSidebar() {
+    document.getElementById("sidebarOverlay").classList.toggle("open");
+    document.getElementById("sidebarDrawer").classList.toggle("open");
+}
+
+function closeSidebar() {
+    document.getElementById("sidebarOverlay").classList.remove("open");
+    document.getElementById("sidebarDrawer").classList.remove("open");
+}
+
+function navigateToPage(pageId) {
+    currentActivePage = pageId;
+    closeSidebar();
+
+    // Show skeleton loading effect briefly
+    showSkeletonLoading();
+
+    // Update active page class
+    const pages = document.querySelectorAll(".dash-page");
+    pages.forEach(p => p.classList.remove("active"));
+
+    const navLinks = document.querySelectorAll(".sidebar-link");
+    navLinks.forEach(link => link.classList.remove("active"));
+
+    setTimeout(() => {
+        hideSkeletonLoading();
+
+        const targetPage = document.getElementById(`page${capitalize(pageId)}`);
+        if (targetPage) targetPage.classList.add("active");
+
+        const targetNavLink = document.getElementById(`navLink${capitalize(pageId)}`);
+        if (targetNavLink) targetNavLink.classList.add("active");
+    }, 250);
+}
+
+function capitalize(s) {
+    return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function showSkeletonLoading() {
+    document.getElementById("dashSkeletonLoading").style.display = "block";
+}
+
+function hideSkeletonLoading() {
+    document.getElementById("dashSkeletonLoading").style.display = "none";
+}
+
+/* ==========================================================================
+   TOP UP & WALLET ACTIONS
+   ========================================================================== */
+function openTopUpModal() {
+    document.getElementById("topUpModal").classList.add("open");
+}
+
+function closeTopUpModal() {
+    document.getElementById("topUpModal").classList.remove("open");
+}
+
+async function executeQuickTopUp(amount) {
+    try {
+        const res = await fetch('/api/wallet/topup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ amount })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Top up failed');
+
+        if (currentUser) currentUser.balance = data.balance;
+        updateWalletDisplay(data.balance);
+        alert(`Successfully added $${amount.toFixed(2)} to your balance!`);
+    } catch (err) {
+        alert("Top up error: " + err.message);
+    }
+}
+
+async function handleCustomTopUp(e) {
+    e.preventDefault();
+    const amtInput = document.getElementById("topUpAmountInput").value;
+    const amount = parseFloat(amtInput);
+    if (isNaN(amount) || amount <= 0) return alert("Please enter a valid amount.");
+
+    await executeQuickTopUp(amount);
+    closeTopUpModal();
+    document.getElementById("topUpAmountInput").value = "";
+}
+
+/* ==========================================================================
+   CONNECT WHATSAPP PAIRING
+   ========================================================================== */
+async function handlePairRequest(e) {
+    e.preventDefault();
+    const phone = document.getElementById("dashPhoneInput").value.trim();
+    const submitBtn = document.getElementById("dashPairSubmitBtn");
+    const resultBox = document.getElementById("dashPairResultBox");
+    const codeDisplay = document.getElementById("dashPairCodeDisplay");
+
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Generating...`;
+
+    try {
+        const res = await fetch('/api/pair', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to request pairing code');
 
         if (data.code) {
-          codeVal.textContent = data.code;
-          codeBox.style.display = 'block';
-          showStatusBadge('¡Código generado con éxito! Ingrésalo en WhatsApp.', 'loading');
+            codeDisplay.textContent = data.code;
+            resultBox.style.display = "block";
         } else if (data.status === 'connected') {
-          showStatusBadge('Esta sesión de WhatsApp ya se encuentra conectada.', 'loading');
+            alert('This session is already connected!');
         }
-      } catch (err) {
-        showStatusBadge(err.message, 'error');
-      }
-    });
-  }
-
-  if (copyBtn) {
-    copyBtn.addEventListener('click', () => {
-      navigator.clipboard.writeText(codeVal.textContent);
-      copyBtn.innerHTML = '<i class="fas fa-check"></i> ¡COPIADO!';
-      setTimeout(() => {
-        copyBtn.innerHTML = '<i class="fas fa-copy"></i> COPIAR CÓDIGO';
-      }, 2000);
-    });
-  }
-}
-
-function showStatusBadge(msg, type) {
-  const badge = document.getElementById('pairStatusBadge');
-  if (badge) {
-    badge.textContent = msg;
-    badge.className = `pair-status-badge ${type}`;
-    badge.style.display = 'block';
-  }
-}
-
-window.requestQrSession = () => {
-  const container = document.getElementById('qrDisplayContainer');
-  if (container) {
-    container.innerHTML = `
-      <div style="padding:20px;">
-        <i class="fas fa-spinner fa-spin text-orange" style="font-size:36px; margin-bottom:12px;"></i>
-        <p style="font-size:14px; font-weight:600;">Iniciando escáner QR de WhatsApp...</p>
-        <span style="font-size:12px; color:var(--text-dim);">Utiliza la pestaña PAIR CODE para vinculación rápida de número.</span>
-      </div>
-    `;
-  }
-};
-
-// Internal Offline Authentication Modal
-function initAuthModal() {
-  const modal = document.getElementById('authModal');
-  const closeBtn = document.getElementById('authModalCloseBtn');
-  const headerAuthBtn = document.getElementById('headerAuthBtn');
-  const mobileAuthBtn = document.getElementById('mobileAuthBtn');
-
-  const loginForm = document.getElementById('authLoginForm');
-  const regForm = document.getElementById('authRegisterForm');
-  const profileView = document.getElementById('authProfileView');
-
-  const switchToRegister = document.getElementById('switchToRegister');
-  const switchToLogin = document.getElementById('switchToLogin');
-  const logoutBtn = document.getElementById('logoutBtn');
-  const changePwForm = document.getElementById('changePasswordForm');
-
-  window.openAuthModal = () => modal.classList.add('active');
-  const closeModal = () => modal.classList.remove('active');
-
-  if (headerAuthBtn) headerAuthBtn.addEventListener('click', openAuthModal);
-  if (mobileAuthBtn) mobileAuthBtn.addEventListener('click', openAuthModal);
-  if (closeBtn) closeBtn.addEventListener('click', closeModal);
-
-  if (switchToRegister) {
-    switchToRegister.addEventListener('click', (e) => {
-      e.preventDefault();
-      loginForm.style.display = 'none';
-      regForm.style.display = 'flex';
-      document.getElementById('authModalTitle').textContent = 'Crear Cuenta Terminal Vast';
-    });
-  }
-
-  if (switchToLogin) {
-    switchToLogin.addEventListener('click', (e) => {
-      e.preventDefault();
-      regForm.style.display = 'none';
-      loginForm.style.display = 'flex';
-      document.getElementById('authModalTitle').textContent = 'Iniciar Sesión en Terminal Vast';
-    });
-  }
-
-  if (loginForm) {
-    loginForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const username = document.getElementById('loginUsername').value;
-      const password = document.getElementById('loginPassword').value;
-
-      try {
-        const res = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Error al iniciar sesión');
-
-        currentUser = data.user;
-        updateAuthUI();
-        closeModal();
-      } catch (err) {
-        showAuthError(err.message);
-      }
-    });
-  }
-
-  if (regForm) {
-    regForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const username = document.getElementById('regUsername').value;
-      const password = document.getElementById('regPassword').value;
-
-      try {
-        const res = await fetch('/api/auth/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Error al registrarse');
-
-        currentUser = data.user;
-        updateAuthUI();
-        closeModal();
-      } catch (err) {
-        showAuthError(err.message);
-      }
-    });
-  }
-
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', async () => {
-      try {
-        await fetch('/api/auth/logout', { method: 'POST' });
-        currentUser = null;
-        updateAuthUI();
-        closeModal();
-      } catch (err) {
-        console.error(err);
-      }
-    });
-  }
-
-  if (changePwForm) {
-    changePwForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const oldPassword = document.getElementById('oldPassword').value;
-      const newPassword = document.getElementById('newPassword').value;
-
-      try {
-        const res = await fetch('/api/auth/password', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ oldPassword, newPassword })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Error al cambiar contraseña');
-
-        alert('¡Contraseña actualizada con éxito!');
-        changePwForm.reset();
-      } catch (err) {
-        alert(err.message);
-      }
-    });
-  }
-}
-
-function showAuthError(msg) {
-  const errAlert = document.getElementById('authErrorMsg');
-  if (errAlert) {
-    errAlert.textContent = msg;
-    errAlert.style.display = 'block';
-    setTimeout(() => { errAlert.style.display = 'none'; }, 5000);
-  }
-}
-
-async function checkAuthSession() {
-  try {
-    const res = await fetch('/api/auth/me');
-    const data = await res.json();
-    if (data.authenticated) {
-      currentUser = data.user;
-    } else {
-      currentUser = null;
+    } catch (err) {
+        alert("Pairing error: " + err.message);
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `<i class="fas fa-bolt"></i> Generate Pairing Code`;
     }
-    updateAuthUI();
-  } catch (_) {
-    currentUser = null;
-    updateAuthUI();
-  }
 }
 
-function updateAuthUI() {
-  const headerBtn = document.getElementById('headerAuthBtn');
-  const loginForm = document.getElementById('authLoginForm');
-  const regForm = document.getElementById('authRegisterForm');
-  const profileView = document.getElementById('authProfileView');
-  const profileUsername = document.getElementById('profileUsername');
-  const profileRole = document.getElementById('profileRole');
-  const profileAvatar = document.getElementById('profileAvatarInitial');
-  const title = document.getElementById('authModalTitle');
-
-  if (currentUser) {
-    if (headerBtn) headerBtn.innerHTML = `<i class="fas fa-user-circle"></i> ${currentUser.username.toUpperCase()}`;
-    if (loginForm) loginForm.style.display = 'none';
-    if (regForm) regForm.style.display = 'none';
-    if (profileView) profileView.style.display = 'block';
-
-    if (profileUsername) profileUsername.textContent = currentUser.username;
-    if (profileRole) profileRole.textContent = currentUser.role === 'admin' ? 'Administrador' : 'Usuario Registrado';
-    if (profileAvatar) profileAvatar.textContent = currentUser.username.charAt(0).toUpperCase();
-    if (title) title.textContent = 'Perfil de Cuenta';
-  } else {
-    if (headerBtn) headerBtn.innerHTML = `<i class="fas fa-user-circle"></i> CUENTA`;
-    if (loginForm) loginForm.style.display = 'flex';
-    if (regForm) regForm.style.display = 'none';
-    if (profileView) profileView.style.display = 'none';
-    if (title) title.textContent = 'Iniciar Sesión en Terminal Vast';
-  }
-}
-
-// Dashboard Panel Controls
-function initDashboardControls() {
-  const dashNavBtn = document.getElementById('navDashboardBtn');
-  const mobileDashBtn = document.getElementById('mobileDashboardBtn');
-
-  if (dashNavBtn) dashNavBtn.addEventListener('click', (e) => { e.preventDefault(); openDashboard(); });
-  if (mobileDashBtn) mobileDashBtn.addEventListener('click', (e) => { e.preventDefault(); openDashboard(); });
-
-  const sudoForm = document.getElementById('dashSudoForm');
-  if (sudoForm) {
-    sudoForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const phone = document.getElementById('sudoPhoneInput').value;
-      try {
-        const res = await fetch('/api/users/sudo', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'add', phone })
-        });
+/* ==========================================================================
+   BOT SETTINGS LOGIC
+   ========================================================================== */
+async function loadBotSettings() {
+    try {
+        const res = await fetch('/api/settings');
+        if (!res.ok) return;
         const data = await res.json();
-        alert(data.message || 'Usuario Sudo actualizado');
-        loadUsers();
-      } catch (err) {
-        alert('Error al añadir usuario sudo.');
-      }
-    });
-  }
 
-  const settingsForm = document.getElementById('dashSettingsForm');
-  if (settingsForm) {
-    settingsForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const payload = {
-        botname: document.getElementById('settingBotName').value,
-        ownername: document.getElementById('settingOwnerName').value,
-        ownernumber: document.getElementById('settingOwnerNumber').value,
-        prefix: document.getElementById('settingPrefix').value
-      };
-      try {
+        if (data.botname) document.getElementById("settingBotName").value = data.botname;
+        if (data.ownername) document.getElementById("settingOwnerName").value = data.ownername;
+        if (data.ownernumber) document.getElementById("settingOwnerNumber").value = data.ownernumber;
+        if (data.prefix) document.getElementById("settingPrefix").value = data.prefix;
+        if (data.mode) document.getElementById("settingMode").value = data.mode;
+    } catch (err) {
+        console.error("Failed to load bot settings:", err);
+    }
+}
+
+async function saveBotSettings(e) {
+    e.preventDefault();
+    const botname = document.getElementById("settingBotName").value;
+    const ownername = document.getElementById("settingOwnerName").value;
+    const ownernumber = document.getElementById("settingOwnerNumber").value;
+    const prefix = document.getElementById("settingPrefix").value;
+    const mode = document.getElementById("settingMode").value;
+
+    try {
         const res = await fetch('/api/settings', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ botname, ownername, ownernumber, prefix, mode })
         });
         const data = await res.json();
-        alert(data.message || 'Configuración guardada correctamente.');
-      } catch (err) {
-        alert('Error al guardar ajustes.');
-      }
-    });
-  }
-}
+        if (!res.ok) throw new Error(data.error || 'Failed to save settings');
 
-window.openDashboard = () => {
-  if (!currentUser) {
-    openAuthModal();
-    return;
-  }
-  const modal = document.getElementById('dashboardModal');
-  if (modal) {
-    modal.classList.add('active');
-    loadBotControl();
-  }
-};
-
-window.closeDashboard = () => {
-  const modal = document.getElementById('dashboardModal');
-  if (modal) modal.classList.remove('active');
-};
-
-window.switchDashTab = (tab) => {
-  document.querySelectorAll('.dash-tab').forEach(btn => btn.classList.remove('active'));
-  document.querySelectorAll('.dash-panel-content').forEach(p => p.style.display = 'none');
-
-  if (tab === 'control') {
-    document.querySelectorAll('.dash-tab')[0].classList.add('active');
-    document.getElementById('dashPanelControl').style.display = 'block';
-    loadBotControl();
-  } else if (tab === 'analytics') {
-    document.querySelectorAll('.dash-tab')[1].classList.add('active');
-    document.getElementById('dashPanelAnalytics').style.display = 'block';
-    loadAnalytics();
-  } else if (tab === 'sudo') {
-    document.querySelectorAll('.dash-tab')[2].classList.add('active');
-    document.getElementById('dashPanelSudo').style.display = 'block';
-    loadUsers();
-  } else if (tab === 'settings') {
-    document.querySelectorAll('.dash-tab')[3].classList.add('active');
-    document.getElementById('dashPanelSettings').style.display = 'block';
-    loadSettings();
-  }
-};
-
-async function loadBotControl() {
-  try {
-    const res = await fetch('/api/status');
-    const data = await res.json();
-    const modeBadge = document.getElementById('dashActiveMode');
-    if (modeBadge) {
-      modeBadge.textContent = (data.mode || 'public').toUpperCase();
+        alert("Bot settings updated successfully!");
+    } catch (err) {
+        alert("Error: " + err.message);
     }
-  } catch (_) {}
-}
-
-window.setBotMode = async (mode) => {
-  try {
-    const res = await fetch('/api/mode', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mode })
-    });
-    const data = await res.json();
-    alert(data.message || 'Modo actualizado');
-    loadBotControl();
-  } catch (_) {
-    alert('No se pudo actualizar el modo del bot.');
-  }
-};
-
-window.restartEngine = async () => {
-  if (!confirm('¿Deseas reiniciar el proceso de Terminal Vast Bot?')) return;
-  try {
-    await fetch('/api/restart', { method: 'POST' });
-    alert('Se envió la señal de reinicio al servidor.');
-  } catch (_) {
-    alert('Reiniciando servidor...');
-  }
-};
-
-async function loadAnalytics() {
-  try {
-    const res = await fetch('/api/status');
-    const data = await res.json();
-    document.getElementById('dashUptime').textContent = data.uptime || '--';
-    document.getElementById('dashRam').textContent = (data.memory?.heapUsed || '--') + ' MB';
-    document.getElementById('dashSessions').textContent = data.sessions ?? '0';
-  } catch (_) {}
-}
-
-async function loadUsers() {
-  try {
-    const res = await fetch('/api/users');
-    const data = await res.json();
-    const sudoContainer = document.getElementById('sudoUsersList');
-    if (sudoContainer) {
-      if (data.sudo && data.sudo.length > 0) {
-        sudoContainer.innerHTML = data.sudo.map(num => `
-          <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:var(--bg-input); border-radius:var(--radius-sm); margin-bottom:8px;">
-            <span><i class="fas fa-user-shield text-orange"></i> ${num}</span>
-            <button class="btn-danger" style="padding:4px 10px; font-size:11px;" onclick="removeSudo('${num}')">Eliminar</button>
-          </div>
-        `).join('');
-      } else {
-        sudoContainer.innerHTML = '<p class="text-dim text-sm">No hay usuarios sudo configurados.</p>';
-      }
-    }
-  } catch (_) {}
-}
-
-window.removeSudo = async (phone) => {
-  try {
-    const res = await fetch('/api/users/sudo', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'remove', phone })
-    });
-    const data = await res.json();
-    alert(data.message || 'Usuario eliminado');
-    loadUsers();
-  } catch (_) {
-    alert('Error al eliminar usuario sudo.');
-  }
-};
-
-async function loadSettings() {
-  try {
-    const res = await fetch('/api/settings');
-    const data = await res.json();
-    if (data) {
-      if (data.botname) document.getElementById('settingBotName').value = data.botname;
-      if (data.ownername) document.getElementById('settingOwnerName').value = data.ownername;
-      if (data.ownernumber) document.getElementById('settingOwnerNumber').value = data.ownernumber;
-      if (data.prefix) document.getElementById('settingPrefix').value = data.prefix;
-    }
-  } catch (_) {}
 }
