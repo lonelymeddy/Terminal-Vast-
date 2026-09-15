@@ -1,11 +1,43 @@
 let currentUser = null;
-let currentActivePage = 'topup';
+let currentActivePage = localStorage.getItem('tv_active_page') || 'topup';
 
 document.addEventListener("DOMContentLoaded", () => {
     initLandingPageEvents();
     initClock();
     checkSession();
 });
+
+/* ==========================================================================
+   LOADING SPINNER HELPER (Minimum 6 Seconds Load)
+   ========================================================================== */
+async function runWithSpinner(buttonEl, loadingText, asyncTaskFn, minMs = 6000) {
+    if (!buttonEl) return await asyncTaskFn();
+    const originalText = buttonEl.innerHTML;
+    const isPrimary = buttonEl.classList.contains("primary");
+    buttonEl.disabled = true;
+    buttonEl.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${loadingText}`;
+
+    const startTime = Date.now();
+    let result;
+    let taskError = null;
+
+    try {
+        result = await asyncTaskFn();
+    } catch (err) {
+        taskError = err;
+    } finally {
+        const elapsedTime = Date.now() - startTime;
+        const remainingTime = Math.max(0, minMs - elapsedTime);
+        if (remainingTime > 0) {
+            await new Promise(res => setTimeout(res, remainingTime));
+        }
+        buttonEl.disabled = false;
+        buttonEl.innerHTML = originalText;
+    }
+
+    if (taskError) throw taskError;
+    return result;
+}
 
 /* ==========================================================================
    LANDING PAGE EVENTS & INTERACTIVITY
@@ -113,20 +145,59 @@ function renderAuthenticatedUI() {
     document.getElementById("landingView").style.display = "none";
     document.getElementById("dashboardContainer").classList.add("active");
 
-    // Update Topbar Info
-    const avatarLetter = (currentUser.username || 'U').charAt(0).toUpperCase();
-    document.getElementById("topbarProfileAvatar").textContent = avatarLetter;
-    document.getElementById("profileBigAvatar").textContent = avatarLetter;
+    // Restore saved page if available
+    const savedPage = localStorage.getItem('tv_active_page');
+    if (savedPage) {
+        currentActivePage = savedPage;
+    }
+
+    // Update Topbar Avatar & Info
+    updateProfileAvatarDisplay();
 
     document.getElementById("profileUsernameDisplay").textContent = currentUser.username;
     document.getElementById("profileEmailDisplay").textContent = currentUser.email || 'N/A';
     document.getElementById("profileRoleBadge").textContent = currentUser.role || 'user';
 
+    const editEmail = document.getElementById("editProfileEmail");
+    if (editEmail) editEmail.value = currentUser.email || '';
+
+    const editBio = document.getElementById("editProfileBio");
+    if (editBio) editBio.value = currentUser.bio || '';
+
+    const joinedEl = document.getElementById("profileJoinedDisplay");
+    if (joinedEl) {
+        if (currentUser.createdAt) {
+            joinedEl.textContent = new Date(currentUser.createdAt).toLocaleDateString();
+        } else {
+            joinedEl.textContent = '2026';
+        }
+    }
+
     updateWalletDisplay(currentUser.balance || 0);
 
     // Initial load for dashboard pages
     loadBotSettings();
+    loadSudoAndSessions();
     navigateToPage(currentActivePage);
+}
+
+function updateProfileAvatarDisplay() {
+    if (!currentUser) return;
+    const topbarAvatarEl = document.getElementById("topbarProfileAvatar");
+    const profileBigAvatarEl = document.getElementById("profileBigAvatar");
+
+    if (currentUser.avatar) {
+        if (topbarAvatarEl) {
+            topbarAvatarEl.innerHTML = `<img src="${currentUser.avatar}" alt="Avatar" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+        }
+        if (profileBigAvatarEl) {
+            profileBigAvatarEl.innerHTML = `<img src="${currentUser.avatar}" alt="Avatar" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+        }
+    } else {
+        const avatarLetter = (currentUser.username || 'U').charAt(0).toUpperCase();
+        if (topbarAvatarEl) topbarAvatarEl.textContent = avatarLetter;
+        if (profileBigAvatarEl) profileBigAvatarEl.textContent = avatarLetter;
+    }
 }
 
 function renderUnauthenticatedUI() {
@@ -138,12 +209,10 @@ function renderUnauthenticatedUI() {
 function updateWalletDisplay(balance) {
     const formatted = `$${parseFloat(balance || 0).toFixed(2)}`;
     const landingWallet = document.getElementById("landingWalletBalance");
-    const topbarWallet = document.getElementById("topbarBalance");
     const dashWallet = document.getElementById("dashWalletBalanceDisplay");
     const profileWallet = document.getElementById("profileBalanceDisplay");
 
     if (landingWallet) landingWallet.textContent = formatted;
-    if (topbarWallet) topbarWallet.textContent = formatted;
     if (dashWallet) dashWallet.textContent = formatted;
     if (profileWallet) profileWallet.textContent = formatted;
 }
@@ -202,19 +271,22 @@ async function handleLogin(e) {
     e.preventDefault();
     const loginInput = document.getElementById("loginIdentifier").value.trim();
     const password = document.getElementById("loginPassword").value;
+    const submitBtn = e.target.querySelector('button[type="submit"]');
 
     try {
-        const res = await fetch('/api/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ loginInput, password })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Login failed');
+        await runWithSpinner(submitBtn, "Logging in...", async () => {
+            const res = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ loginInput, password })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Login failed');
 
-        currentUser = data.user;
-        closeAuthModal();
-        renderAuthenticatedUI();
+            currentUser = data.user;
+            closeAuthModal();
+            renderAuthenticatedUI();
+        });
     } catch (err) {
         showAuthAlert(err.message, 'error');
     }
@@ -225,19 +297,22 @@ async function handleRegister(e) {
     const username = document.getElementById("regUsername").value.trim();
     const email = document.getElementById("regEmail").value.trim();
     const password = document.getElementById("regPassword").value;
+    const submitBtn = e.target.querySelector('button[type="submit"]');
 
     try {
-        const res = await fetch('/api/auth/register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, email, password })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Registration failed');
+        await runWithSpinner(submitBtn, "Creating account...", async () => {
+            const res = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, email, password })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Registration failed');
 
-        currentUser = data.user;
-        closeAuthModal();
-        renderAuthenticatedUI();
+            currentUser = data.user;
+            closeAuthModal();
+            renderAuthenticatedUI();
+        });
     } catch (err) {
         showAuthAlert(err.message, 'error');
     }
@@ -248,6 +323,7 @@ async function handleLogout() {
         await fetch('/api/auth/logout', { method: 'POST' });
     } catch (_) {}
     currentUser = null;
+    localStorage.removeItem('tv_active_page');
     renderUnauthenticatedUI();
 }
 
@@ -255,21 +331,203 @@ async function handlePasswordChange(e) {
     e.preventDefault();
     const oldPassword = document.getElementById("oldPasswordInput").value;
     const newPassword = document.getElementById("newPasswordInput").value;
+    const submitBtn = e.target.querySelector('button[type="submit"]');
 
     try {
-        const res = await fetch('/api/auth/password', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ oldPassword, newPassword })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Failed to update password');
+        await runWithSpinner(submitBtn, "Updating password...", async () => {
+            const res = await fetch('/api/auth/password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ oldPassword, newPassword })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed to update password');
 
-        alert("Password updated successfully!");
-        document.getElementById("oldPasswordInput").value = "";
-        document.getElementById("newPasswordInput").value = "";
+            alert("Password updated successfully!");
+            document.getElementById("oldPasswordInput").value = "";
+            document.getElementById("newPasswordInput").value = "";
+        });
     } catch (err) {
         alert("Error: " + err.message);
+    }
+}
+
+/* ==========================================================================
+   SUDO USERS, SESSIONS & ENGINE RESTART LOGIC
+   ========================================================================== */
+async function loadSudoAndSessions() {
+    try {
+        const res = await fetch('/api/users');
+        if (!res.ok) return;
+        const data = await res.json();
+
+        // Render Sudo Users
+        const sudoListEl = document.getElementById("sudoUsersList");
+        if (sudoListEl) {
+            const sudoArr = data.sudo || [];
+            if (sudoArr.length === 0) {
+                sudoListEl.innerHTML = `<span style="color: var(--muted-2); font-size: 13px;">No sudo users configured yet.</span>`;
+            } else {
+                sudoListEl.innerHTML = sudoArr.map(s => {
+                    const cleanPhone = s.split('@')[0];
+                    return `
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--surface-2); border-radius: var(--radius); font-size: 13px;">
+                            <span><i class="fas fa-user-shield" style="color: var(--orange); margin-right: 8px;"></i> ${cleanPhone}</span>
+                            <button type="button" class="button danger sm" onclick="removeSudo('${cleanPhone}')"><i class="fas fa-trash-alt"></i></button>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        // Render Active Sessions
+        const sessionsArr = data.sessions || [];
+        const sessionsCountEl = document.getElementById("connectSessionsCount");
+        if (sessionsCountEl) sessionsCountEl.textContent = sessionsArr.length;
+
+        const activeSessionsListEl = document.getElementById("activeSessionsList");
+        if (activeSessionsListEl) {
+            if (sessionsArr.length === 0) {
+                activeSessionsListEl.innerHTML = `<span style="color: var(--muted-2); font-size: 13px;">No secondary sessions active.</span>`;
+            } else {
+                activeSessionsListEl.innerHTML = sessionsArr.map(sess => `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--surface-2); border-radius: var(--radius); font-size: 13px;">
+                        <div>
+                            <div style="font-weight: 600; color: var(--text);"><i class="fab fa-whatsapp" style="color: #22c55e; margin-right: 6px;"></i> ${sess.phone}</div>
+                            <div style="font-size: 11px; color: var(--muted);">Status: ${sess.status}</div>
+                        </div>
+                        <span class="status-badge-live"><span class="status-dot"></span> Active</span>
+                    </div>
+                `).join('');
+            }
+        }
+    } catch (err) {
+        console.error("Failed to load sudo and sessions:", err);
+    }
+}
+
+async function handleAddSudo(e) {
+    e.preventDefault();
+    const phone = document.getElementById("sudoPhoneInput").value.trim();
+    if (!phone) return;
+    const submitBtn = document.getElementById("addSudoBtn");
+
+    try {
+        await runWithSpinner(submitBtn, "Adding...", async () => {
+            const res = await fetch('/api/users/sudo', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'add', phone })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed to add sudo user');
+
+            document.getElementById("sudoPhoneInput").value = "";
+            await loadSudoAndSessions();
+            alert(`Successfully added ${phone} to sudo list!`);
+        });
+    } catch (err) {
+        alert("Error adding sudo: " + err.message);
+    }
+}
+
+async function removeSudo(phone) {
+    if (!confirm(`Are you sure you want to remove ${phone} from sudo users?`)) return;
+
+    try {
+        const res = await fetch('/api/users/sudo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'remove', phone })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to remove sudo user');
+
+        await loadSudoAndSessions();
+        alert(`Removed ${phone} from sudo list.`);
+    } catch (err) {
+        alert("Error removing sudo: " + err.message);
+    }
+}
+
+async function handleRestartEngine() {
+    if (!confirm("Are you sure you want to restart the WhatsApp Bot Engine?")) return;
+    const restartBtn = document.getElementById("restartEngineBtn");
+
+    try {
+        await runWithSpinner(restartBtn, "Restarting Engine...", async () => {
+            const res = await fetch('/api/restart', { method: 'POST' });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Restart failed');
+
+            alert("Engine restart signal sent. The bot will reboot in a moment.");
+        });
+    } catch (err) {
+        alert("Restart error: " + err.message);
+    }
+}
+
+/* ==========================================================================
+   PROFILE DETAILS & AVATAR UPLOAD LOGIC
+   ========================================================================== */
+async function handleAvatarFileSelect(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+        alert('Please select a valid image file.');
+        return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+        alert('Image size must be smaller than 5MB.');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async () => {
+        const base64Avatar = reader.result;
+        try {
+            const res = await fetch('/api/profile/avatar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ avatar: base64Avatar })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed to update avatar');
+
+            currentUser = data.user;
+            updateProfileAvatarDisplay();
+            alert('Profile picture updated successfully!');
+        } catch (err) {
+            alert('Avatar upload error: ' + err.message);
+        }
+    };
+    reader.readAsDataURL(file);
+}
+
+async function handleProfileUpdate(e) {
+    e.preventDefault();
+    const email = document.getElementById("editProfileEmail").value.trim();
+    const bio = document.getElementById("editProfileBio").value.trim();
+    const submitBtn = document.getElementById("saveProfileBtn");
+
+    try {
+        await runWithSpinner(submitBtn, "Updating profile...", async () => {
+            const res = await fetch('/api/profile/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, bio })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed to update profile');
+
+            currentUser = data.user;
+            document.getElementById("profileEmailDisplay").textContent = currentUser.email;
+            alert('Profile details updated successfully!');
+        });
+    } catch (err) {
+        alert('Error updating profile: ' + err.message);
     }
 }
 
@@ -288,6 +546,7 @@ function closeSidebar() {
 
 function navigateToPage(pageId) {
     currentActivePage = pageId;
+    localStorage.setItem('tv_active_page', pageId);
     closeSidebar();
 
     // Show skeleton loading effect briefly
@@ -308,7 +567,7 @@ function navigateToPage(pageId) {
 
         const targetNavLink = document.getElementById(`navLink${capitalize(pageId)}`);
         if (targetNavLink) targetNavLink.classList.add("active");
-    }, 250);
+    }, 150);
 }
 
 function capitalize(s) {
@@ -334,21 +593,29 @@ function closeTopUpModal() {
     document.getElementById("topUpModal").classList.remove("open");
 }
 
-async function executeQuickTopUp(amount) {
-    try {
-        const res = await fetch('/api/wallet/topup', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ amount })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Top up failed');
+async function executeQuickTopUp(amount, buttonEl = null) {
+    const action = async () => {
+        try {
+            const res = await fetch('/api/wallet/topup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ amount })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Top up failed');
 
-        if (currentUser) currentUser.balance = data.balance;
-        updateWalletDisplay(data.balance);
-        alert(`Successfully added $${amount.toFixed(2)} to your balance!`);
-    } catch (err) {
-        alert("Top up error: " + err.message);
+            if (currentUser) currentUser.balance = data.balance;
+            updateWalletDisplay(data.balance);
+            alert(`Successfully added $${amount.toFixed(2)} to your balance!`);
+        } catch (err) {
+            alert("Top up error: " + err.message);
+        }
+    };
+
+    if (buttonEl) {
+        await runWithSpinner(buttonEl, "Processing...", action);
+    } else {
+        await action();
     }
 }
 
@@ -357,10 +624,13 @@ async function handleCustomTopUp(e) {
     const amtInput = document.getElementById("topUpAmountInput").value;
     const amount = parseFloat(amtInput);
     if (isNaN(amount) || amount <= 0) return alert("Please enter a valid amount.");
+    const submitBtn = e.target.querySelector('button[type="submit"]');
 
-    await executeQuickTopUp(amount);
-    closeTopUpModal();
-    document.getElementById("topUpAmountInput").value = "";
+    await runWithSpinner(submitBtn, "Processing Top Up...", async () => {
+        await executeQuickTopUp(amount);
+        closeTopUpModal();
+        document.getElementById("topUpAmountInput").value = "";
+    });
 }
 
 /* ==========================================================================
@@ -373,29 +643,25 @@ async function handlePairRequest(e) {
     const resultBox = document.getElementById("dashPairResultBox");
     const codeDisplay = document.getElementById("dashPairCodeDisplay");
 
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Generating...`;
-
     try {
-        const res = await fetch('/api/pair', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ phone })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Failed to request pairing code');
+        await runWithSpinner(submitBtn, "Generating code...", async () => {
+            const res = await fetch('/api/pair', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed to request pairing code');
 
-        if (data.code) {
-            codeDisplay.textContent = data.code;
-            resultBox.style.display = "block";
-        } else if (data.status === 'connected') {
-            alert('This session is already connected!');
-        }
+            if (data.code) {
+                codeDisplay.textContent = data.code;
+                resultBox.style.display = "block";
+            } else if (data.status === 'connected') {
+                alert('This session is already connected!');
+            }
+        });
     } catch (err) {
         alert("Pairing error: " + err.message);
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = `<i class="fas fa-bolt"></i> Generate Pairing Code`;
     }
 }
 
@@ -425,17 +691,20 @@ async function saveBotSettings(e) {
     const ownernumber = document.getElementById("settingOwnerNumber").value;
     const prefix = document.getElementById("settingPrefix").value;
     const mode = document.getElementById("settingMode").value;
+    const submitBtn = document.getElementById("saveBotSettingsBtn");
 
     try {
-        const res = await fetch('/api/settings', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ botname, ownername, ownernumber, prefix, mode })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Failed to save settings');
+        await runWithSpinner(submitBtn, "Saving settings...", async () => {
+            const res = await fetch('/api/settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ botname, ownername, ownernumber, prefix, mode })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed to save settings');
 
-        alert("Bot settings updated successfully!");
+            alert("Bot settings updated successfully!");
+        });
     } catch (err) {
         alert("Error: " + err.message);
     }

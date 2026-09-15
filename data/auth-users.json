@@ -1,0 +1,29 @@
+[
+  {
+    "id": "user_admin_001",
+    "username": "admin",
+    "email": "admin@terminalvast.bot",
+    "passwordHash": "$2b$10$bZK4VADNAp7rwE3DVcO82ujVFuvV1BH9Ar5Q3LQLr/Em5cdmAp/4G",
+    "role": "admin",
+    "balance": 0,
+    "createdAt": "2026-09-15T22:36:49.104Z"
+  },
+  {
+    "id": "user_1789511809237_rzeuw",
+    "username": "meddy_1789511808",
+    "email": "meddy_1789511808@terminalvast.bot",
+    "passwordHash": "$2b$10$PIsLVAmKseMPKcREkRMitengwB/yrVNqki/RGSDFP.UBp6P8bd.ge",
+    "role": "user",
+    "balance": 0,
+    "createdAt": "2026-09-15T22:36:49.237Z"
+  },
+  {
+    "id": "user_1789511861579_oniq0",
+    "username": "meddy_1789511861",
+    "email": "meddy_1789511861@terminalvast.bot",
+    "passwordHash": "$2b$10$epLOITfjikTp/Vaz7PzrfuRGlwCyZV4T4QlivkMzREo5Sewm/gOxy",
+    "role": "user",
+    "balance": 0,
+    "createdAt": "2026-09-15T22:37:41.579Z"
+  }
+]

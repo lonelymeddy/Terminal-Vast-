@@ -153,6 +153,47 @@ async function authenticateUser(loginInput, password, ip = '127.0.0.1') {
     return safeUser;
 }
 
+async function updateProfile(username, { email, bio }) {
+    const users = loadUsers();
+    const normalizedUser = String(username || '').trim().toLowerCase();
+    const userIndex = users.findIndex(u => u.username.toLowerCase() === normalizedUser);
+
+    if (userIndex === -1) {
+        throw new Error('User not found.');
+    }
+
+    if (email) {
+        const normalizedEmail = String(email).trim().toLowerCase();
+        if (!normalizedEmail.includes('@')) throw new Error('Invalid email address.');
+        const existing = users.find((u, idx) => idx !== userIndex && u.email.toLowerCase() === normalizedEmail);
+        if (existing) throw new Error('Email is already used by another account.');
+        users[userIndex].email = normalizedEmail;
+    }
+
+    if (bio !== undefined) {
+        users[userIndex].bio = String(bio).trim();
+    }
+
+    saveUsers(users);
+    const { passwordHash: _, ...safeUser } = users[userIndex];
+    return safeUser;
+}
+
+async function updateAvatar(username, avatarData) {
+    const users = loadUsers();
+    const normalizedUser = String(username || '').trim().toLowerCase();
+    const userIndex = users.findIndex(u => u.username.toLowerCase() === normalizedUser);
+
+    if (userIndex === -1) {
+        throw new Error('User not found.');
+    }
+
+    users[userIndex].avatar = avatarData;
+    saveUsers(users);
+    const { passwordHash: _, ...safeUser } = users[userIndex];
+    return safeUser;
+}
+
 async function changePassword(username, oldPassword, newPassword) {
     const users = loadUsers();
     const normalizedUser = String(username || '').trim().toLowerCase();
@@ -256,6 +297,8 @@ module.exports = {
     topUpBalance,
     getUserBalance,
     getAllUsersSafe,
+    updateProfile,
+    updateAvatar,
     requireAuth,
     requireAdmin
 };

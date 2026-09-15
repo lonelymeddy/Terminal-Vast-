@@ -69,8 +69,8 @@ const port = Number(process.env.PORT) || 3000;
 const session = require('express-session');
 const auth = require('./auth');
 
-app.use(express.json({ limit: '32kb' }));
-app.use(express.urlencoded({ extended: false, limit: '32kb' }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 app.use(session({
     secret: process.env.SESSION_SECRET || 'terminal_vast_secure_session_secret_2026',
     resave: false,
@@ -105,6 +105,29 @@ app.post('/api/auth/login', async (req, res) => {
         const user = await auth.authenticateUser(identifier, password, ip);
         req.session.user = user;
         res.json({ status: 'ok', message: 'Login successful', user });
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
+
+app.post('/api/profile/update', auth.requireAuth, async (req, res) => {
+    try {
+        const { email, bio } = req.body || {};
+        const updatedUser = await auth.updateProfile(req.session.user.username, { email, bio });
+        req.session.user = updatedUser;
+        res.json({ status: 'ok', message: 'Profile updated successfully', user: updatedUser });
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
+
+app.post('/api/profile/avatar', auth.requireAuth, async (req, res) => {
+    try {
+        const { avatar } = req.body || {};
+        if (!avatar) return res.status(400).json({ error: 'No avatar data provided' });
+        const updatedUser = await auth.updateAvatar(req.session.user.username, avatar);
+        req.session.user = updatedUser;
+        res.json({ status: 'ok', message: 'Profile avatar updated successfully', user: updatedUser });
     } catch (err) {
         res.status(400).json({ error: err.message });
     }
