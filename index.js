@@ -66,9 +66,85 @@ const { Boom } = require('@hapi/boom');
 const PhoneNumber = require('awesome-phonenumber');
 const { File } = require('megajs');
 const port = Number(process.env.PORT) || 3000;
+const session = require('express-session');
+const auth = require('./auth');
+
 app.use(express.json({ limit: '32kb' }));
 app.use(express.urlencoded({ extended: false, limit: '32kb' }));
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'terminal_vast_secure_session_secret_2026',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    }
+}));
 app.use(express.static(path.join(__dirname, 'frontend')));
+
+// Authentication API Routes
+app.get('/api/auth/me', (req, res) => {
+    if (req.session && req.session.user) {
+        return res.json({ authenticated: true, user: req.session.user });
+    }
+    return res.json({ authenticated: false, user: null });
+});
+
+app.post('/api/auth/login', async (req, res) => {
+    try {
+        const { username, password } = req.body || {};
+        const ip = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1').split(',')[0].trim();
+        const user = await auth.authenticateUser(username, password, ip);
+        req.session.user = user;
+        res.json({ status: 'ok', message: 'Login successful', user });
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
+
+app.post('/api/auth/register', async (req, res) => {
+    try {
+        const { username, password } = req.body || {};
+        const userCount = auth.getAllUsersSafe().length;
+        // First user registered becomes admin automatically if no admin exists
+        const role = userCount === 0 ? 'admin' : 'user';
+        const user = await auth.registerUser({ username, password, role });
+        req.session.user = user;
+        res.json({ status: 'ok', message: 'Registration successful', user });
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
+
+app.post('/api/auth/logout', (req, res) => {
+    req.session.destroy(err => {
+        if (err) return res.status(500).json({ error: 'Could not log out.' });
+        res.clearCookie('connect.sid');
+        res.json({ status: 'ok', message: 'Logged out successfully' });
+    });
+});
+
+app.post('/api/auth/password', auth.requireAuth, async (req, res) => {
+    try {
+        const { oldPassword, newPassword } = req.body || {};
+        await auth.changePassword(req.session.user.username, oldPassword, newPassword);
+        res.json({ status: 'ok', message: 'Password updated successfully' });
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
+
+app.post('/api/auth/reset', auth.requireAdmin, async (req, res) => {
+    try {
+        const { username, newPassword } = req.body || {};
+        await auth.resetPasswordInternal(username, newPassword);
+        res.json({ status: 'ok', message: `Password reset successfully for ${username}` });
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
 const { color } = require('./start/lib/color');
 
 const db = require('./data/database.json');
@@ -1350,32 +1426,8 @@ async function restoreWebSessions() {
     }
 }
 
-app.get("/", (req, res) => {
+app.get(["/", "/dashboard", "/bot-control", "/analytics", "/users", "/settings-page", "/restart-page"], (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
-});
-
-app.get("/dashboard", (req, res) => {
-    res.sendFile(path.join(__dirname, 'data', 'terminal-vast.html'));
-});
-
-app.get("/bot-control", (req, res) => {
-    res.sendFile(path.join(__dirname, 'data', 'bot-control.html'));
-});
-
-app.get("/analytics", (req, res) => {
-    res.sendFile(path.join(__dirname, 'data', 'analytics.html'));
-});
-
-app.get("/users", (req, res) => {
-    res.sendFile(path.join(__dirname, 'data', 'users.html'));
-});
-
-app.get("/settings-page", (req, res) => {
-    res.sendFile(path.join(__dirname, 'data', 'settings.html'));
-});
-
-app.get("/restart-page", (req, res) => {
-    res.sendFile(path.join(__dirname, 'data', 'restart.html'));
 });
 
 app.get("/uptime", (req, res) => {
@@ -1408,7 +1460,7 @@ app.get("/api/settings", (req, res) => {
     res.json(allSettings);
 });
 
-app.post("/api/settings", (req, res) => {
+app.post("/api/settings", auth.requireAuth, (req, res) => {
     const settingManager = require('./start/Core/settingManager');
     const botNum = 'default';
     const body = req.body || {};
@@ -1418,7 +1470,7 @@ app.post("/api/settings", (req, res) => {
     res.json({ status: 'ok', message: 'Settings updated successfully' });
 });
 
-app.post("/api/mode", (req, res) => {
+app.post("/api/mode", auth.requireAuth, (req, res) => {
     const settingManager = require('./start/Core/settingManager');
     const botNum = 'default';
     const mode = req.body?.mode === 'private' ? 'private' : 'public';
@@ -1426,7 +1478,7 @@ app.post("/api/mode", (req, res) => {
     res.json({ status: 'ok', mode, message: `Mode updated to ${mode}` });
 });
 
-app.get("/api/users", (req, res) => {
+app.get("/api/users", auth.requireAuth, (req, res) => {
     const settingManager = require('./start/Core/settingManager');
     const botNum = 'default';
     const sudoList = settingManager.getSudo(botNum) || [];
@@ -1434,10 +1486,10 @@ app.get("/api/users", (req, res) => {
     for (const [id, session] of webSessions.entries()) {
         activeSessionsList.push({ id, phone: session.phone, status: session.status });
     }
-    res.json({ sudo: sudoList, sessions: activeSessionsList });
+    res.json({ sudo: sudoList, sessions: activeSessionsList, allUsers: auth.getAllUsersSafe() });
 });
 
-app.post("/api/users/sudo", (req, res) => {
+app.post("/api/users/sudo", auth.requireAuth, (req, res) => {
     const settingManager = require('./start/Core/settingManager');
     const botNum = 'default';
     const { action, phone } = req.body || {};
@@ -1452,7 +1504,7 @@ app.post("/api/users/sudo", (req, res) => {
     }
 });
 
-app.post("/api/restart", (req, res) => {
+app.post("/api/restart", auth.requireAuth, (req, res) => {
     res.json({ status: 'ok', message: 'Restarting bot engine...' });
     setTimeout(() => {
         process.exit(0);
