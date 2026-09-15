@@ -329,17 +329,6 @@
           <i class="fas fa-clock"></i> <span id="clockValue">00:00:00 • 01/01/2026</span>
         </div>
 
-        <!-- Wallet Balance Pill -->
-        <a href="#" onclick="navigateToPage('topup'); return false;" class="trust-pill" style="display: flex; align-items: center; gap: 6px; text-decoration:none; cursor:pointer;">
-          <i class="fas fa-wallet" style="color:var(--orange);"></i>
-          <span id="topbarBalance">$0.00</span>
-        </a>
-
-        <!-- Bot Status Indicator -->
-        <span class="status-badge-live" id="topbarBotStatus">
-          <span class="status-dot"></span> Online
-        </span>
-
         <!-- Profile Icon Button -->
         <a href="#" onclick="navigateToPage('profile'); return false;" class="profile-icon-btn" id="topbarProfileAvatar" title="Profile">
           U
@@ -419,47 +408,79 @@
       <!-- PAGE 2: CONNECT WHATSAPP PAGE -->
       <section class="dash-page" id="pageConnect">
         <div class="section-header" style="margin-bottom: 24px; text-align: left;">
-          <div class="section-label">Session Pairing</div>
+          <div class="section-label">Session Pairing & Control</div>
           <h2 class="section-title">Connect WhatsApp Bot</h2>
-          <p class="section-description">Link your WhatsApp number using an 8-digit pair code.</p>
+          <p class="section-description">Link WhatsApp numbers, manage active sessions, restart engine and configure sudo permissions.</p>
         </div>
 
-        <div class="dash-grid">
-          <div class="dash-card">
+        <div class="dash-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px;">
+          <!-- Card 1: Pair Code Link -->
+          <div class="dash-card" style="padding: 24px;">
             <h3 class="dash-card-title"><i class="fas fa-key"></i> Pair Code Link</h3>
-            <p style="color: var(--muted); font-size: 13px; margin-bottom: 16px;">Enter your phone number with country code (e.g. 256702662846)</p>
+            <p style="color: var(--muted); font-size: 13px; margin-bottom: 18px;">Pair any WhatsApp number with 8-digit code.</p>
 
             <form onsubmit="handlePairRequest(event)">
               <div class="form-group">
-                <input type="tel" id="dashPhoneInput" class="form-input" placeholder="256702662846" required>
+                <label for="dashPhoneInput"><i class="fas fa-phone-alt"></i> WhatsApp Phone Number</label>
+                <input type="tel" id="dashPhoneInput" class="form-input" placeholder="e.g. 256702662846" required>
               </div>
               <button type="submit" id="dashPairSubmitBtn" class="button primary" style="width: 100%;">
                 <i class="fas fa-bolt"></i> Generate Pairing Code
               </button>
             </form>
 
-            <div id="dashPairResultBox" style="display: none; margin-top: 20px; padding: 16px; background: var(--surface-2); border-radius: var(--radius); text-align: center;">
+            <div id="dashPairResultBox" style="display: none; margin-top: 20px; padding: 18px; background: var(--surface-2); border: 1px solid var(--orange-border); border-radius: var(--radius); text-align: center;">
               <span style="font-size: 12px; color: var(--muted); display: block; margin-bottom: 6px;">YOUR PAIR CODE</span>
-              <div id="dashPairCodeDisplay" style="font-family: monospace; font-size: 26px; font-weight: 700; color: var(--orange); letter-spacing: 4px; margin-bottom: 12px;">--------</div>
+              <div id="dashPairCodeDisplay" style="font-family: monospace; font-size: 28px; font-weight: 700; color: var(--orange); letter-spacing: 5px; margin-bottom: 10px;">--------</div>
               <p style="font-size: 12px; color: var(--muted);">Open WhatsApp &gt; Linked Devices &gt; Link with phone number instead</p>
             </div>
           </div>
 
-          <div class="dash-card">
-            <h3 class="dash-card-title"><i class="fas fa-signal"></i> Active Session Info</h3>
-            <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 12px;">
-              <div style="display: flex; justify-content: space-between; font-size: 14px;">
-                <span style="color: var(--muted);">Bot Status:</span>
-                <span class="status-badge-live" id="connectBotStatusBadge"><span class="status-dot"></span> Online</span>
+          <!-- Card 2: Engine Control & Sessions -->
+          <div class="dash-card" style="padding: 24px;">
+            <h3 class="dash-card-title"><i class="fas fa-microchip"></i> Engine &amp; Session Control</h3>
+            <p style="color: var(--muted); font-size: 13px; margin-bottom: 18px;">Manage running bot engine and active connected WhatsApp numbers.</p>
+
+            <div style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; font-size: 14px;">
+                <span style="color: var(--muted);">System Platform:</span>
+                <span style="color: var(--text); font-weight: 500;" id="connectPlatform">Ubuntu / Node</span>
               </div>
-              <div style="display: flex; justify-content: space-between; font-size: 14px;">
-                <span style="color: var(--muted);">Platform:</span>
-                <span style="color: var(--text);" id="connectPlatform">Ubuntu / Node</span>
+              <div style="display: flex; justify-content: space-between; align-items: center; font-size: 14px;">
+                <span style="color: var(--muted);">Active Connected Sessions:</span>
+                <span style="color: var(--orange); font-weight: 700;" id="connectSessionsCount">0</span>
               </div>
-              <div style="display: flex; justify-content: space-between; font-size: 14px;">
-                <span style="color: var(--muted);">Active Sessions:</span>
-                <span style="color: var(--orange); font-weight: 600;" id="connectSessionsCount">1</span>
+            </div>
+
+            <div id="activeSessionsList" style="margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px;">
+              <!-- Dynamically populated session pills -->
+            </div>
+
+            <button type="button" id="restartEngineBtn" class="button danger" style="width: 100%;" onclick="handleRestartEngine()">
+              <i class="fas fa-redo-alt"></i> Restart Bot Engine
+            </button>
+          </div>
+
+          <!-- Card 3: Sudo Users Management -->
+          <div class="dash-card" style="padding: 24px;">
+            <h3 class="dash-card-title"><i class="fas fa-user-shield"></i> Sudo Users Management</h3>
+            <p style="color: var(--muted); font-size: 13px; margin-bottom: 18px;">Grant elevated bot privileges to secondary WhatsApp numbers.</p>
+
+            <form onsubmit="handleAddSudo(event)" style="margin-bottom: 20px;">
+              <div class="form-group">
+                <label for="sudoPhoneInput"><i class="fas fa-plus-circle"></i> Add Sudo Number</label>
+                <div style="display: flex; gap: 8px;">
+                  <input type="tel" id="sudoPhoneInput" class="form-input" placeholder="256702662846" required>
+                  <button type="submit" id="addSudoBtn" class="button primary" style="white-space: nowrap;">
+                    <i class="fas fa-plus"></i> Add
+                  </button>
+                </div>
               </div>
+            </form>
+
+            <div style="font-size: 13px; color: var(--muted); margin-bottom: 8px;">Current Sudo Users:</div>
+            <div id="sudoUsersList" style="display: flex; flex-direction: column; gap: 8px;">
+              <span style="color: var(--muted-2); font-size: 13px; italic;">Loading sudo users...</span>
             </div>
           </div>
         </div>
@@ -470,42 +491,60 @@
         <div class="section-header" style="margin-bottom: 24px; text-align: left;">
           <div class="section-label">Configuration</div>
           <h2 class="section-title">Bot Settings</h2>
-          <p class="section-description">Customize bot behaviour, prefix, mode and details.</p>
+          <p class="section-description">Customize bot identity, owner credentials, and operation parameters.</p>
         </div>
 
-        <div class="dash-card" style="max-width: 600px;">
-          <form id="botSettingsForm" onsubmit="saveBotSettings(event)">
-            <div class="form-group">
-              <label><i class="fas fa-robot"></i> Bot Name</label>
-              <input type="text" id="settingBotName" class="form-input" required>
+        <form id="botSettingsForm" onsubmit="saveBotSettings(event)">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px;">
+
+            <!-- Group 1: General Bot Identity -->
+            <div class="dash-card" style="padding: 24px;">
+              <h3 class="dash-card-title"><i class="fas fa-robot"></i> General Identity</h3>
+              <p style="color: var(--muted); font-size: 13px; margin-bottom: 18px;">Configure name and prefix representation.</p>
+
+              <div class="form-group">
+                <label for="settingBotName"><i class="fas fa-signature"></i> Bot Name</label>
+                <input type="text" id="settingBotName" class="form-input" placeholder="Terminal Vast" required>
+              </div>
+
+              <div class="form-group">
+                <label for="settingPrefix"><i class="fas fa-terminal"></i> Command Prefix</label>
+                <input type="text" id="settingPrefix" class="form-input" placeholder="." required>
+              </div>
+
+              <div class="form-group">
+                <label for="settingMode"><i class="fas fa-eye"></i> Bot Visibility Mode</label>
+                <select id="settingMode" class="form-input">
+                  <option value="public">Public (Responds to all users)</option>
+                  <option value="private">Private (Responds to owner only)</option>
+                </select>
+              </div>
             </div>
 
-            <div class="form-group">
-              <label><i class="fas fa-user-shield"></i> Owner Name</label>
-              <input type="text" id="settingOwnerName" class="form-input" required>
+            <!-- Group 2: Owner Credentials -->
+            <div class="dash-card" style="padding: 24px;">
+              <h3 class="dash-card-title"><i class="fas fa-user-shield"></i> Owner Details</h3>
+              <p style="color: var(--muted); font-size: 13px; margin-bottom: 18px;">Set primary administrator contact details.</p>
+
+              <div class="form-group">
+                <label for="settingOwnerName"><i class="fas fa-id-badge"></i> Owner Display Name</label>
+                <input type="text" id="settingOwnerName" class="form-input" placeholder="Meddy" required>
+              </div>
+
+              <div class="form-group">
+                <label for="settingOwnerNumber"><i class="fas fa-phone"></i> Primary Owner Number</label>
+                <input type="tel" id="settingOwnerNumber" class="form-input" placeholder="256702662846" required>
+              </div>
+
+              <div style="margin-top: 24px;">
+                <button type="submit" id="saveBotSettingsBtn" class="button primary" style="width: 100%;">
+                  <i class="fas fa-save"></i> Save All Bot Settings
+                </button>
+              </div>
             </div>
 
-            <div class="form-group">
-              <label><i class="fas fa-phone"></i> Owner Number</label>
-              <input type="tel" id="settingOwnerNumber" class="form-input" required>
-            </div>
-
-            <div class="form-group">
-              <label><i class="fas fa-terminal"></i> Command Prefix</label>
-              <input type="text" id="settingPrefix" class="form-input" required>
-            </div>
-
-            <div class="form-group">
-              <label><i class="fas fa-globe"></i> Bot Visibility Mode</label>
-              <select id="settingMode" class="form-input">
-                <option value="public">Public (Responds to all users)</option>
-                <option value="private">Private (Responds to owner only)</option>
-              </select>
-            </div>
-
-            <button type="submit" class="button primary" style="margin-top: 12px;"><i class="fas fa-save"></i> Save Settings</button>
-          </form>
-        </div>
+          </div>
+        </form>
       </section>
 
       <!-- PAGE 4: PROFILE PAGE -->
@@ -513,47 +552,91 @@
         <div class="section-header" style="margin-bottom: 24px; text-align: left;">
           <div class="section-label">User Account</div>
           <h2 class="section-title">Profile</h2>
-          <p class="section-description">Your profile information and password management.</p>
+          <p class="section-description">Manage your account credentials, profile picture, bio, and security settings.</p>
         </div>
 
-        <div class="dash-grid">
-          <div class="dash-card">
-            <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px;">
-              <div class="profile-icon-btn" id="profileBigAvatar" style="width: 54px; height: 54px; font-size: 22px;">U</div>
-              <div>
-                <h3 id="profileUsernameDisplay" style="font-size: 18px; color: var(--text);">User</h3>
-                <span id="profileRoleBadge" class="status-pill">user</span>
+        <div class="dash-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px;">
+
+          <!-- Card 1: User Overview & Avatar Upload -->
+          <div class="dash-card" style="padding: 24px;">
+            <div style="display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 24px;">
+
+              <div style="position: relative; margin-bottom: 16px;">
+                <div class="profile-icon-btn" id="profileBigAvatar" style="width: 84px; height: 84px; font-size: 34px; border-width: 2px;">
+                  U
+                </div>
+                <label for="profileAvatarInput" style="position: absolute; bottom: -2px; right: -2px; background: var(--orange); color: #000; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid var(--surface); font-size: 13px;" title="Upload Profile Picture">
+                  <i class="fas fa-camera"></i>
+                </label>
+                <input type="file" id="profileAvatarInput" accept="image/*" style="display: none;" onchange="handleAvatarFileSelect(event)">
+              </div>
+
+              <h3 id="profileUsernameDisplay" style="font-size: 20px; color: var(--text); font-weight: 700;">User</h3>
+              <div style="margin-top: 6px; display: flex; gap: 8px;">
+                <span id="profileRoleBadge" class="status-pill" style="text-transform: uppercase; font-size: 11px; font-weight: 700;">USER</span>
               </div>
             </div>
 
-            <div style="display: flex; flex-direction: column; gap: 10px; font-size: 14px; margin-bottom: 20px;">
+            <div style="display: flex; flex-direction: column; gap: 14px; font-size: 14px; margin-bottom: 24px; padding-top: 16px; border-top: 1px solid var(--border);">
               <div style="display: flex; justify-content: space-between;">
-                <span style="color: var(--muted);">Email:</span>
-                <span id="profileEmailDisplay" style="color: var(--text);">user@terminalvast.bot</span>
+                <span style="color: var(--muted);"><i class="fas fa-envelope"></i> Email:</span>
+                <span id="profileEmailDisplay" style="color: var(--text); font-weight: 500;">user@terminalvast.bot</span>
               </div>
               <div style="display: flex; justify-content: space-between;">
-                <span style="color: var(--muted);">Wallet Balance:</span>
+                <span style="color: var(--muted);"><i class="fas fa-wallet"></i> Wallet Balance:</span>
                 <span id="profileBalanceDisplay" style="color: var(--orange); font-weight: 700;">$0.00</span>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--muted);"><i class="fas fa-calendar-alt"></i> Joined:</span>
+                <span id="profileJoinedDisplay" style="color: var(--text);">2026</span>
               </div>
             </div>
 
             <button class="button danger" onclick="handleLogout()" style="width: 100%;"><i class="fas fa-sign-out-alt"></i> Logout</button>
           </div>
 
-          <div class="dash-card">
-            <h3 class="dash-card-title"><i class="fas fa-key"></i> Change Password</h3>
+          <!-- Card 2: Edit Profile Details & Bio -->
+          <div class="dash-card" style="padding: 24px;">
+            <h3 class="dash-card-title"><i class="fas fa-user-edit"></i> Edit Account Info</h3>
+            <p style="color: var(--muted); font-size: 13px; margin-bottom: 18px;">Update email address and account bio.</p>
+
+            <form id="profileDetailsForm" onsubmit="handleProfileUpdate(event)">
+              <div class="form-group">
+                <label for="editProfileEmail"><i class="fas fa-envelope"></i> Email Address</label>
+                <input type="email" id="editProfileEmail" class="form-input" required>
+              </div>
+
+              <div class="form-group">
+                <label for="editProfileBio"><i class="fas fa-quote-left"></i> Account Bio / Status</label>
+                <textarea id="editProfileBio" class="form-input" rows="3" placeholder="Tell us something about your bot instance..."></textarea>
+              </div>
+
+              <button type="submit" id="saveProfileBtn" class="button primary" style="width: 100%; margin-top: 10px;">
+                <i class="fas fa-check-circle"></i> Update Info
+              </button>
+            </form>
+          </div>
+
+          <!-- Card 3: Security & Password -->
+          <div class="dash-card" style="padding: 24px;">
+            <h3 class="dash-card-title"><i class="fas fa-shield-alt"></i> Change Password</h3>
+            <p style="color: var(--muted); font-size: 13px; margin-bottom: 18px;">Update login password securely.</p>
+
             <form onsubmit="handlePasswordChange(event)">
               <div class="form-group">
-                <label>Current Password</label>
+                <label for="oldPasswordInput"><i class="fas fa-lock"></i> Current Password</label>
                 <input type="password" id="oldPasswordInput" class="form-input" required>
               </div>
               <div class="form-group">
-                <label>New Password (min 6 characters)</label>
+                <label for="newPasswordInput"><i class="fas fa-key"></i> New Password (min 6 chars)</label>
                 <input type="password" id="newPasswordInput" class="form-input" required minlength="6">
               </div>
-              <button type="submit" class="button primary"><i class="fas fa-check"></i> Update Password</button>
+              <button type="submit" id="changePasswordBtn" class="button primary" style="width: 100%; margin-top: 10px;">
+                <i class="fas fa-lock"></i> Update Password
+              </button>
             </form>
           </div>
+
         </div>
       </section>
 
