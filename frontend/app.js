@@ -218,10 +218,18 @@ function renderAuthenticatedUI() {
 
     updateWalletDisplay(currentUser.balance || 0);
 
+    // Show initial skeleton loading on dashboard login / session load
+    showSkeletonLoading();
+    const pages = document.querySelectorAll(".dash-page");
+    pages.forEach(p => p.classList.remove("active"));
+
     // Initial load for dashboard pages
     loadBotSettings();
     loadSudoAndSessions();
-    navigateToPage(currentActivePage);
+
+    setTimeout(() => {
+        navigateToPage(currentActivePage);
+    }, 200);
 }
 
 function updateProfileAvatarDisplay() {
@@ -592,6 +600,11 @@ function navigateToPage(pageId, updateHistory = true) {
     localStorage.setItem('tv_active_page', pageId);
     closeSidebar();
 
+    // Scroll to top of window and dashboard content container
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    const dashContent = document.querySelector('.dash-content');
+    if (dashContent) dashContent.scrollTop = 0;
+
     if (updateHistory && window.history) {
         const targetPath = `/${pageId}`;
         if (window.location.pathname !== targetPath) {
@@ -617,6 +630,9 @@ function navigateToPage(pageId, updateHistory = true) {
 
         const targetNavLink = document.getElementById(`navLink${capitalize(pageId)}`);
         if (targetNavLink) targetNavLink.classList.add("active");
+
+        // Ensure scrolled to top after target page rendered
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     }, 150);
 }
 
