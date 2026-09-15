@@ -22,8 +22,10 @@ function loadUsers() {
             {
                 id: 'user_admin_001',
                 username: 'admin',
+                email: 'admin@terminalvast.bot',
                 passwordHash: defaultHash,
                 role: 'admin',
+                balance: 0.00,
                 createdAt: new Date().toISOString()
             }
         ];
@@ -32,7 +34,23 @@ function loadUsers() {
     }
     try {
         const raw = fs.readFileSync(USERS_FILE, 'utf8');
-        return JSON.parse(raw);
+        const users = JSON.parse(raw);
+        // Ensure legacy records have email & balance fields if missing
+        let modified = false;
+        users.forEach(u => {
+            if (u.balance === undefined) {
+                u.balance = 0.00;
+                modified = true;
+            }
+            if (!u.email) {
+                u.email = u.username + '@terminalvast.bot';
+                modified = true;
+            }
+        });
+        if (modified) {
+            saveUsers(users);
+        }
+        return users;
     } catch (err) {
         console.error('⚠️ Error loading auth-users.json:', err);
         return [];
@@ -70,12 +88,16 @@ function clearFailedAttempts(ip) {
 }
 
 // Helper functions for auth management
-async function registerUser({ username, password, role = 'user' }) {
+async function registerUser({ username, email, password, role = 'user' }) {
     const users = loadUsers();
     const normalizedUser = String(username || '').trim().toLowerCase();
+    const normalizedEmail = String(email || '').trim().toLowerCase();
 
     if (!normalizedUser || normalizedUser.length < 3) {
         throw new Error('Username must be at least 3 characters long.');
+    }
+    if (!normalizedEmail || !normalizedEmail.includes('@')) {
+        throw new Error('A valid email address is required.');
     }
     if (!password || password.length < 6) {
         throw new Error('Password must be at least 6 characters long.');
@@ -83,13 +105,18 @@ async function registerUser({ username, password, role = 'user' }) {
     if (users.some(u => u.username.toLowerCase() === normalizedUser)) {
         throw new Error('Username already exists.');
     }
+    if (users.some(u => u.email.toLowerCase() === normalizedEmail)) {
+        throw new Error('Email address is already registered.');
+    }
 
     const passwordHash = await bcrypt.hash(password, 10);
     const newUser = {
         id: 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
         username: normalizedUser,
+        email: normalizedEmail,
         passwordHash,
         role: role === 'admin' ? 'admin' : 'user',
+        balance: 0.00,
         createdAt: new Date().toISOString()
     };
 
@@ -100,25 +127,25 @@ async function registerUser({ username, password, role = 'user' }) {
     return safeUser;
 }
 
-async function authenticateUser(username, password, ip = '127.0.0.1') {
+async function authenticateUser(loginInput, password, ip = '127.0.0.1') {
     const rateCheck = checkRateLimit(ip);
     if (!rateCheck.allowed) {
         throw new Error(rateCheck.message);
     }
 
     const users = loadUsers();
-    const normalizedUser = String(username || '').trim().toLowerCase();
-    const user = users.find(u => u.username.toLowerCase() === normalizedUser);
+    const query = String(loginInput || '').trim().toLowerCase();
+    const user = users.find(u => u.username.toLowerCase() === query || u.email.toLowerCase() === query);
 
     if (!user) {
         recordFailedAttempt(ip);
-        throw new Error('Invalid username or password.');
+        throw new Error('Invalid username/email or password.');
     }
 
     const isValid = await bcrypt.compare(password, user.passwordHash);
     if (!isValid) {
         recordFailedAttempt(ip);
-        throw new Error('Invalid username or password.');
+        throw new Error('Invalid username/email or password.');
     }
 
     clearFailedAttempts(ip);
@@ -171,6 +198,35 @@ async function resetPasswordInternal(username, newPassword) {
     return true;
 }
 
+function topUpBalance(username, amount) {
+    const users = loadUsers();
+    const normalizedUser = String(username || '').trim().toLowerCase();
+    const userIndex = users.findIndex(u => u.username.toLowerCase() === normalizedUser);
+
+    if (userIndex === -1) {
+        throw new Error('User not found.');
+    }
+
+    const numericAmount = parseFloat(amount);
+    if (isNaN(numericAmount) || numericAmount <= 0) {
+        throw new Error('Top up amount must be a positive number.');
+    }
+
+    users[userIndex].balance = (users[userIndex].balance || 0) + numericAmount;
+    saveUsers(users);
+
+    const { passwordHash: _, ...safeUser } = users[userIndex];
+    return safeUser;
+}
+
+function getUserBalance(username) {
+    const users = loadUsers();
+    const normalizedUser = String(username || '').trim().toLowerCase();
+    const user = users.find(u => u.username.toLowerCase() === normalizedUser);
+    if (!user) return 0.00;
+    return user.balance || 0.00;
+}
+
 function getAllUsersSafe() {
     const users = loadUsers();
     return users.map(({ passwordHash, ...safeUser }) => safeUser);
@@ -197,6 +253,8 @@ module.exports = {
     authenticateUser,
     changePassword,
     resetPasswordInternal,
+    topUpBalance,
+    getUserBalance,
     getAllUsersSafe,
     requireAuth,
     requireAdmin

@@ -87,6 +87,11 @@ app.use(express.static(path.join(__dirname, 'frontend')));
 // Authentication API Routes
 app.get('/api/auth/me', (req, res) => {
     if (req.session && req.session.user) {
+        const freshUser = auth.getAllUsersSafe().find(u => u.username === req.session.user.username);
+        if (freshUser) {
+            req.session.user = freshUser;
+            return res.json({ authenticated: true, user: freshUser });
+        }
         return res.json({ authenticated: true, user: req.session.user });
     }
     return res.json({ authenticated: false, user: null });
@@ -94,9 +99,10 @@ app.get('/api/auth/me', (req, res) => {
 
 app.post('/api/auth/login', async (req, res) => {
     try {
-        const { username, password } = req.body || {};
+        const { loginInput, username, email, password } = req.body || {};
+        const identifier = loginInput || username || email;
         const ip = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1').split(',')[0].trim();
-        const user = await auth.authenticateUser(username, password, ip);
+        const user = await auth.authenticateUser(identifier, password, ip);
         req.session.user = user;
         res.json({ status: 'ok', message: 'Login successful', user });
     } catch (err) {
@@ -106,13 +112,30 @@ app.post('/api/auth/login', async (req, res) => {
 
 app.post('/api/auth/register', async (req, res) => {
     try {
-        const { username, password } = req.body || {};
+        const { username, email, password } = req.body || {};
         const userCount = auth.getAllUsersSafe().length;
         // First user registered becomes admin automatically if no admin exists
         const role = userCount === 0 ? 'admin' : 'user';
-        const user = await auth.registerUser({ username, password, role });
+        const user = await auth.registerUser({ username, email, password, role });
         req.session.user = user;
         res.json({ status: 'ok', message: 'Registration successful', user });
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
+
+// Wallet API Routes
+app.get('/api/wallet', auth.requireAuth, (req, res) => {
+    const balance = auth.getUserBalance(req.session.user.username);
+    res.json({ status: 'ok', balance });
+});
+
+app.post('/api/wallet/topup', auth.requireAuth, (req, res) => {
+    try {
+        const { amount } = req.body || {};
+        const updatedUser = auth.topUpBalance(req.session.user.username, amount);
+        req.session.user = updatedUser;
+        res.json({ status: 'ok', message: `Successfully added $${parseFloat(amount).toFixed(2)} to wallet balance`, balance: updatedUser.balance, user: updatedUser });
     } catch (err) {
         res.status(400).json({ error: err.message });
     }

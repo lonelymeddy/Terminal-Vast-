@@ -1,590 +1,582 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#09090b">
-  <title>Terminal Vast Bot — WhatsApp Bot & Panel de Control</title>
+  <meta name="theme-color" content="#080808">
+  <meta name="description" content="Terminal Vast Bot — fast, secure and simplified WhatsApp automation.">
+  <title>Terminal Vast Bot</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
 
-<div class="site-wrapper">
-  <!-- TOP NAVIGATION HEADER -->
-  <header class="top-header" id="topHeader">
-    <div class="header-container">
-      <a href="#" class="brand-logo">
-        <div class="brand-icon">
-          <i class="fas fa-terminal"></i>
-        </div>
-        <div class="brand-text">
-          <span class="brand-name">TERMINAL VAST</span>
-          <span class="brand-sub">BOT WHATSAPP</span>
-        </div>
-      </a>
+  <!-- ==================== LANDING PAGE VIEW ==================== -->
+  <div id="landingView">
 
-      <nav class="desktop-nav">
-        <a href="#hero" class="nav-link active">Inicio</a>
-        <a href="#connect" class="nav-link">Conectar</a>
-        <a href="#how-to-connect" class="nav-link">Cómo Conectar</a>
-        <a href="#features" class="nav-link">Funcionalidades</a>
-        <a href="#security" class="nav-link">Seguridad</a>
-        <a href="#" class="nav-link" id="navDashboardBtn">Dashboard</a>
-      </nav>
+    <div class="top-border"></div>
 
-      <div class="header-controls">
-        <!-- Language Selector -->
-        <div class="dropdown-wrapper">
-          <button class="control-btn lang-btn" id="langSelectorBtn">
-            <i class="fas fa-globe"></i> <span id="currentLangLabel">ES</span> <i class="fas fa-chevron-down text-xs"></i>
+    <header class="navbar">
+      <div class="container nav-inner">
+        <a href="#home" class="brand">
+          TERMINAL <span>VAST</span>
+        </a>
+
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <button class="button primary sm" id="landingAuthBtn" onclick="openAuthModal('login')">
+            <i class="fas fa-user-circle"></i> Login / Account
           </button>
-          <div class="dropdown-menu" id="langDropdown">
-            <div class="dropdown-item active" onclick="setLanguage('ES')"><i class="fas fa-check"></i> Español (ES)</div>
-            <div class="dropdown-item" onclick="setLanguage('EN')">English (EN)</div>
+
+          <button class="menu-button" id="menuButton" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="mobileMenu">
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <nav class="mobile-menu" id="mobileMenu" aria-label="Main navigation">
+      <div class="menu-inner">
+        <a href="#home" class="menu-link active">Home</a>
+        <a href="#connect" class="menu-link">How to Connect</a>
+        <a href="#wallet" class="menu-link">Wallet</a>
+        <a href="#features" class="menu-link">Features</a>
+        <a href="#faq" class="menu-link">FAQ</a>
+        <a href="#support" class="menu-link">Support</a>
+        <a href="#" class="menu-link" onclick="openAuthModal('login')"><i class="fas fa-sign-in-alt"></i> Account Login</a>
+      </div>
+    </nav>
+
+    <main>
+      <!-- HERO SECTION -->
+      <section class="hero" id="home">
+        <div class="container">
+          <div class="eyebrow reveal">100% FREE FOREVER</div>
+          <div class="hero-heading-wrap reveal">
+            <h1>Deploy Your Free <span>WhatsApp Bot</span> in Seconds</h1>
+          </div>
+          <p class="hero-description reveal">
+            Connect your WhatsApp with Terminal Vast — no payment, no coding and no complicated setup. Auto-reply, anti-delete, anti-view-once, status tools and more, all from one panel.
+          </p>
+          <div class="trust-row reveal">
+            <span class="trust-pill">End-to-end encrypted</span>
+            <span class="trust-pill">30-second setup</span>
+            <span class="trust-pill">No password stored</span>
           </div>
         </div>
+      </section>
 
-        <!-- Theme Switcher -->
-        <button class="control-btn icon-only-btn" id="themeToggleBtn" title="Cambiar Tema">
-          <i class="fas fa-moon"></i>
-        </button>
+      <!-- HOW TO CONNECT SECTION -->
+      <section class="section" id="connect">
+        <div class="container">
+          <div class="section-header reveal">
+            <div class="section-label">Simple Setup</div>
+            <div class="section-title-wrap">
+              <h2 class="section-title">How to Connect</h2>
+            </div>
+            <p class="section-description">Three simple steps. No installs.</p>
+          </div>
 
-        <!-- Account / Login CTA -->
-        <button class="btn-orange header-account-btn" id="headerAuthBtn">
-          <i class="fas fa-user-circle"></i> CUENTA
-        </button>
+          <div class="steps">
+            <article class="step-card reveal">
+              <div class="step-number">1</div>
+              <h3 class="card-title">Enter your number</h3>
+              <p class="card-text">Type your WhatsApp number and agree to the terms.</p>
+            </article>
 
-        <!-- Mobile Hamburger Toggle -->
-        <button class="mobile-toggle-btn" id="mobileToggleBtn" aria-label="Abrir Menú">
-          <i class="fas fa-bars"></i>
-        </button>
-      </div>
-    </div>
+            <article class="step-card reveal">
+              <div class="step-number">2</div>
+              <h3 class="card-title">Get your code</h3>
+              <p class="card-text">Generate a pair code and enter it in WhatsApp → Linked Devices.</p>
+            </article>
 
-    <!-- Mobile Drawer Menu -->
-    <div class="mobile-menu-drawer" id="mobileDrawer">
-      <div class="mobile-drawer-header">
-        <div class="brand-logo">
-          <div class="brand-icon"><i class="fas fa-terminal"></i></div>
-          <span class="brand-name">TERMINAL VAST</span>
+            <article class="step-card reveal">
+              <div class="step-number">3</div>
+              <h3 class="card-title">You're live</h3>
+              <p class="card-text">Your bot connects instantly. Manage everything from your Terminal Vast panel.</p>
+            </article>
+          </div>
         </div>
-        <button class="drawer-close-btn" id="mobileDrawerClose"><i class="fas fa-times"></i></button>
-      </div>
-      <nav class="mobile-nav-links">
-        <a href="#hero" class="mobile-nav-item"><i class="fas fa-home"></i> Inicio</a>
-        <a href="#connect" class="mobile-nav-item"><i class="fas fa-plug"></i> Conectar</a>
-        <a href="#how-to-connect" class="mobile-nav-item"><i class="fas fa-list-ol"></i> Cómo Conectar</a>
-        <a href="#features" class="mobile-nav-item"><i class="fas fa-bolt"></i> Funcionalidades</a>
-        <a href="#security" class="mobile-nav-item"><i class="fas fa-shield-alt"></i> Seguridad</a>
-        <a href="#" class="mobile-nav-item" id="mobileDashboardBtn"><i class="fas fa-sliders-h"></i> Dashboard</a>
-      </nav>
-      <div class="mobile-drawer-footer">
-        <button class="btn-orange w-full" id="mobileAuthBtn">
-          <i class="fas fa-user-circle"></i> Mi Cuenta / Iniciar Sesión
-        </button>
-      </div>
-    </div>
-  </header>
+      </section>
 
-  <!-- MAIN LANDING CONTENT -->
-  <main class="main-content">
+      <!-- WALLET SECTION -->
+      <section class="section" id="wallet">
+        <div class="container">
+          <div class="section-header reveal">
+            <div class="section-label">Account</div>
+            <div class="section-title-wrap">
+              <h2 class="section-title">Wallet</h2>
+            </div>
+            <p class="section-description">Manage your Terminal Vast account balance and services.</p>
+          </div>
 
-    <!-- HERO SECTION -->
-    <section class="hero-section" id="hero">
-      <div class="hero-background-glow"></div>
-      <div class="container hero-container">
-
-        <div class="hero-badge-pill">
-          <i class="fas fa-robot"></i>
-          <span>BOT DE WHATSAPP TERMINAL VAST</span>
+          <div class="wallet-card reveal">
+            <div class="status-pill">
+              <span class="status-dot"></span> Available Balance
+            </div>
+            <div class="wallet-balance" id="landingWalletBalance">$0.00</div>
+            <div class="wallet-caption">Your wallet balance</div>
+            <div class="wallet-actions">
+              <button class="button primary" type="button" onclick="openAuthModal('login')">
+                <i class="fas fa-wallet"></i> Access Wallet & Top Up
+              </button>
+            </div>
+          </div>
         </div>
+      </section>
 
-        <h1 class="hero-headline">
-          BOT DE WHATSAPP <br>
-          <span class="text-orange-glow">CONEXIÓN DIRECTA Y AUTOMÁTICA</span>
-        </h1>
+      <!-- FEATURES SECTION -->
+      <section class="section" id="features">
+        <div class="container">
+          <div class="section-header reveal">
+            <div class="section-label">Features</div>
+            <div class="section-title-wrap">
+              <h2 class="section-title">Why Terminal Vast Bot?</h2>
+            </div>
+            <p class="section-description">Powerful automation with a simple experience.</p>
+          </div>
 
-        <p class="hero-subtext">
-          Conecta Terminal Vast Bot a tu WhatsApp en segundos mediante Pair Code o Código QR. Potencia tus chats con respuestas automáticas, herramientas de seguridad, protección anti-eliminar y comandos inteligentes.
+          <div class="features">
+            <article class="feature-card reveal">
+              <h3>Instant &amp; Free</h3>
+              <p class="card-text">Connect in seconds with a simple setup. Completely free with no hidden costs.</p>
+            </article>
+
+            <article class="feature-card reveal">
+              <h3>Powerful Automation</h3>
+              <p class="card-text">Auto-reply, anti-delete, anti-view-once, auto-react, privacy controls and more.</p>
+            </article>
+
+            <article class="feature-card reveal">
+              <h3>Secure &amp; Private</h3>
+              <p class="card-text">Encrypted sessions and secure server-side validation help keep your connection protected.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- FAQ SECTION -->
+      <section class="section" id="faq">
+        <div class="container">
+          <div class="section-header reveal">
+            <div class="section-label">Help</div>
+            <div class="section-title-wrap">
+              <h2 class="section-title">Frequently Asked Questions</h2>
+            </div>
+            <p class="section-description">Everything you need to know about Terminal Vast.</p>
+          </div>
+
+          <div class="faq">
+            <div class="faq-item reveal">
+              <button class="faq-question" type="button" aria-expanded="false">
+                <span>What is Terminal Vast Bot?</span>
+                <span>+</span>
+              </button>
+              <div class="faq-answer">
+                <div class="faq-answer-inner">
+                  Terminal Vast Bot is a WhatsApp automation service designed to provide useful automation tools through a simple web-based control panel.
+                </div>
+              </div>
+            </div>
+
+            <div class="faq-item reveal">
+              <button class="faq-question" type="button" aria-expanded="false">
+                <span>Is Terminal Vast free?</span>
+                <span>+</span>
+              </button>
+              <div class="faq-answer">
+                <div class="faq-answer-inner">
+                  The bot deployment is designed to be free. Any paid services or account features should be clearly identified before use.
+                </div>
+              </div>
+            </div>
+
+            <div class="faq-item reveal">
+              <button class="faq-question" type="button" aria-expanded="false">
+                <span>Do I need to install another application?</span>
+                <span>+</span>
+              </button>
+              <div class="faq-answer">
+                <div class="faq-answer-inner">
+                  No additional application is required for the web panel. Your WhatsApp connection is managed through the supported linking process.
+                </div>
+              </div>
+            </div>
+
+            <div class="faq-item reveal">
+              <button class="faq-question" type="button" aria-expanded="false">
+                <span>Can I manage my bot from my phone?</span>
+                <span>+</span>
+              </button>
+              <div class="faq-answer">
+                <div class="faq-answer-inner">
+                  Yes. The interface is responsive and designed to work comfortably on mobile devices as well as larger screens.
+                </div>
+              </div>
+            </div>
+
+            <div class="faq-item reveal">
+              <button class="faq-question" type="button" aria-expanded="false">
+                <span>Where can I get support?</span>
+                <span>+</span>
+              </button>
+              <div class="faq-answer">
+                <div class="faq-answer-inner">
+                  Use the Support link below to access the official Terminal Vast support channel.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer id="support">
+      <div class="container footer-inner">
+        <div class="footer-brand">TERMINAL VAST</div>
+        <nav class="footer-links" aria-label="Footer navigation">
+          <a href="#support">Support</a>
+          <a href="#privacy">Privacy</a>
+          <a href="#terms">Terms of Service</a>
+        </nav>
+        <p class="copyright">
+          © <span id="year"></span> Terminal Vast. All rights reserved.
         </p>
-
-        <!-- Feature Badges Row -->
-        <div class="hero-badges-grid">
-          <div class="badge-card">
-            <i class="fas fa-shield-halved badge-icon"></i>
-            <span>SISTEMA SEGURO Y ESTABLE</span>
-          </div>
-          <div class="badge-card">
-            <i class="fas fa-qrcode badge-icon"></i>
-            <span>PAIR CODE Y QR CODE</span>
-          </div>
-          <div class="badge-card">
-            <i class="fas fa-mobile-screen-button badge-icon"></i>
-            <span>WHATSAPP MULTI-DEVICE</span>
-          </div>
-        </div>
-
-        <!-- Main Call To Action Button -->
-        <div class="hero-actions">
-          <a href="#connect" class="btn-orange btn-hero-cta">
-            <i class="fas fa-plug"></i> CONECTAR AHORA
-          </a>
-        </div>
-
       </div>
-    </section>
-
-    <!-- CONNECTION / PAIRING SECTION -->
-    <section class="connect-section" id="connect">
-      <div class="container">
-        <div class="section-title-wrapper text-center">
-          <h2 class="section-title">CONEXIÓN RÁPIDA DE WHATSAPP</h2>
-          <p class="section-subtitle">Selecciona tu método de vinculación preferido para conectar Terminal Vast Bot a tu cuenta.</p>
-        </div>
-
-        <div class="connection-card-wrapper">
-          <!-- Connection Tabs Header -->
-          <div class="connection-tabs">
-            <button class="tab-btn active" id="tabPairCodeBtn" onclick="switchConnectionTab('pair')">
-              <i class="fas fa-key"></i> PAIR CODE
-            </button>
-            <button class="tab-btn" id="tabQrCodeBtn" onclick="switchConnectionTab('qr')">
-              <i class="fas fa-qrcode"></i> CÓDIGO QR
-            </button>
-          </div>
-
-          <!-- Tab Content 1: Pair Code -->
-          <div class="tab-panel active" id="panelPairCode">
-            <div class="form-instructions">
-              Ingresa tu número de WhatsApp con el código de país (sin el signo + ni espacios) para recibir un código de vinculación de 8 dígitos.
-            </div>
-
-            <form id="pairCodeForm" class="pairing-form" novalidate>
-              <div class="input-group">
-                <span class="input-prefix"><i class="fab fa-whatsapp"></i> +</span>
-                <input type="tel" class="form-input" id="phoneInput" placeholder="256702662846" required autocomplete="off">
-              </div>
-
-              <button type="submit" class="btn-orange btn-submit-pair" id="pairSubmitBtn">
-                <i class="fas fa-bolt"></i> OBTENER CÓDIGO
-              </button>
-            </form>
-
-            <div id="pairStatusBadge" class="pair-status-badge" style="display:none;"></div>
-
-            <div id="codeDisplayBox" class="code-result-box" style="display:none;">
-              <span class="code-box-label">CÓDIGO DE VINCULACIÓN GENERADO</span>
-              <div class="code-value-display" id="pairingCodeVal">--------</div>
-              <button class="btn-secondary" id="copyCodeBtn">
-                <i class="fas fa-copy"></i> COPIAR CÓDIGO
-              </button>
-              <p class="code-hint">Ve a WhatsApp &gt; Dispositivos vinculados &gt; Vincular con el código de teléfono e ingresa los 8 dígitos.</p>
-            </div>
-          </div>
-
-          <!-- Tab Content 2: QR Code -->
-          <div class="tab-panel" id="panelQrCode" style="display:none;">
-            <div class="form-instructions">
-              Escanea el código QR desde la aplicación de WhatsApp en tu teléfono para realizar una vinculación rápida.
-            </div>
-
-            <div class="qr-container-box text-center">
-              <div class="qr-placeholder-box" id="qrDisplayContainer">
-                <i class="fas fa-qrcode qr-placeholder-icon"></i>
-                <p>Haz clic abajo para solicitar la sesión e iniciar el escáner QR.</p>
-              </div>
-              <button class="btn-orange mt-4" id="generateQrBtn" onclick="requestQrSession()">
-                <i class="fas fa-sync-alt"></i> GENERAR CÓDIGO QR
-              </button>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </section>
-
-    <!-- HOW TO CONNECT SECTION -->
-    <section class="how-to-connect-section" id="how-to-connect">
-      <div class="container">
-        <div class="section-title-wrapper text-center">
-          <h2 class="section-title">CÓMO CONECTAR</h2>
-          <p class="section-subtitle">Sigue estos 4 sencillos pasos para activar Terminal Vast Bot en tu cuenta de WhatsApp.</p>
-        </div>
-
-        <div class="steps-grid">
-          <!-- Step 1 -->
-          <div class="step-card">
-            <div class="step-number">01</div>
-            <div class="step-icon"><i class="fas fa-mobile-alt"></i></div>
-            <h3 class="step-title">Ingresa tu Número</h3>
-            <p class="step-desc">Introduce tu número telefónico completo de WhatsApp incluyendo el código de país correspondiente.</p>
-          </div>
-
-          <!-- Step 2 -->
-          <div class="step-card">
-            <div class="step-number">02</div>
-            <div class="step-icon"><i class="fas fa-key"></i></div>
-            <h3 class="step-title">Genera el Código</h3>
-            <p class="step-desc">Presiona "Obtener Código" o elige el método de Código QR para solicitar la clave de vinculación única.</p>
-          </div>
-
-          <!-- Step 3 -->
-          <div class="step-card">
-            <div class="step-number">03</div>
-            <div class="step-icon"><i class="fab fa-whatsapp"></i></div>
-            <h3 class="step-title">Vincula en WhatsApp</h3>
-            <p class="step-desc">Abre WhatsApp &gt; Menú Ajustes &gt; Dispositivos vinculados &gt; Vincular dispositivo e ingresa la clave o escanea el QR.</p>
-          </div>
-
-          <!-- Step 4 -->
-          <div class="step-card">
-            <div class="step-number">04</div>
-            <div class="step-icon"><i class="fas fa-check-circle"></i></div>
-            <h3 class="step-title">Bot Activo</h3>
-            <p class="step-desc">¡Listo! Terminal Vast Bot quedará conectado de forma segura y comenzará a ejecutar los comandos configurados.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- FEATURES / WHY TERMINAL VAST SECTION -->
-    <section class="features-section" id="features">
-      <div class="container">
-        <div class="section-title-wrapper text-center">
-          <h2 class="section-title">POR QUÉ ELEGIR TERMINAL VAST BOT</h2>
-          <p class="section-subtitle">Diseñado para la máxima velocidad, estabilidad y control total sobre tu experiencia en WhatsApp.</p>
-        </div>
-
-        <div class="features-grid">
-          <!-- Feature 1 -->
-          <div class="feature-card">
-            <div class="feature-card-icon"><i class="fas fa-bolt"></i></div>
-            <h3 class="feature-card-title">Conexión Rápida</h3>
-            <p class="feature-card-desc">Conexión multi-device optimizada que mantiene el bot activo 24/7 sin desconexiones repentinas.</p>
-          </div>
-
-          <!-- Feature 2 -->
-          <div class="feature-card">
-            <div class="feature-card-icon"><i class="fas fa-reply-all"></i></div>
-            <h3 class="feature-card-title">Respuestas Automáticas</h3>
-            <p class="feature-card-desc">Responde comandos, consultas y preguntas frecuentes de forma instantánea y personalizada.</p>
-          </div>
-
-          <!-- Feature 3 -->
-          <div class="feature-card">
-            <div class="feature-card-icon"><i class="fas fa-trash-restore"></i></div>
-            <h3 class="feature-card-title">Anti-Eliminar</h3>
-            <p class="feature-card-desc">Guarda y recupera automáticamente mensajes, imágenes y notas de voz borradas por los participantes.</p>
-          </div>
-
-          <!-- Feature 4 -->
-          <div class="feature-card">
-            <div class="feature-card-icon"><i class="fas fa-eye-slash"></i></div>
-            <h3 class="feature-card-title">Anti-Ver Una Vez</h3>
-            <p class="feature-card-desc">Permite visualizar e inspeccionar contenido multimedia enviado como 'Ver una sola vez' cuantas veces quieras.</p>
-          </div>
-
-          <!-- Feature 5 -->
-          <div class="feature-card">
-            <div class="feature-card-icon"><i class="fas fa-icons"></i></div>
-            <h3 class="feature-card-title">Herramientas de Estado</h3>
-            <p class="feature-card-desc">Descarga estados, gestiona menciones automáticas y publica actualizaciones directamente desde el bot.</p>
-          </div>
-
-          <!-- Feature 6 -->
-          <div class="feature-card">
-            <div class="feature-card-icon"><i class="fas fa-brain"></i></div>
-            <h3 class="feature-card-title">IA Integrada</h3>
-            <p class="feature-card-desc">Asistente de inteligencia artificial inteligente para conversación, generación de contenido e interacción.</p>
-          </div>
-
-          <!-- Feature 7 -->
-          <div class="feature-card">
-            <div class="feature-card-icon"><i class="fas fa-sliders-h"></i></div>
-            <h3 class="feature-card-title">Ajustes Avanzados</h3>
-            <p class="feature-card-desc">Panel de administración en tiempo real para modificar prefijos, modos privado/público y usuarios sudo.</p>
-          </div>
-
-          <!-- Feature 8 -->
-          <div class="feature-card">
-            <div class="feature-card-icon"><i class="fas fa-lock"></i></div>
-            <h3 class="feature-card-title">Privacidad Garantizada</h3>
-            <p class="feature-card-desc">Arquitectura 100% autohospedada. Tus credenciales y sesiones nunca se comparten con terceros.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- SECURITY & PRIVACY HIGHLIGHT SECTION -->
-    <section class="security-section" id="security">
-      <div class="container">
-        <div class="security-banner-card">
-          <div class="security-content-col">
-            <div class="security-tag"><i class="fas fa-user-shield"></i> MÁXIMA PROTECCIÓN</div>
-            <h2 class="security-title">SEGURIDAD Y PRIVACIDAD DE ALTO NIVEL</h2>
-            <p class="security-desc">
-              Terminal Vast Bot opera mediante un sistema de autenticación interno fuera de línea, sin APIs externas de autenticación ni verificación por SMS o correo electrónico. Todos los datos de sesión y contraseñas se almacenan localmente con algoritmos de hashing seguro (bcrypt) y cookies HTTP-only cifradas.
-            </p>
-            <div class="security-highlights">
-              <div class="highlight-item"><i class="fas fa-check-circle"></i> Sesiones locales cifradas</div>
-              <div class="highlight-item"><i class="fas fa-check-circle"></i> Cero proveedores externos</div>
-              <div class="highlight-item"><i class="fas fa-check-circle"></i> Control de acceso por roles (Admin/User)</div>
-            </div>
-          </div>
-          <div class="security-graphic-col">
-            <div class="shield-graphic-box">
-              <i class="fas fa-shield-alt shield-icon"></i>
-              <div class="shield-pulse"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-  </main>
-
-  <!-- DASHBOARD / CONTROL PANEL DRAWER (FOR LOGGED IN / ADMIN USERS) -->
-  <div class="dashboard-panel-modal" id="dashboardModal">
-    <div class="dashboard-modal-content">
-      <div class="dashboard-header">
-        <h2><i class="fas fa-sliders-h text-orange"></i> Panel de Control Terminal Vast</h2>
-        <button class="modal-close-btn" onclick="closeDashboard()"><i class="fas fa-times"></i></button>
-      </div>
-
-      <div class="dashboard-body">
-        <div class="dashboard-tabs">
-          <button class="dash-tab active" onclick="switchDashTab('control')"><i class="fas fa-toggle-on"></i> Control de Bot</button>
-          <button class="dash-tab" onclick="switchDashTab('analytics')"><i class="fas fa-chart-line"></i> Analíticas</button>
-          <button class="dash-tab" onclick="switchDashTab('sudo')"><i class="fas fa-users-cog"></i> Usuarios y Sudo</button>
-          <button class="dash-tab" onclick="switchDashTab('settings')"><i class="fas fa-cog"></i> Ajustes</button>
-        </div>
-
-        <div class="dash-panel-content active" id="dashPanelControl">
-          <h3>Modo Operativo del Bot</h3>
-          <p class="text-dim mb-4">Cambia la visibilidad y respuesta del bot entre público o privado.</p>
-          <div class="mode-status-box mb-4">
-            <span>Estado Actual:</span>
-            <span id="dashActiveMode" class="badge-status online">PÚBLICO</span>
-          </div>
-          <div class="flex-gap-4">
-            <button class="btn-orange" onclick="setBotMode('public')"><i class="fas fa-globe"></i> Modo Público</button>
-            <button class="btn-secondary" onclick="setBotMode('private')"><i class="fas fa-lock"></i> Modo Privado</button>
-          </div>
-
-          <hr class="dash-divider">
-
-          <h3>Reinicio de Servidor</h3>
-          <p class="text-dim mb-4">Reinicia el motor de Terminal Vast Bot si requieres aplicar cambios profundos.</p>
-          <button class="btn-danger" onclick="restartEngine()"><i class="fas fa-power-off"></i> Reiniciar Bot Engine</button>
-        </div>
-
-        <div class="dash-panel-content" id="dashPanelAnalytics" style="display:none;">
-          <h3>Analíticas del Sistema</h3>
-          <div class="dash-stats-grid">
-            <div class="dash-stat-card">
-              <div class="stat-label">Tiempo en línea (Uptime)</div>
-              <div class="stat-value" id="dashUptime">--</div>
-            </div>
-            <div class="dash-stat-card">
-              <div class="stat-label">Uso de RAM Heap</div>
-              <div class="stat-value" id="dashRam">-- MB</div>
-            </div>
-            <div class="dash-stat-card">
-              <div class="stat-label">Sesiones Web Activas</div>
-              <div class="stat-value" id="dashSessions">--</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="dash-panel-content" id="dashPanelSudo" style="display:none;">
-          <h3>Administración Sudo</h3>
-          <form id="dashSudoForm" class="flex-gap-2 mb-4">
-            <input type="tel" class="form-input" id="sudoPhoneInput" placeholder="Número de teléfono (ej. 256702662846)" required>
-            <button type="submit" class="btn-orange whitespace-nowrap"><i class="fas fa-plus"></i> Añadir Sudo</button>
-          </form>
-          <div id="sudoUsersList">Cargando lista sudo...</div>
-        </div>
-
-        <div class="dash-panel-content" id="dashPanelSettings" style="display:none;">
-          <h3>Configuración del Bot</h3>
-          <form id="dashSettingsForm">
-            <div class="form-group mb-3">
-              <label>Nombre del Bot</label>
-              <input type="text" class="form-input" id="settingBotName">
-            </div>
-            <div class="form-group mb-3">
-              <label>Nombre del Propietario</label>
-              <input type="text" class="form-input" id="settingOwnerName">
-            </div>
-            <div class="form-group mb-3">
-              <label>Número del Propietario</label>
-              <input type="tel" class="form-input" id="settingOwnerNumber">
-            </div>
-            <div class="form-group mb-4">
-              <label>Prefijo de Comandos</label>
-              <input type="text" class="form-input" id="settingPrefix">
-            </div>
-            <button type="submit" class="btn-orange"><i class="fas fa-save"></i> Guardar Ajustes</button>
-          </form>
-        </div>
-      </div>
-    </div>
+    </footer>
   </div>
 
-  <!-- INTERNAL OFFLINE AUTHENTICATION MODAL -->
+  <!-- ==================== AUTHENTICATION MODAL ==================== -->
   <div class="modal-overlay" id="authModal">
-    <div class="auth-modal-card">
-      <button class="modal-close-btn" id="authModalCloseBtn"><i class="fas fa-times"></i></button>
+    <div class="modal-card">
+      <button class="modal-close" onclick="closeAuthModal()"><i class="fas fa-times"></i></button>
 
-      <div class="auth-header text-center">
-        <div class="brand-icon mx-auto mb-2"><i class="fas fa-terminal"></i></div>
-        <h2 id="authModalTitle" class="auth-title">Iniciar Sesión en Terminal Vast</h2>
-        <p class="auth-subtitle">Sistema de autenticación interno fuera de línea</p>
+      <div class="text-center" style="text-align: center; margin-bottom: 20px;">
+        <h2 class="modal-title" id="authModalTitle">TERMINAL <span>VAST</span></h2>
+        <p class="modal-subtitle" id="authModalSubtitle">Internal Offline Authentication System</p>
       </div>
 
-      <div id="authErrorMsg" class="auth-error-alert" style="display:none;"></div>
+      <div id="authAlert" style="display:none; padding: 10px; border-radius: var(--radius); margin-bottom: 16px; font-size: 13px; font-weight: 500;"></div>
 
       <!-- Login Form -->
-      <form id="authLoginForm" class="auth-form">
+      <form id="loginForm" onsubmit="handleLogin(event)">
         <div class="form-group">
-          <label for="loginUsername">Usuario</label>
-          <input type="text" class="form-input" id="loginUsername" required autocomplete="username">
+          <label for="loginIdentifier"><i class="fas fa-user"></i> Username or Email</label>
+          <input type="text" id="loginIdentifier" class="form-input" placeholder="e.g. admin or user@terminalvast.bot" required>
         </div>
         <div class="form-group">
-          <label for="loginPassword">Contraseña</label>
-          <input type="password" class="form-input" id="loginPassword" required autocomplete="current-password">
+          <label for="loginPassword"><i class="fas fa-lock"></i> Password</label>
+          <input type="password" id="loginPassword" class="form-input" placeholder="••••••••" required>
         </div>
-        <button type="submit" class="btn-orange w-full justify-center">
-          <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+        <button type="submit" class="button primary" style="width: 100%; margin-top: 10px;">
+          <i class="fas fa-sign-in-alt"></i> Login
         </button>
-        <div class="auth-switch-text">
-          ¿No tienes una cuenta? <a href="#" id="switchToRegister">Regístrate aquí</a>
+        <div style="text-align: center; margin-top: 16px; font-size: 13px; color: var(--muted);">
+          Don't have an account? <a href="#" onclick="toggleAuthMode('register'); return false;" style="color: var(--orange); font-weight: 600;">Register here</a>
         </div>
       </form>
 
       <!-- Register Form -->
-      <form id="authRegisterForm" class="auth-form" style="display:none;">
+      <form id="registerForm" onsubmit="handleRegister(event)" style="display:none;">
         <div class="form-group">
-          <label for="regUsername">Nombre de Usuario</label>
-          <input type="text" class="form-input" id="regUsername" required minlength="3">
+          <label for="regUsername"><i class="fas fa-user"></i> Username</label>
+          <input type="text" id="regUsername" class="form-input" placeholder="e.g. meddy" required minlength="3">
         </div>
         <div class="form-group">
-          <label for="regPassword">Contraseña (Mín. 6 caracteres)</label>
-          <input type="password" class="form-input" id="regPassword" required minlength="6">
+          <label for="regEmail"><i class="fas fa-envelope"></i> Email Address</label>
+          <input type="email" id="regEmail" class="form-input" placeholder="e.g. meddy@terminalvast.bot" required>
         </div>
-        <button type="submit" class="btn-orange w-full justify-center">
-          <i class="fas fa-user-plus"></i> Crear Cuenta
+        <div class="form-group">
+          <label for="regPassword"><i class="fas fa-lock"></i> Password (Min 6 chars)</label>
+          <input type="password" id="regPassword" class="form-input" placeholder="••••••••" required minlength="6">
+        </div>
+        <button type="submit" class="button primary" style="width: 100%; margin-top: 10px;">
+          <i class="fas fa-user-plus"></i> Create Account
         </button>
-        <div class="auth-switch-text">
-          ¿Ya tienes cuenta? <a href="#" id="switchToLogin">Inicia sesión</a>
+        <div style="text-align: center; margin-top: 16px; font-size: 13px; color: var(--muted);">
+          Already have an account? <a href="#" onclick="toggleAuthMode('login'); return false;" style="color: var(--orange); font-weight: 600;">Sign in</a>
         </div>
       </form>
-
-      <!-- Authenticated Profile View -->
-      <div id="authProfileView" class="auth-profile-box" style="display:none;">
-        <div class="user-avatar-large mx-auto mb-3" id="profileAvatarInitial">A</div>
-        <h3 id="profileUsername" class="profile-username">Admin</h3>
-        <span id="profileRole" class="profile-role-badge">Administrador</span>
-
-        <hr class="dash-divider">
-
-        <h4 class="mb-2 font-bold text-sm">Cambiar Contraseña</h4>
-        <form id="changePasswordForm" class="mb-4">
-          <div class="form-group mb-2">
-            <input type="password" class="form-input" id="oldPassword" placeholder="Contraseña actual" required>
-          </div>
-          <div class="form-group mb-3">
-            <input type="password" class="form-input" id="newPassword" placeholder="Nueva contraseña (mín 6)" required minlength="6">
-          </div>
-          <button type="submit" class="btn-secondary w-full justify-center text-xs">Actualizar Contraseña</button>
-        </form>
-
-        <button class="btn-danger w-full justify-center" id="logoutBtn">
-          <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
-        </button>
-      </div>
-
     </div>
   </div>
 
-  <!-- FOOTER SECTION -->
-  <footer class="site-footer">
-    <div class="container">
-      <div class="footer-top-grid">
-        <!-- Brand Info Column -->
-        <div class="footer-col footer-brand-col">
-          <div class="brand-logo mb-3">
-            <div class="brand-icon"><i class="fas fa-terminal"></i></div>
-            <span class="brand-name">TERMINAL VAST</span>
-          </div>
-          <p class="footer-desc">
-            Terminal Vast Bot es una plataforma avanzada y automatizada para WhatsApp multi-device. Ofrece herramientas de moderación, IA, anti-delete y respuestas personalizadas con máxima estabilidad.
-          </p>
-          <div class="footer-status">
-            <span class="status-indicator-dot"></span>
-            <span>Sistema Operativo • WhatsApp Web API</span>
-          </div>
+
+  <!-- ==================== POST-AUTH DASHBOARD ==================== -->
+  <div class="dashboard-container" id="dashboardContainer">
+
+    <!-- Top Navigation Bar -->
+    <header class="dash-topbar">
+      <div class="dash-topbar-left">
+        <button class="hamburger-btn" id="sidebarToggleBtn" onclick="toggleSidebar()">
+          <i class="fas fa-bars"></i>
+        </button>
+
+        <a href="#" onclick="navigateToPage('topup'); return false;" class="brand" style="text-decoration:none;">
+          TERMINAL <span>VAST</span>
+        </a>
+      </div>
+
+      <div class="dash-topbar-right">
+        <!-- Live Clock with Date & Time -->
+        <div class="dash-clock" id="liveClockDisplay">
+          <i class="fas fa-clock"></i> <span id="clockValue">00:00:00 • 01/01/2026</span>
         </div>
 
-        <!-- Links Column 1: Funcionalidades -->
-        <div class="footer-col">
-          <h4 class="footer-heading">Funcionalidades</h4>
-          <ul class="footer-links">
-            <li><a href="#connect"><i class="fas fa-chevron-right text-xs"></i> Pair Code & QR</a></li>
-            <li><a href="#features"><i class="fas fa-chevron-right text-xs"></i> Respuestas Automáticas</a></li>
-            <li><a href="#features"><i class="fas fa-chevron-right text-xs"></i> Anti-Eliminar Mensajes</a></li>
-            <li><a href="#features"><i class="fas fa-chevron-right text-xs"></i> Anti-Ver Una Vez</a></li>
-            <li><a href="#features"><i class="fas fa-chevron-right text-xs"></i> IA Chat Asistente</a></li>
-          </ul>
-        </div>
+        <!-- Wallet Balance Pill -->
+        <a href="#" onclick="navigateToPage('topup'); return false;" class="trust-pill" style="display: flex; align-items: center; gap: 6px; text-decoration:none; cursor:pointer;">
+          <i class="fas fa-wallet" style="color:var(--orange);"></i>
+          <span id="topbarBalance">$0.00</span>
+        </a>
 
-        <!-- Links Column 2: Navegación -->
-        <div class="footer-col">
-          <h4 class="footer-heading">Navegación</h4>
-          <ul class="footer-links">
-            <li><a href="#hero"><i class="fas fa-chevron-right text-xs"></i> Inicio</a></li>
-            <li><a href="#connect"><i class="fas fa-chevron-right text-xs"></i> Conectar WhatsApp</a></li>
-            <li><a href="#how-to-connect"><i class="fas fa-chevron-right text-xs"></i> Pasos de Conexión</a></li>
-            <li><a href="#features"><i class="fas fa-chevron-right text-xs"></i> Características</a></li>
-            <li><a href="#security"><i class="fas fa-chevron-right text-xs"></i> Seguridad Local</a></li>
-          </ul>
-        </div>
+        <!-- Bot Status Indicator -->
+        <span class="status-badge-live" id="topbarBotStatus">
+          <span class="status-dot"></span> Online
+        </span>
 
-        <!-- Links Column 3: Cuenta -->
-        <div class="footer-col">
-          <h4 class="footer-heading">Cuenta y Panel</h4>
-          <ul class="footer-links">
-            <li><a href="#" onclick="openAuthModal()"><i class="fas fa-chevron-right text-xs"></i> Iniciar Sesión</a></li>
-            <li><a href="#" onclick="openAuthModal()"><i class="fas fa-chevron-right text-xs"></i> Registrarse</a></li>
-            <li><a href="#" onclick="openDashboard()"><i class="fas fa-chevron-right text-xs"></i> Bot Dashboard</a></li>
-            <li><a href="#security"><i class="fas fa-chevron-right text-xs"></i> Autenticación Interna</a></li>
-          </ul>
-        </div>
+        <!-- Profile Icon Button -->
+        <a href="#" onclick="navigateToPage('profile'); return false;" class="profile-icon-btn" id="topbarProfileAvatar" title="Profile">
+          U
+        </a>
+      </div>
+    </header>
 
-        <!-- Links Column 4: Legal -->
-        <div class="footer-col">
-          <h4 class="footer-heading">Legal y Privacidad</h4>
-          <ul class="footer-links">
-            <li><a href="#"><i class="fas fa-chevron-right text-xs"></i> Términos del Servicio</a></li>
-            <li><a href="#"><i class="fas fa-chevron-right text-xs"></i> Política de Privacidad</a></li>
-            <li><a href="#"><i class="fas fa-chevron-right text-xs"></i> Seguridad Autohospedada</a></li>
-            <li><a href="#"><i class="fas fa-chevron-right text-xs"></i> Licencia de Software</a></li>
-          </ul>
+    <!-- Sidebar Drawer Menu -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+    <aside class="sidebar-drawer" id="sidebarDrawer">
+      <div class="sidebar-header">
+        <div class="brand">TERMINAL <span>VAST</span></div>
+        <button class="hamburger-btn" onclick="closeSidebar()"><i class="fas fa-times"></i></button>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="#" class="sidebar-link active" id="navLinkTopup" onclick="navigateToPage('topup'); return false;">
+          <i class="fas fa-wallet"></i> Top Up & Wallet
+        </a>
+        <a href="#" class="sidebar-link" id="navLinkConnect" onclick="navigateToPage('connect'); return false;">
+          <i class="fas fa-plug"></i> WhatsApp Connect
+        </a>
+        <a href="#" class="sidebar-link" id="navLinkSettings" onclick="navigateToPage('settings'); return false;">
+          <i class="fas fa-sliders-h"></i> Bot Settings
+        </a>
+        <a href="#" class="sidebar-link" id="navLinkProfile" onclick="navigateToPage('profile'); return false;">
+          <i class="fas fa-user-circle"></i> Profile
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button class="button danger sm" style="width: 100%; justify-content: center;" onclick="handleLogout()">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Dashboard Content Area -->
+    <main class="dash-content">
+
+      <!-- Skeleton Loading State -->
+      <div id="dashSkeletonLoading" style="display: none;">
+        <div class="skeleton-box skeleton-card"></div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+          <div class="skeleton-box" style="height: 180px;"></div>
+          <div class="skeleton-box" style="height: 180px;"></div>
         </div>
       </div>
 
-      <div class="footer-bottom-bar">
-        <p>&copy; 2026 Terminal Vast Bot. Todos los derechos reservados.</p>
-        <div class="footer-bottom-links">
-          <span>Desarrollado para conexión rápida e intuitiva</span>
+      <!-- PAGE 1: TOP UP & WALLET PAGE -->
+      <section class="dash-page active" id="pageTopup">
+        <div class="wallet-card" style="margin-bottom: 24px;">
+          <div class="status-pill">
+            <span class="status-dot"></span> Current Balance
+          </div>
+          <div class="wallet-balance" id="dashWalletBalanceDisplay">$0.00</div>
+          <div class="wallet-caption">Account Wallet Credit</div>
+
+          <div class="wallet-actions">
+            <button class="button primary" onclick="openTopUpModal()"><i class="fas fa-plus-circle"></i> Top Up Balance</button>
+          </div>
         </div>
-      </div>
+
+        <div class="dash-card">
+          <h3 class="dash-card-title"><i class="fas fa-history"></i> Quick Top Up Options</h3>
+          <p style="color: var(--muted); font-size: 14px; margin-bottom: 16px;">Instant account credit balance adjustment.</p>
+
+          <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+            <button class="button" onclick="executeQuickTopUp(10)">+$10.00</button>
+            <button class="button" onclick="executeQuickTopUp(25)">+$25.00</button>
+            <button class="button" onclick="executeQuickTopUp(50)">+$50.00</button>
+            <button class="button primary" onclick="openTopUpModal()">Custom Amount</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- PAGE 2: CONNECT WHATSAPP PAGE -->
+      <section class="dash-page" id="pageConnect">
+        <div class="section-header" style="margin-bottom: 24px; text-align: left;">
+          <div class="section-label">Session Pairing</div>
+          <h2 class="section-title">Connect WhatsApp Bot</h2>
+          <p class="section-description">Link your WhatsApp number using an 8-digit pair code.</p>
+        </div>
+
+        <div class="dash-grid">
+          <div class="dash-card">
+            <h3 class="dash-card-title"><i class="fas fa-key"></i> Pair Code Link</h3>
+            <p style="color: var(--muted); font-size: 13px; margin-bottom: 16px;">Enter your phone number with country code (e.g. 256702662846)</p>
+
+            <form onsubmit="handlePairRequest(event)">
+              <div class="form-group">
+                <input type="tel" id="dashPhoneInput" class="form-input" placeholder="256702662846" required>
+              </div>
+              <button type="submit" id="dashPairSubmitBtn" class="button primary" style="width: 100%;">
+                <i class="fas fa-bolt"></i> Generate Pairing Code
+              </button>
+            </form>
+
+            <div id="dashPairResultBox" style="display: none; margin-top: 20px; padding: 16px; background: var(--surface-2); border-radius: var(--radius); text-align: center;">
+              <span style="font-size: 12px; color: var(--muted); display: block; margin-bottom: 6px;">YOUR PAIR CODE</span>
+              <div id="dashPairCodeDisplay" style="font-family: monospace; font-size: 26px; font-weight: 700; color: var(--orange); letter-spacing: 4px; margin-bottom: 12px;">--------</div>
+              <p style="font-size: 12px; color: var(--muted);">Open WhatsApp &gt; Linked Devices &gt; Link with phone number instead</p>
+            </div>
+          </div>
+
+          <div class="dash-card">
+            <h3 class="dash-card-title"><i class="fas fa-signal"></i> Active Session Info</h3>
+            <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 12px;">
+              <div style="display: flex; justify-content: space-between; font-size: 14px;">
+                <span style="color: var(--muted);">Bot Status:</span>
+                <span class="status-badge-live" id="connectBotStatusBadge"><span class="status-dot"></span> Online</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 14px;">
+                <span style="color: var(--muted);">Platform:</span>
+                <span style="color: var(--text);" id="connectPlatform">Ubuntu / Node</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 14px;">
+                <span style="color: var(--muted);">Active Sessions:</span>
+                <span style="color: var(--orange); font-weight: 600;" id="connectSessionsCount">1</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PAGE 3: BOT SETTINGS PAGE -->
+      <section class="dash-page" id="pageSettings">
+        <div class="section-header" style="margin-bottom: 24px; text-align: left;">
+          <div class="section-label">Configuration</div>
+          <h2 class="section-title">Bot Settings</h2>
+          <p class="section-description">Customize bot behaviour, prefix, mode and details.</p>
+        </div>
+
+        <div class="dash-card" style="max-width: 600px;">
+          <form id="botSettingsForm" onsubmit="saveBotSettings(event)">
+            <div class="form-group">
+              <label><i class="fas fa-robot"></i> Bot Name</label>
+              <input type="text" id="settingBotName" class="form-input" required>
+            </div>
+
+            <div class="form-group">
+              <label><i class="fas fa-user-shield"></i> Owner Name</label>
+              <input type="text" id="settingOwnerName" class="form-input" required>
+            </div>
+
+            <div class="form-group">
+              <label><i class="fas fa-phone"></i> Owner Number</label>
+              <input type="tel" id="settingOwnerNumber" class="form-input" required>
+            </div>
+
+            <div class="form-group">
+              <label><i class="fas fa-terminal"></i> Command Prefix</label>
+              <input type="text" id="settingPrefix" class="form-input" required>
+            </div>
+
+            <div class="form-group">
+              <label><i class="fas fa-globe"></i> Bot Visibility Mode</label>
+              <select id="settingMode" class="form-input">
+                <option value="public">Public (Responds to all users)</option>
+                <option value="private">Private (Responds to owner only)</option>
+              </select>
+            </div>
+
+            <button type="submit" class="button primary" style="margin-top: 12px;"><i class="fas fa-save"></i> Save Settings</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- PAGE 4: PROFILE PAGE -->
+      <section class="dash-page" id="pageProfile">
+        <div class="section-header" style="margin-bottom: 24px; text-align: left;">
+          <div class="section-label">User Account</div>
+          <h2 class="section-title">Profile</h2>
+          <p class="section-description">Your profile information and password management.</p>
+        </div>
+
+        <div class="dash-grid">
+          <div class="dash-card">
+            <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px;">
+              <div class="profile-icon-btn" id="profileBigAvatar" style="width: 54px; height: 54px; font-size: 22px;">U</div>
+              <div>
+                <h3 id="profileUsernameDisplay" style="font-size: 18px; color: var(--text);">User</h3>
+                <span id="profileRoleBadge" class="status-pill">user</span>
+              </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 10px; font-size: 14px; margin-bottom: 20px;">
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--muted);">Email:</span>
+                <span id="profileEmailDisplay" style="color: var(--text);">user@terminalvast.bot</span>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--muted);">Wallet Balance:</span>
+                <span id="profileBalanceDisplay" style="color: var(--orange); font-weight: 700;">$0.00</span>
+              </div>
+            </div>
+
+            <button class="button danger" onclick="handleLogout()" style="width: 100%;"><i class="fas fa-sign-out-alt"></i> Logout</button>
+          </div>
+
+          <div class="dash-card">
+            <h3 class="dash-card-title"><i class="fas fa-key"></i> Change Password</h3>
+            <form onsubmit="handlePasswordChange(event)">
+              <div class="form-group">
+                <label>Current Password</label>
+                <input type="password" id="oldPasswordInput" class="form-input" required>
+              </div>
+              <div class="form-group">
+                <label>New Password (min 6 characters)</label>
+                <input type="password" id="newPasswordInput" class="form-input" required minlength="6">
+              </div>
+              <button type="submit" class="button primary"><i class="fas fa-check"></i> Update Password</button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- TOP UP CUSTOM MODAL -->
+  <div class="modal-overlay" id="topUpModal">
+    <div class="modal-card">
+      <button class="modal-close" onclick="closeTopUpModal()"><i class="fas fa-times"></i></button>
+      <h2 class="modal-title">Top Up <span>Wallet</span></h2>
+      <p class="modal-subtitle">Enter amount to credit your account balance</p>
+
+      <form onsubmit="handleCustomTopUp(event)">
+        <div class="form-group">
+          <label>Amount ($)</label>
+          <input type="number" id="topUpAmountInput" class="form-input" min="1" step="0.01" placeholder="25.00" required>
+        </div>
+        <button type="submit" class="button primary" style="width: 100%; margin-top: 10px;">
+          <i class="fas fa-credit-card"></i> Add Funds Now
+        </button>
+      </form>
     </div>
-  </footer>
+  </div>
 
-</div>
-
-<script src="/app.js"></script>
+  <script src="/app.js"></script>
 </body>
 </html>
