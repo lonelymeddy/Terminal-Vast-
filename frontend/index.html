@@ -27,10 +27,6 @@
         </a>
 
         <div style="display: flex; align-items: center; gap: 12px;">
-          <button class="button primary sm" id="landingAuthBtn" onclick="openAuthModal('login')">
-            <i class="fas fa-user-circle"></i> Login / Account
-          </button>
-
           <button class="menu-button" id="menuButton" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="mobileMenu">
             <span></span>
             <span></span>
@@ -156,6 +152,12 @@
               <h3>Secure &amp; Private</h3>
               <p class="card-text">Encrypted sessions and secure server-side validation help keep your connection protected.</p>
             </article>
+          </div>
+
+          <div style="text-align: center; margin-top: 32px;" class="reveal">
+            <button class="button primary" onclick="openAuthModal('login')">
+              Get Started
+            </button>
           </div>
         </div>
       </section>
