@@ -3,7 +3,7 @@ let currentActivePage = getPageFromPath() || localStorage.getItem('tv_active_pag
 
 function getPageFromPath() {
     const pathname = window.location.pathname.replace(/^\/+|\/+$/g, '');
-    const validPages = ['topup', 'connect', 'settings', 'profile'];
+    const validPages = ['topup', 'connect', 'settings', 'profile', 'blog', 'history', 'admin'];
     if (validPages.includes(pathname.toLowerCase())) {
         return pathname.toLowerCase();
     }
@@ -218,6 +218,19 @@ function renderAuthenticatedUI() {
 
     updateWalletDisplay(currentUser.balance || 0);
 
+    // Admin UI checks
+    const isAdmin = currentUser.role === 'admin';
+    const navLinkAdmin = document.getElementById("navLinkAdmin");
+    const adminPassageContainer = document.getElementById("adminPassageContainer");
+    const blogAdminActionBtn = document.getElementById("blogAdminActionBtn");
+
+    if (navLinkAdmin) navLinkAdmin.style.display = isAdmin ? "flex" : "none";
+    if (adminPassageContainer) adminPassageContainer.style.display = isAdmin ? "block" : "none";
+    if (blogAdminActionBtn) blogAdminActionBtn.style.display = isAdmin ? "block" : "none";
+
+    // Direct Messages / Warnings Banner Display
+    renderDirectMessagesAndWarnings();
+
     // Show initial skeleton loading on dashboard login / session load
     showSkeletonLoading();
     const pages = document.querySelectorAll(".dash-page");
@@ -226,6 +239,7 @@ function renderAuthenticatedUI() {
     // Initial load for dashboard pages
     loadBotSettings();
     loadSudoAndSessions();
+    if (isAdmin) loadAdminDashboardData();
 
     setTimeout(() => {
         navigateToPage(currentActivePage);
@@ -397,6 +411,449 @@ async function handlePasswordChange(e) {
             alert("Password updated successfully!");
             document.getElementById("oldPasswordInput").value = "";
             document.getElementById("newPasswordInput").value = "";
+        });
+    } catch (err) {
+        alert("Error: " + err.message);
+    }
+}
+
+/* ==========================================================================
+   BLOG PAGE FUNCTIONALITY (User & Admin Perspective)
+   ========================================================================== */
+let uploadedBlogBase64Image = null;
+
+async function loadBlogPosts() {
+    const container = document.getElementById("blogPostsContainer");
+    if (!container) return;
+
+    try {
+        const res = await fetch('/api/blog');
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to load blog posts');
+
+        const posts = data.posts || [];
+        if (posts.length === 0) {
+            container.innerHTML = `
+                <div class="dash-card" style="text-align: center; padding: 40px 20px;">
+                    <i class="fas fa-newspaper" style="font-size: 36px; color: var(--muted-2); margin-bottom: 12px;"></i>
+                    <h3 style="color: var(--text);">No blog articles published yet</h3>
+                    <p style="color: var(--muted); font-size: 13.5px;">Check back later for updates and announcements.</p>
+                </div>
+            `;
+            return;
+        }
+
+        const isAdmin = currentUser && currentUser.role === 'admin';
+
+        container.innerHTML = posts.map(post => {
+            const likesCount = (post.likes || []).length;
+            const dislikesCount = (post.dislikes || []).length;
+            const userLiked = currentUser && (post.likes || []).includes(currentUser.username);
+            const userDisliked = currentUser && (post.dislikes || []).includes(currentUser.username);
+            const commentsList = post.comments || [];
+
+            return `
+                <article class="blog-card" id="blogPostCard_${post.id}">
+                    ${post.image ? `
+                        <div class="blog-image-wrap">
+                            <img src="${post.image}" alt="${post.title}" loading="lazy">
+                        </div>
+                    ` : ''}
+
+                    <div class="blog-meta">
+                        <span><i class="fas fa-user-circle" style="color: var(--orange);"></i> ${post.author || 'Admin'}</span>
+                        <span>•</span>
+                        <span><i class="fas fa-calendar-alt"></i> ${new Date(post.createdAt).toLocaleDateString()}</span>
+                    </div>
+
+                    <h2 class="blog-title">${post.title}</h2>
+                    <div class="blog-content">${post.content}</div>
+
+                    <div class="blog-actions">
+                        <button class="react-btn ${userLiked ? 'active-like' : ''}" onclick="toggleBlogReaction('${post.id}', 'like')">
+                            <i class="fas fa-thumbs-up"></i> <span>${likesCount}</span>
+                        </button>
+
+                        <button class="react-btn ${userDisliked ? 'active-dislike' : ''}" onclick="toggleBlogReaction('${post.id}', 'dislike')">
+                            <i class="fas fa-thumbs-down"></i> <span>${dislikesCount}</span>
+                        </button>
+
+                        <span style="font-size: 13px; color: var(--muted); margin-left: auto;">
+                            <i class="fas fa-comments"></i> ${commentsList.length} Comments
+                        </span>
+
+                        ${isAdmin ? `
+                            <button class="button danger sm" onclick="deleteBlogPost('${post.id}')" title="Delete Article (Admin)">
+                                <i class="fas fa-trash-alt"></i> Delete
+                            </button>
+                        ` : ''}
+                    </div>
+
+                    <!-- Comment Section -->
+                    <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border);">
+                        <h4 style="font-size: 14px; color: var(--text); margin-bottom: 12px;"><i class="fas fa-comments" style="color: var(--orange);"></i> Discussion &amp; Comments</h4>
+
+                        <form onsubmit="handleAddBlogComment(event, '${post.id}')" style="display: flex; gap: 8px; margin-bottom: 16px;">
+                            <input type="text" class="form-input" placeholder="Write a comment..." required style="padding: 8px 12px; font-size: 13px;">
+                            <button type="submit" class="button primary sm" style="white-space: nowrap;">Comment</button>
+                        </form>
+
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            ${commentsList.length === 0 ? `<span style="font-size: 12px; color: var(--muted-2);">No comments yet. Be the first to comment!</span>` : ''}
+                            ${commentsList.map(c => `
+                                <div style="background: var(--surface-2); padding: 10px 14px; border-radius: var(--radius); font-size: 13px;">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                        <span style="font-weight: 600; color: var(--orange);">${c.username}</span>
+                                        <span style="font-size: 11px; color: var(--muted-2);">${new Date(c.createdAt).toLocaleTimeString()}</span>
+                                    </div>
+                                    <div style="color: var(--text);">${c.text}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </article>
+            `;
+        }).join('');
+    } catch (err) {
+        console.error("Error loading blog posts:", err);
+    }
+}
+
+async function toggleBlogReaction(postId, type) {
+    if (!currentUser) return alert('Please log in to react to blog posts.');
+    try {
+        const res = await fetch('/api/blog/react', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ postId, type })
+        });
+        if (res.ok) await loadBlogPosts();
+    } catch (err) {
+        console.error("Error reacting to blog post:", err);
+    }
+}
+
+async function handleAddBlogComment(e, postId) {
+    e.preventDefault();
+    if (!currentUser) return alert('Please log in to add comments.');
+    const inputEl = e.target.querySelector('input');
+    const text = inputEl.value.trim();
+    if (!text) return;
+
+    try {
+        const res = await fetch('/api/blog/comment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ postId, text })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to post comment');
+
+        inputEl.value = "";
+        await loadBlogPosts();
+    } catch (err) {
+        alert("Error: " + err.message);
+    }
+}
+
+function handleBlogImageFileSelect(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) return alert('Image file size must be smaller than 5MB.');
+
+    const nameDisplay = document.getElementById("blogFileNameDisplay");
+    if (nameDisplay) nameDisplay.textContent = file.name;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+        uploadedBlogBase64Image = reader.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+async function handleCreateBlogPost(e) {
+    e.preventDefault();
+    const title = document.getElementById("blogTitleInput").value.trim();
+    const urlImage = document.getElementById("blogImageUrlInput").value.trim();
+    const content = document.getElementById("blogContentInput").value.trim();
+    const submitBtn = document.getElementById("createPostSubmitBtn");
+
+    const finalImage = uploadedBlogBase64Image || urlImage || null;
+
+    try {
+        await runWithSpinner(submitBtn, "Publishing article...", async () => {
+            const res = await fetch('/api/blog/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, content, image: finalImage })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed to publish post');
+
+            document.getElementById("blogTitleInput").value = "";
+            document.getElementById("blogImageUrlInput").value = "";
+            document.getElementById("blogContentInput").value = "";
+            uploadedBlogBase64Image = null;
+            const nameDisplay = document.getElementById("blogFileNameDisplay");
+            if (nameDisplay) nameDisplay.textContent = "No file attached";
+
+            alert("Article published successfully!");
+            navigateToPage('blog');
+        });
+    } catch (err) {
+        alert("Publishing error: " + err.message);
+    }
+}
+
+async function deleteBlogPost(postId) {
+    if (!confirm("Are you sure you want to delete this blog article?")) return;
+    try {
+        const res = await fetch('/api/blog/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ postId })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to delete post');
+
+        await loadBlogPosts();
+        alert("Article deleted successfully.");
+    } catch (err) {
+        alert("Error: " + err.message);
+    }
+}
+
+/* ==========================================================================
+   HISTORY PAGE LOGIC
+   ========================================================================== */
+async function loadHistoryLogs() {
+    const container = document.getElementById("historyLogsList");
+    if (!container) return;
+
+    try {
+        const res = await fetch('/api/history');
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to fetch history logs');
+
+        const logs = data.history || [];
+        if (logs.length === 0) {
+            container.innerHTML = `<span style="color: var(--muted-2); font-size: 13px;">No history records found.</span>`;
+            return;
+        }
+
+        container.innerHTML = logs.map(h => `
+            <div class="history-item">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-weight: 700; color: var(--text); font-size: 14px;">${h.title}</span>
+                    <span style="font-size: 11px; color: var(--muted);"><i class="fas fa-clock"></i> ${new Date(h.date).toLocaleString()}</span>
+                </div>
+                <div style="font-size: 13px; color: var(--muted);">${h.description}</div>
+                ${currentUser && currentUser.role === 'admin' ? `
+                    <div style="font-size: 11px; color: var(--orange); margin-top: 2px;">User: ${h.username || 'System'}</div>
+                ` : ''}
+            </div>
+        `).join('');
+    } catch (err) {
+        console.error("Error loading history logs:", err);
+    }
+}
+
+/* ==========================================================================
+   ADMIN PANEL DASHBOARD (7 SECTIONS)
+   ========================================================================== */
+let adminUsersCache = [];
+
+function switchAdminSection(sectionId) {
+    const sections = document.querySelectorAll(".admin-sec");
+    sections.forEach(s => s.classList.remove("active"));
+
+    const tabs = document.querySelectorAll(".admin-tab-btn");
+    tabs.forEach(t => t.classList.remove("active"));
+
+    const targetSec = document.getElementById(sectionId);
+    if (targetSec) targetSec.classList.add("active");
+
+    const tabMap = {
+        'adminSecUsers': 'tabBtnSecUsers',
+        'adminSecModeration': 'tabBtnSecModeration',
+        'adminSecTopup': 'tabBtnSecTopup',
+        'adminSecMessages': 'tabBtnSecMessages',
+        'adminSecRoles': 'tabBtnSecRoles',
+        'adminSecPayments': 'tabBtnSecPayments',
+        'adminSecBlog': 'tabBtnSecBlog'
+    };
+    const targetTab = document.getElementById(tabMap[sectionId]);
+    if (targetTab) targetTab.classList.add("active");
+}
+
+function navigateToAdminSection(sectionId) {
+    navigateToPage('admin');
+    switchAdminSection(sectionId);
+}
+
+async function loadAdminDashboardData() {
+    try {
+        const res = await fetch('/api/admin/users');
+        const data = await res.json();
+        if (!res.ok) return;
+
+        adminUsersCache = data.users || [];
+        renderAdminTablesAndSelects(adminUsersCache);
+    } catch (err) {
+        console.error("Error loading admin dashboard data:", err);
+    }
+}
+
+function renderAdminTablesAndSelects(users) {
+    // 1. Users Table
+    const tbodyUsers = document.getElementById("adminUsersTableBody");
+    if (tbodyUsers) {
+        tbodyUsers.innerHTML = users.map(u => `
+            <tr>
+                <td><strong>${u.username}</strong></td>
+                <td>${u.email}</td>
+                <td>${u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '2026'}</td>
+                <td><span class="status-pill" style="font-size: 10px; font-weight: 700;">${(u.role || 'user').toUpperCase()}</span></td>
+                <td><span class="status-pill" style="font-size: 10px; font-weight: 700; color: ${u.accountStatus === 'banned' ? '#f87171' : u.accountStatus === 'warned' ? '#fef08a' : '#4ade80'};">${(u.accountStatus || 'active').toUpperCase()}</span></td>
+                <td style="color: var(--orange); font-weight: 700;">$${parseFloat(u.balance || 0).toFixed(2)}</td>
+            </tr>
+        `).join('');
+    }
+
+    // Populate User Dropdowns for Moderation, Top-Up, Messages & Roles
+    const optionsHTML = users.map(u => `<option value="${u.username}">${u.username} (${u.email})</option>`).join('');
+
+    const selMod = document.getElementById("adminStatusUserSelect");
+    const selTop = document.getElementById("adminTopupUserSelect");
+    const selRole = document.getElementById("adminRoleUserSelect");
+    const selMsg = document.getElementById("adminMsgTargetSelect");
+
+    if (selMod) selMod.innerHTML = optionsHTML;
+    if (selTop) selTop.innerHTML = optionsHTML;
+    if (selRole) selRole.innerHTML = optionsHTML;
+
+    if (selMsg) {
+        selMsg.innerHTML = `<option value="all">📢 Broadcast to ALL Users</option>` + optionsHTML;
+    }
+
+    // Financial & Payments Section Stats & Table
+    const totalUsersEl = document.getElementById("statTotalUsers");
+    const totalFundsEl = document.getElementById("statTotalFunds");
+    const totalAdminsEl = document.getElementById("statTotalAdmins");
+
+    const totalFunds = users.reduce((acc, curr) => acc + (parseFloat(curr.balance) || 0), 0);
+    const totalAdmins = users.filter(u => u.role === 'admin').length;
+
+    if (totalUsersEl) totalUsersEl.textContent = users.length;
+    if (totalFundsEl) totalFundsEl.textContent = `$${totalFunds.toFixed(2)}`;
+    if (totalAdminsEl) totalAdminsEl.textContent = totalAdmins;
+
+    const tbodyPayments = document.getElementById("adminPaymentsTableBody");
+    if (tbodyPayments) {
+        tbodyPayments.innerHTML = users.map(u => `
+            <tr>
+                <td><strong>${u.username}</strong></td>
+                <td><span class="status-badge-live"><span class="status-dot"></span> Verified Paid Account</span></td>
+                <td style="color: var(--orange); font-weight: 700;">$${parseFloat(u.balance || 0).toFixed(2)}</td>
+                <td><span style="font-size: 12px; color: ${u.accountStatus === 'banned' ? '#f87171' : '#4ade80'};">${u.accountStatus || 'active'}</span></td>
+            </tr>
+        `).join('');
+    }
+}
+
+async function handleAdminStatusChange(e) {
+    e.preventDefault();
+    const username = document.getElementById("adminStatusUserSelect").value;
+    const status = document.getElementById("adminAccountStatusSelect").value;
+    const warningMessage = document.getElementById("adminWarningInput").value;
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+
+    try {
+        await runWithSpinner(submitBtn, "Updating status...", async () => {
+            const res = await fetch('/api/admin/user/status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, status, warningMessage })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed to update user status');
+
+            alert(`Updated status for ${username} to ${status}`);
+            await loadAdminDashboardData();
+        });
+    } catch (err) {
+        alert("Error: " + err.message);
+    }
+}
+
+async function handleAdminTopUp(e) {
+    e.preventDefault();
+    const username = document.getElementById("adminTopupUserSelect").value;
+    const amount = document.getElementById("adminTopupAmount").value;
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+
+    try {
+        await runWithSpinner(submitBtn, "Crediting funds...", async () => {
+            const res = await fetch('/api/admin/user/topup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, amount })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed to top up balance');
+
+            alert(`Successfully credited $${parseFloat(amount).toFixed(2)} to ${username}`);
+            document.getElementById("adminTopupAmount").value = "";
+            await loadAdminDashboardData();
+        });
+    } catch (err) {
+        alert("Error: " + err.message);
+    }
+}
+
+async function handleAdminSendMessage(e) {
+    e.preventDefault();
+    const targetUsername = document.getElementById("adminMsgTargetSelect").value;
+    const message = document.getElementById("adminMsgText").value;
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+
+    try {
+        await runWithSpinner(submitBtn, "Sending message...", async () => {
+            const res = await fetch('/api/admin/message/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ targetUsername, message })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed to send message');
+
+            alert(data.message || "Message sent successfully!");
+            document.getElementById("adminMsgText").value = "";
+        });
+    } catch (err) {
+        alert("Error: " + err.message);
+    }
+}
+
+async function handleAdminRoleChange(e) {
+    e.preventDefault();
+    const username = document.getElementById("adminRoleUserSelect").value;
+    const role = document.getElementById("adminRoleSelect").value;
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+
+    try {
+        await runWithSpinner(submitBtn, "Updating role...", async () => {
+            const res = await fetch('/api/admin/user/role', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, role })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed to update user role');
+
+            alert(`Updated role for ${username} to ${role}`);
+            await loadAdminDashboardData();
         });
     } catch (err) {
         alert("Error: " + err.message);
@@ -631,9 +1088,65 @@ function navigateToPage(pageId, updateHistory = true) {
         const targetNavLink = document.getElementById(`navLink${capitalize(pageId)}`);
         if (targetNavLink) targetNavLink.classList.add("active");
 
+        // Specific page data fetching on navigation
+        if (pageId === 'blog') loadBlogPosts();
+        if (pageId === 'history') loadHistoryLogs();
+        if (pageId === 'admin') loadAdminDashboardData();
+
         // Ensure scrolled to top after target page rendered
         window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     }, 150);
+}
+
+function renderDirectMessagesAndWarnings() {
+    const bannerContainer = document.getElementById("adminDirectMessagesBanner");
+    if (!bannerContainer || !currentUser) return;
+
+    let bannerHTML = "";
+
+    // Check account status warning
+    if (currentUser.accountStatus === 'warned' || currentUser.warningMessage) {
+        bannerHTML += `
+            <div style="padding: 14px 18px; background: rgba(234, 179, 8, 0.15); border: 1px solid rgba(234, 179, 8, 0.4); border-radius: var(--radius); color: #fef08a; margin-bottom: 12px; font-size: 14px; display: flex; align-items: center; gap: 12px;">
+                <i class="fas fa-exclamation-triangle" style="font-size: 20px; color: #eab308;"></i>
+                <div>
+                    <strong>Account Warning:</strong> ${currentUser.warningMessage || 'Your account has an active warning flag.'}
+                </div>
+            </div>
+        `;
+    } else if (currentUser.accountStatus === 'restricted' || currentUser.accountStatus === 'banned') {
+        bannerHTML += `
+            <div style="padding: 14px 18px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: var(--radius); color: #fca5a5; margin-bottom: 12px; font-size: 14px; display: flex; align-items: center; gap: 12px;">
+                <i class="fas fa-ban" style="font-size: 20px; color: #ef4444;"></i>
+                <div>
+                    <strong>Account Notice (${currentUser.accountStatus.toUpperCase()}):</strong> ${currentUser.warningMessage || 'Account access is currently restricted by Administrator.'}
+                </div>
+            </div>
+        `;
+    }
+
+    // Check direct messages from admins
+    const msgs = currentUser.adminMessages || [];
+    if (msgs.length > 0) {
+        msgs.forEach(m => {
+            bannerHTML += `
+                <div style="padding: 14px 18px; background: var(--orange-soft); border: 1px solid var(--orange-border); border-radius: var(--radius); color: var(--text); margin-bottom: 12px; font-size: 14px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <span style="font-weight: 700; color: var(--orange);"><i class="fas fa-envelope-open-text"></i> Message from ${m.sender || 'Admin'}</span>
+                        <span style="font-size: 11px; color: var(--muted);">${new Date(m.createdAt).toLocaleString()}</span>
+                    </div>
+                    <div>${m.text}</div>
+                </div>
+            `;
+        });
+    }
+
+    if (bannerHTML) {
+        bannerContainer.innerHTML = bannerHTML;
+        bannerContainer.style.display = "block";
+    } else {
+        bannerContainer.style.display = "none";
+    }
 }
 
 function capitalize(s) {

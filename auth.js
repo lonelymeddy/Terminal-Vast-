@@ -3,10 +3,16 @@ const path = require('path');
 const bcrypt = require('bcryptjs');
 
 const USERS_FILE = path.join(__dirname, 'data', 'auth-users.json');
+const ADMIN_EMAILS = ['delostvoyage@gmail.com', 'meddymususwa126@gmail.com'];
 
 // Ensure data directory exists
 if (!fs.existsSync(path.dirname(USERS_FILE))) {
     fs.mkdirSync(path.dirname(USERS_FILE), { recursive: true });
+}
+
+function isSpecialAdmin(email) {
+    if (!email) return false;
+    return ADMIN_EMAILS.includes(String(email).trim().toLowerCase());
 }
 
 // In-memory brute force protection tracking
@@ -44,6 +50,22 @@ function loadUsers() {
             }
             if (!u.email) {
                 u.email = u.username + '@terminalvast.bot';
+                modified = true;
+            }
+            if (isSpecialAdmin(u.email) && u.role !== 'admin') {
+                u.role = 'admin';
+                modified = true;
+            }
+            if (!u.accountStatus) {
+                u.accountStatus = 'active';
+                modified = true;
+            }
+            if (u.warningMessage === undefined) {
+                u.warningMessage = '';
+                modified = true;
+            }
+            if (!Array.isArray(u.adminMessages)) {
+                u.adminMessages = [];
                 modified = true;
             }
         });
@@ -120,13 +142,17 @@ async function registerUser({ username, email, password, role = 'user' }) {
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
+    const isAdminEmail = isSpecialAdmin(normalizedEmail);
     const newUser = {
         id: 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
         username: normalizedUser,
         email: normalizedEmail,
         passwordHash,
-        role: role === 'admin' ? 'admin' : 'user',
+        role: (isAdminEmail || role === 'admin') ? 'admin' : 'user',
         balance: 0.00,
+        accountStatus: 'active',
+        warningMessage: '',
+        adminMessages: [],
         createdAt: new Date().toISOString()
     };
 
@@ -298,8 +324,69 @@ function requireAdmin(req, res, next) {
     return res.status(403).json({ error: 'Access denied. Administrative privileges required.' });
 }
 
+function adminUpdateUserStatus(username, { status, warningMessage }) {
+    const users = loadUsers();
+    const normalizedUser = String(username || '').trim().toLowerCase();
+    const userIndex = users.findIndex(u => u.username.toLowerCase() === normalizedUser);
+    if (userIndex === -1) throw new Error('User not found.');
+
+    if (status) {
+        if (!['active', 'warned', 'restricted', 'banned'].includes(status)) {
+            throw new Error('Invalid account status.');
+        }
+        users[userIndex].accountStatus = status;
+    }
+    if (warningMessage !== undefined) {
+        users[userIndex].warningMessage = String(warningMessage || '').trim();
+    }
+    saveUsers(users);
+    const { passwordHash: _, ...safeUser } = users[userIndex];
+    return safeUser;
+}
+
+function adminUpdateUserRole(username, role) {
+    const users = loadUsers();
+    const normalizedUser = String(username || '').trim().toLowerCase();
+    const userIndex = users.findIndex(u => u.username.toLowerCase() === normalizedUser);
+    if (userIndex === -1) throw new Error('User not found.');
+
+    if (!['user', 'admin'].includes(role)) {
+        throw new Error('Invalid role.');
+    }
+    users[userIndex].role = role;
+    saveUsers(users);
+    const { passwordHash: _, ...safeUser } = users[userIndex];
+    return safeUser;
+}
+
+function adminSendUserMessage(username, messageText, senderUsername = 'Admin') {
+    const users = loadUsers();
+    const normalizedUser = String(username || '').trim().toLowerCase();
+
+    if (normalizedUser === 'all') {
+        const timestamp = new Date().toISOString();
+        const msgObj = { id: 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4), text: messageText, sender: senderUsername, createdAt: timestamp, read: false };
+        users.forEach(u => {
+            if (!Array.isArray(u.adminMessages)) u.adminMessages = [];
+            u.adminMessages.unshift(msgObj);
+        });
+        saveUsers(users);
+        return { count: users.length };
+    } else {
+        const userIndex = users.findIndex(u => u.username.toLowerCase() === normalizedUser);
+        if (userIndex === -1) throw new Error('Target user not found.');
+        if (!Array.isArray(users[userIndex].adminMessages)) users[userIndex].adminMessages = [];
+        const msgObj = { id: 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4), text: messageText, sender: senderUsername, createdAt: new Date().toISOString(), read: false };
+        users[userIndex].adminMessages.unshift(msgObj);
+        saveUsers(users);
+        const { passwordHash: _, ...safeUser } = users[userIndex];
+        return safeUser;
+    }
+}
+
 module.exports = {
     loadUsers,
+    saveUsers,
     registerUser,
     authenticateUser,
     changePassword,
@@ -309,6 +396,9 @@ module.exports = {
     getAllUsersSafe,
     updateProfile,
     updateAvatar,
+    adminUpdateUserStatus,
+    adminUpdateUserRole,
+    adminSendUserMessage,
     requireAuth,
     requireAdmin
 };
