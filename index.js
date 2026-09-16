@@ -85,6 +85,52 @@ app.use(session({
 }));
 app.use(express.static(path.join(__dirname, 'frontend')));
 
+// Helper for History & Blog persistence
+const HISTORY_FILE = path.join(__dirname, 'data', 'history.json');
+const BLOG_FILE = path.join(__dirname, 'data', 'blog-posts.json');
+
+function loadHistory() {
+    if (!fs.existsSync(HISTORY_FILE)) return [];
+    try {
+        return JSON.parse(fs.readFileSync(HISTORY_FILE, 'utf8'));
+    } catch (_) {
+        return [];
+    }
+}
+
+function saveHistory(historyList) {
+    fs.writeFileSync(HISTORY_FILE, JSON.stringify(historyList, null, 2), 'utf8');
+}
+
+function recordHistory(userId, username, type, title, description) {
+    const list = loadHistory();
+    const entry = {
+        id: 'hist_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+        userId: userId || 'system',
+        username: username || 'User',
+        type,
+        title,
+        description,
+        date: new Date().toISOString()
+    };
+    list.unshift(entry);
+    saveHistory(list);
+    return entry;
+}
+
+function loadBlogPosts() {
+    if (!fs.existsSync(BLOG_FILE)) return [];
+    try {
+        return JSON.parse(fs.readFileSync(BLOG_FILE, 'utf8'));
+    } catch (_) {
+        return [];
+    }
+}
+
+function saveBlogPosts(posts) {
+    fs.writeFileSync(BLOG_FILE, JSON.stringify(posts, null, 2), 'utf8');
+}
+
 // Authentication API Routes
 app.get('/api/auth/me', (req, res) => {
     if (req.session && req.session.user) {
@@ -142,6 +188,7 @@ app.post('/api/auth/register', async (req, res) => {
         const role = userCount === 0 ? 'admin' : 'user';
         const user = await auth.registerUser({ username, email, password, role });
         req.session.user = user;
+        recordHistory(user.id, user.username, 'join', 'Account Joined', 'Registered new account on Terminal Vast Bot platform');
         res.json({ status: 'ok', message: 'Registration successful', user });
     } catch (err) {
         res.status(400).json({ error: err.message });
@@ -159,9 +206,186 @@ app.post('/api/wallet/topup', auth.requireAuth, (req, res) => {
         const { amount } = req.body || {};
         const updatedUser = auth.topUpBalance(req.session.user.username, amount);
         req.session.user = updatedUser;
+        recordHistory(updatedUser.id, updatedUser.username, 'topup', 'Wallet Top Up', `Credited $${parseFloat(amount).toFixed(2)} to account wallet`);
         res.json({ status: 'ok', message: `Successfully added $${parseFloat(amount).toFixed(2)} to wallet balance`, balance: updatedUser.balance, user: updatedUser });
     } catch (err) {
         res.status(400).json({ error: err.message });
+    }
+});
+
+// Admin Panel API Routes
+app.get('/api/admin/users', auth.requireAdmin, (req, res) => {
+    const users = auth.getAllUsersSafe();
+    res.json({ status: 'ok', users });
+});
+
+app.post('/api/admin/user/topup', auth.requireAdmin, (req, res) => {
+    try {
+        const { username, amount } = req.body || {};
+        const updatedUser = auth.topUpBalance(username, amount);
+        recordHistory(updatedUser.id, updatedUser.username, 'topup', 'Admin Wallet Top Up', `Admin (${req.session.user.username}) credited $${parseFloat(amount).toFixed(2)} to wallet`);
+        res.json({ status: 'ok', message: `Credited $${parseFloat(amount).toFixed(2)} to ${username}`, user: updatedUser });
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
+
+app.post('/api/admin/user/status', auth.requireAdmin, (req, res) => {
+    try {
+        const { username, status, warningMessage } = req.body || {};
+        const updatedUser = auth.adminUpdateUserStatus(username, { status, warningMessage });
+        recordHistory(updatedUser.id, updatedUser.username, 'admin_action', 'Account Status Update', `Status set to "${status || 'unchanged'}" ${warningMessage ? 'with warning: ' + warningMessage : ''}`);
+        res.json({ status: 'ok', message: `Updated account status for ${username}`, user: updatedUser });
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
+
+app.post('/api/admin/user/role', auth.requireAdmin, (req, res) => {
+    try {
+        const { username, role } = req.body || {};
+        const updatedUser = auth.adminUpdateUserRole(username, role);
+        recordHistory(updatedUser.id, updatedUser.username, 'admin_action', 'Account Role Promotion', `Role updated to "${role}" by Admin`);
+        res.json({ status: 'ok', message: `Role for ${username} changed to ${role}`, user: updatedUser });
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
+
+app.post('/api/admin/message/send', auth.requireAdmin, (req, res) => {
+    try {
+        const { targetUsername, message } = req.body || {};
+        if (!message || !message.trim()) return res.status(400).json({ error: 'Message content cannot be empty.' });
+        const result = auth.adminSendUserMessage(targetUsername, message.trim(), req.session.user.username);
+        if (targetUsername === 'all') {
+            recordHistory('all', 'all', 'message', 'Admin Announcement', `Broadcast message: "${message.trim()}"`);
+            res.json({ status: 'ok', message: `Broadcast message sent to all users.` });
+        } else {
+            recordHistory(result.id, result.username, 'message', 'Admin Direct Message', `Direct message received: "${message.trim()}"`);
+            res.json({ status: 'ok', message: `Message sent to ${targetUsername}.`, user: result });
+        }
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
+
+// Blog API Routes
+app.get('/api/blog', (req, res) => {
+    const posts = loadBlogPosts();
+    res.json({ status: 'ok', posts });
+});
+
+app.post('/api/blog/create', auth.requireAdmin, (req, res) => {
+    try {
+        const { title, content, image } = req.body || {};
+        if (!title || !title.trim()) return res.status(400).json({ error: 'Article title is required.' });
+        if (!content || !content.trim()) return res.status(400).json({ error: 'Article content body is required.' });
+
+        const posts = loadBlogPosts();
+        const newPost = {
+            id: 'post_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+            title: title.trim(),
+            content: content.trim(),
+            image: image || null,
+            author: req.session.user.username,
+            createdAt: new Date().toISOString(),
+            likes: [],
+            dislikes: [],
+            comments: []
+        };
+        posts.unshift(newPost);
+        saveBlogPosts(posts);
+        recordHistory(req.session.user.id, req.session.user.username, 'blog', 'Published Article', `Published new article: "${newPost.title}"`);
+        res.json({ status: 'ok', message: 'Article published successfully', post: newPost });
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
+
+app.post('/api/blog/delete', auth.requireAdmin, (req, res) => {
+    try {
+        const { postId } = req.body || {};
+        let posts = loadBlogPosts();
+        posts = posts.filter(p => p.id !== postId);
+        saveBlogPosts(posts);
+        res.json({ status: 'ok', message: 'Article deleted successfully' });
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
+
+app.post('/api/blog/react', auth.requireAuth, (req, res) => {
+    try {
+        const { postId, type } = req.body || {}; // type: 'like' or 'dislike'
+        const username = req.session.user.username;
+        const posts = loadBlogPosts();
+        const postIndex = posts.findIndex(p => p.id === postId);
+        if (postIndex === -1) return res.status(404).json({ error: 'Post not found.' });
+
+        const post = posts[postIndex];
+        if (!Array.isArray(post.likes)) post.likes = [];
+        if (!Array.isArray(post.dislikes)) post.dislikes = [];
+
+        if (type === 'like') {
+            const likeIdx = post.likes.indexOf(username);
+            if (likeIdx !== -1) {
+                post.likes.splice(likeIdx, 1);
+            } else {
+                post.likes.push(username);
+                const disIdx = post.dislikes.indexOf(username);
+                if (disIdx !== -1) post.dislikes.splice(disIdx, 1);
+            }
+        } else if (type === 'dislike') {
+            const disIdx = post.dislikes.indexOf(username);
+            if (disIdx !== -1) {
+                post.dislikes.splice(disIdx, 1);
+            } else {
+                post.dislikes.push(username);
+                const likeIdx = post.likes.indexOf(username);
+                if (likeIdx !== -1) post.likes.splice(likeIdx, 1);
+            }
+        }
+        posts[postIndex] = post;
+        saveBlogPosts(posts);
+        res.json({ status: 'ok', post });
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
+
+app.post('/api/blog/comment', auth.requireAuth, (req, res) => {
+    try {
+        const { postId, text } = req.body || {};
+        if (!text || !text.trim()) return res.status(400).json({ error: 'Comment text cannot be empty.' });
+
+        const posts = loadBlogPosts();
+        const postIndex = posts.findIndex(p => p.id === postId);
+        if (postIndex === -1) return res.status(404).json({ error: 'Post not found.' });
+
+        const comment = {
+            id: 'cmt_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+            username: req.session.user.username,
+            avatar: req.session.user.avatar || null,
+            text: text.trim(),
+            createdAt: new Date().toISOString()
+        };
+        if (!Array.isArray(posts[postIndex].comments)) posts[postIndex].comments = [];
+        posts[postIndex].comments.push(comment);
+        saveBlogPosts(posts);
+        res.json({ status: 'ok', message: 'Comment added', comment });
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
+
+// History API Routes
+app.get('/api/history', auth.requireAuth, (req, res) => {
+    const allHistory = loadHistory();
+    if (req.session.user.role === 'admin') {
+        res.json({ status: 'ok', history: allHistory });
+    } else {
+        const userHistory = allHistory.filter(h => h.userId === req.session.user.id || h.username === req.session.user.username || h.userId === 'all');
+        res.json({ status: 'ok', history: userHistory });
     }
 });
 
@@ -1617,6 +1841,10 @@ app.post('/api/pair', async (req, res) => {
         if (!code) {
             webSessions.delete(id);
             return res.status(500).json({ error: 'Server did not receive a pairing code from WhatsApp. Please check the number and try again.' });
+        }
+
+        if (req.session && req.session.user) {
+            recordHistory(req.session.user.id, req.session.user.username, 'pairing', 'Bot Pairing Code Generated', `Generated WhatsApp pair code for number +${phone}`);
         }
 
         return res.json({ status: 'pairing', code, sessionId: id });

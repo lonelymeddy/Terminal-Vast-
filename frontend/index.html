@@ -1231,8 +1231,17 @@
         <a href="#" class="sidebar-link" id="navLinkSettings" onclick="navigateToPage('settings'); return false;">
           <i class="fas fa-sliders-h"></i> Bot Settings
         </a>
+        <a href="#" class="sidebar-link" id="navLinkBlog" onclick="navigateToPage('blog'); return false;">
+          <i class="fas fa-newspaper"></i> Blog
+        </a>
+        <a href="#" class="sidebar-link" id="navLinkHistory" onclick="navigateToPage('history'); return false;">
+          <i class="fas fa-history"></i> History
+        </a>
         <a href="#" class="sidebar-link" id="navLinkProfile" onclick="navigateToPage('profile'); return false;">
           <i class="fas fa-user-circle"></i> Profile
+        </a>
+        <a href="#" class="sidebar-link" id="navLinkAdmin" onclick="navigateToPage('admin'); return false;" style="display: none; color: var(--orange); font-weight: 700;">
+          <i class="fas fa-user-shield"></i> Admin Panel
         </a>
       </nav>
 
@@ -1245,6 +1254,11 @@
 
     <!-- Main Dashboard Content Area -->
     <main class="dash-content">
+
+      <!-- Admin Messages / Direct Notifications Banner -->
+      <div id="adminDirectMessagesBanner" style="display: none; margin-bottom: 20px;">
+        <!-- Populated via JS -->
+      </div>
 
       <!-- Skeleton Loading State -->
       <div id="dashSkeletonLoading" style="display: none;">
@@ -1466,6 +1480,13 @@
               </div>
             </div>
 
+            <!-- Admin Passage Section inside Profile Page -->
+            <div id="adminPassageContainer" style="display: none; margin-bottom: 16px;">
+              <button class="button primary" style="width: 100%; font-weight: 700;" onclick="navigateToPage('admin')">
+                <i class="fas fa-user-shield"></i> Enter Admin Panel Passage
+              </button>
+            </div>
+
             <button class="button danger" onclick="handleLogout()" style="width: 100%;"><i class="fas fa-sign-out-alt"></i> Logout</button>
           </div>
 
@@ -1512,6 +1533,287 @@
           </div>
 
         </div>
+      </section>
+
+      <!-- PAGE 5: BLOG PAGE -->
+      <section class="dash-page" id="pageBlog">
+        <div class="section-header" style="margin-bottom: 24px; text-align: left; align-items: flex-start; display: flex; justify-content: space-between; flex-wrap: wrap;">
+          <div>
+            <h2 class="section-title">Terminal Vast Blog</h2>
+            <p class="section-description">Official announcements, updates, articles, and community discussions.</p>
+          </div>
+          <div id="blogAdminActionBtn" style="display: none;">
+            <button class="button primary" onclick="navigateToAdminSection('adminSecBlog')">
+              <i class="fas fa-pen-nib"></i> Write Article (Admin Studio)
+            </button>
+          </div>
+        </div>
+
+        <div id="blogPostsContainer" style="display: flex; flex-direction: column; gap: 24px;">
+          <!-- Dynamically loaded blog articles -->
+        </div>
+      </section>
+
+      <!-- PAGE 6: HISTORY PAGE -->
+      <section class="dash-page" id="pageHistory">
+        <div class="section-header" style="margin-bottom: 24px; text-align: left; align-items: flex-start;">
+          <h2 class="section-title">Activity & Account History</h2>
+          <p class="section-description">Complete log of account joining, bot pairing events, wallet top-ups, and admin notices with dates.</p>
+        </div>
+
+        <div class="dash-card">
+          <div id="historyLogsList" style="display: flex; flex-direction: column; gap: 14px;">
+            <!-- Dynamically loaded history entries -->
+          </div>
+        </div>
+      </section>
+
+      <!-- PAGE 7: ADMIN PANEL PAGE (7 FULL SECTIONS) -->
+      <section class="dash-page" id="pageAdmin">
+        <div class="section-header" style="margin-bottom: 20px; text-align: left; align-items: flex-start;">
+          <div class="section-label">ADMINISTRATOR CONTROL CENTER</div>
+          <h2 class="section-title">Admin Panel</h2>
+          <p class="section-description">Manage users, account status, balance top-ups, dashboard messaging, roles, payments & blog studio.</p>
+        </div>
+
+        <!-- Admin 7-Section Navigation Tabs -->
+        <div class="admin-tabs" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; padding-bottom: 12px; border-bottom: 1px solid var(--border);">
+          <button class="admin-tab-btn active" id="tabBtnSecUsers" onclick="switchAdminSection('adminSecUsers')">
+            <i class="fas fa-users"></i> 1. User Overview
+          </button>
+          <button class="admin-tab-btn" id="tabBtnSecModeration" onclick="switchAdminSection('adminSecModeration')">
+            <i class="fas fa-user-lock"></i> 2. Moderation & Bans
+          </button>
+          <button class="admin-tab-btn" id="tabBtnSecTopup" onclick="switchAdminSection('adminSecTopup')">
+            <i class="fas fa-hand-holding-usd"></i> 3. Balance Top-Up
+          </button>
+          <button class="admin-tab-btn" id="tabBtnSecMessages" onclick="switchAdminSection('adminSecMessages')">
+            <i class="fas fa-comment-dots"></i> 4. Dashboard Messaging
+          </button>
+          <button class="admin-tab-btn" id="tabBtnSecRoles" onclick="switchAdminSection('adminSecRoles')">
+            <i class="fas fa-user-shield"></i> 5. Role & Promotion
+          </button>
+          <button class="admin-tab-btn" id="tabBtnSecPayments" onclick="switchAdminSection('adminSecPayments')">
+            <i class="fas fa-file-invoice-dollar"></i> 6. Payment Status
+          </button>
+          <button class="admin-tab-btn" id="tabBtnSecBlog" onclick="switchAdminSection('adminSecBlog')">
+            <i class="fas fa-blog"></i> 7. Admin Blog Studio
+          </button>
+        </div>
+
+        <!-- SECTION 1: USER OVERVIEW & JOINED ACCOUNTS -->
+        <div class="admin-sec active" id="adminSecUsers">
+          <div class="dash-card">
+            <h3 class="dash-card-title"><i class="fas fa-users"></i> Registered Users Directory</h3>
+            <p style="color: var(--muted); font-size: 13px; margin-bottom: 16px;">See who joined, when, role, and current account status.</p>
+
+            <div style="overflow-x: auto;">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Joined Date</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Balance</th>
+                  </tr>
+                </thead>
+                <tbody id="adminUsersTableBody">
+                  <!-- Dynamically populated -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 2: MODERATION, BANS & WARNINGS -->
+        <div class="admin-sec" id="adminSecModeration">
+          <div class="dash-card">
+            <h3 class="dash-card-title"><i class="fas fa-user-slash"></i> Account Ban, Restriction & Warning</h3>
+            <p style="color: var(--muted); font-size: 13px; margin-bottom: 18px;">Ban accounts, restrict access, or place persistent account warnings.</p>
+
+            <form onsubmit="handleAdminStatusChange(event)" style="max-width: 500px;">
+              <div class="form-group">
+                <label for="adminStatusUserSelect"><i class="fas fa-user"></i> Select User</label>
+                <select id="adminStatusUserSelect" class="form-input" required></select>
+              </div>
+
+              <div class="form-group">
+                <label for="adminAccountStatusSelect"><i class="fas fa-shield-alt"></i> Account Status</label>
+                <select id="adminAccountStatusSelect" class="form-input" required>
+                  <option value="active">Active (Normal)</option>
+                  <option value="warned">Warned (Shows Warning Banner)</option>
+                  <option value="restricted">Restricted (Limited Access)</option>
+                  <option value="banned">Banned (Account Suspended)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="adminWarningInput"><i class="fas fa-exclamation-triangle"></i> Account Warning Message (Optional)</label>
+                <input type="text" id="adminWarningInput" class="form-input" placeholder="e.g. Excessive pairing attempts detected. Please contact support.">
+              </div>
+
+              <button type="submit" class="button primary" style="width: 100%; margin-top: 10px;">
+                <i class="fas fa-save"></i> Apply Status &amp; Warning
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- SECTION 3: BALANCE TOP-UP FUNCTIONALITY -->
+        <div class="admin-sec" id="adminSecTopup">
+          <div class="dash-card">
+            <h3 class="dash-card-title"><i class="fas fa-plus-circle"></i> Direct Balance Top-Up</h3>
+            <p style="color: var(--muted); font-size: 13px; margin-bottom: 18px;">Full functionality to credit funds to any user account balance.</p>
+
+            <form onsubmit="handleAdminTopUp(event)" style="max-width: 500px;">
+              <div class="form-group">
+                <label for="adminTopupUserSelect"><i class="fas fa-user"></i> Select Target Account</label>
+                <select id="adminTopupUserSelect" class="form-input" required></select>
+              </div>
+
+              <div class="form-group">
+                <label for="adminTopupAmount"><i class="fas fa-dollar-sign"></i> Top-Up Amount ($)</label>
+                <input type="number" id="adminTopupAmount" class="form-input" min="0.01" step="0.01" placeholder="50.00" required>
+              </div>
+
+              <button type="submit" class="button primary" style="width: 100%; margin-top: 10px;">
+                <i class="fas fa-wallet"></i> Credit Account Wallet
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- SECTION 4: DASHBOARD DIRECT MESSAGING -->
+        <div class="admin-sec" id="adminSecMessages">
+          <div class="dash-card">
+            <h3 class="dash-card-title"><i class="fas fa-paper-plane"></i> Send Direct Dashboard Message</h3>
+            <p style="color: var(--muted); font-size: 13px; margin-bottom: 18px;">Send messages that appear directly on users' dashboard header banners.</p>
+
+            <form onsubmit="handleAdminSendMessage(event)" style="max-width: 600px;">
+              <div class="form-group">
+                <label for="adminMsgTargetSelect"><i class="fas fa-bullhorn"></i> Recipient</label>
+                <select id="adminMsgTargetSelect" class="form-input" required>
+                  <option value="all">📢 Broadcast to ALL Users</option>
+                  <!-- Dynamically populates specific users -->
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="adminMsgText"><i class="fas fa-envelope"></i> Message Text</label>
+                <textarea id="adminMsgText" class="form-input" rows="4" placeholder="Enter message text here... (Appears instantly on recipient dashboard)" required></textarea>
+              </div>
+
+              <button type="submit" class="button primary" style="width: 100%; margin-top: 10px;">
+                <i class="fas fa-paper-plane"></i> Send Dashboard Message
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- SECTION 5: ROLE & PROMOTION -->
+        <div class="admin-sec" id="adminSecRoles">
+          <div class="dash-card">
+            <h3 class="dash-card-title"><i class="fas fa-award"></i> User Role Promotion & Management</h3>
+            <p style="color: var(--muted); font-size: 13px; margin-bottom: 18px;">Promote users to Admin or demote administrator privileges.</p>
+
+            <form onsubmit="handleAdminRoleChange(event)" style="max-width: 500px;">
+              <div class="form-group">
+                <label for="adminRoleUserSelect"><i class="fas fa-user"></i> Select User</label>
+                <select id="adminRoleUserSelect" class="form-input" required></select>
+              </div>
+
+              <div class="form-group">
+                <label for="adminRoleSelect"><i class="fas fa-user-shield"></i> Target Role</label>
+                <select id="adminRoleSelect" class="form-input" required>
+                  <option value="user">User (Standard Account)</option>
+                  <option value="admin">Admin (Full Control Privileges)</option>
+                </select>
+              </div>
+
+              <button type="submit" class="button primary" style="width: 100%; margin-top: 10px;">
+                <i class="fas fa-check-circle"></i> Save Role Assignment
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- SECTION 6: PAYMENT STATUS & FINANCIAL OVERVIEW -->
+        <div class="admin-sec" id="adminSecPayments">
+          <div class="dash-card">
+            <h3 class="dash-card-title"><i class="fas fa-receipt"></i> Payment Status & Wallet Financials</h3>
+            <p style="color: var(--muted); font-size: 13px; margin-bottom: 16px;">View overall user balance totals, payment status, and wallet records.</p>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
+              <div style="background: var(--surface-2); padding: 18px; border-radius: var(--radius); text-align: center;">
+                <div style="font-size: 12px; color: var(--muted);">TOTAL USERS</div>
+                <div id="statTotalUsers" style="font-size: 24px; font-weight: 700; color: var(--text);">0</div>
+              </div>
+              <div style="background: var(--surface-2); padding: 18px; border-radius: var(--radius); text-align: center;">
+                <div style="font-size: 12px; color: var(--muted);">TOTAL WALLET FUNDS</div>
+                <div id="statTotalFunds" style="font-size: 24px; font-weight: 700; color: var(--orange);">$0.00</div>
+              </div>
+              <div style="background: var(--surface-2); padding: 18px; border-radius: var(--radius); text-align: center;">
+                <div style="font-size: 12px; color: var(--muted);">ACTIVE ADMINS</div>
+                <div id="statTotalAdmins" style="font-size: 24px; font-weight: 700; color: var(--text);">0</div>
+              </div>
+            </div>
+
+            <div style="overflow-x: auto;">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Username</th>
+                    <th>Payment Status</th>
+                    <th>Current Balance</th>
+                    <th>Account Health</th>
+                  </tr>
+                </thead>
+                <tbody id="adminPaymentsTableBody">
+                  <!-- Dynamically populated -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 7: ADMIN BLOG STUDIO (POST ARTICLES & IMAGES) -->
+        <div class="admin-sec" id="adminSecBlog">
+          <div class="dash-card">
+            <h3 class="dash-card-title"><i class="fas fa-feather-alt"></i> Admin Blog Publishing Studio</h3>
+            <p style="color: var(--muted); font-size: 13px; margin-bottom: 18px;">Post articles with title, formatting, and image attachments (upload or direct link).</p>
+
+            <form onsubmit="handleCreateBlogPost(event)">
+              <div class="form-group">
+                <label for="blogTitleInput"><i class="fas fa-heading"></i> Article Title</label>
+                <input type="text" id="blogTitleInput" class="form-input" placeholder="e.g. Terminal Vast Bot Update v2.5 Released!" required>
+              </div>
+
+              <div class="form-group">
+                <label for="blogImageInput"><i class="fas fa-image"></i> Image (Direct URL or Upload File)</label>
+                <input type="text" id="blogImageUrlInput" class="form-input" placeholder="https://i.ibb.co/sample-image.jpg" style="margin-bottom: 8px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <label for="blogImageFileInput" class="button sm" style="cursor: pointer;">
+                    <i class="fas fa-upload"></i> Upload Image File
+                  </label>
+                  <input type="file" id="blogImageFileInput" accept="image/*" style="display: none;" onchange="handleBlogImageFileSelect(event)">
+                  <span id="blogFileNameDisplay" style="font-size: 12px; color: var(--muted);">No file attached</span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="blogContentInput"><i class="fas fa-align-left"></i> Article Content</label>
+                <textarea id="blogContentInput" class="form-input" rows="8" placeholder="Write full article body content here..." required></textarea>
+              </div>
+
+              <button type="submit" id="createPostSubmitBtn" class="button primary" style="width: 100%; margin-top: 10px;">
+                <i class="fas fa-paper-plane"></i> Publish Article to Blog
+              </button>
+            </form>
+          </div>
+        </div>
+
       </section>
 
     </main>

@@ -6,7 +6,10 @@
     "passwordHash": "$2b$10$bZK4VADNAp7rwE3DVcO82ujVFuvV1BH9Ar5Q3LQLr/Em5cdmAp/4G",
     "role": "admin",
     "balance": 0,
-    "createdAt": "2026-09-15T22:36:49.104Z"
+    "createdAt": "2026-09-15T22:36:49.104Z",
+    "accountStatus": "active",
+    "warningMessage": "",
+    "adminMessages": []
   },
   {
     "id": "user_1789511809237_rzeuw",
@@ -15,7 +18,10 @@
     "passwordHash": "$2b$10$PIsLVAmKseMPKcREkRMitengwB/yrVNqki/RGSDFP.UBp6P8bd.ge",
     "role": "user",
     "balance": 0,
-    "createdAt": "2026-09-15T22:36:49.237Z"
+    "createdAt": "2026-09-15T22:36:49.237Z",
+    "accountStatus": "active",
+    "warningMessage": "",
+    "adminMessages": []
   },
   {
     "id": "user_1789511861579_oniq0",
@@ -24,7 +30,10 @@
     "passwordHash": "$2b$10$epLOITfjikTp/Vaz7PzrfuRGlwCyZV4T4QlivkMzREo5Sewm/gOxy",
     "role": "user",
     "balance": 0,
-    "createdAt": "2026-09-15T22:37:41.579Z"
+    "createdAt": "2026-09-15T22:37:41.579Z",
+    "accountStatus": "active",
+    "warningMessage": "",
+    "adminMessages": []
   },
   {
     "id": "user_1789515054154_gw4y8",
@@ -33,6 +42,33 @@
     "passwordHash": "$2b$10$VA7uzPDS1C4cTJm4bI7SOO7gZOo9T7t/zG7T0G.OcN3s/QkBiGOri",
     "role": "user",
     "balance": 0,
-    "createdAt": "2026-09-15T23:30:54.154Z"
+    "createdAt": "2026-09-15T23:30:54.154Z",
+    "accountStatus": "active",
+    "warningMessage": "",
+    "adminMessages": []
+  },
+  {
+    "id": "user_1789518670386_vefjr",
+    "username": "delostuser",
+    "email": "delostvoyage@gmail.com",
+    "passwordHash": "$2b$10$aIsHY/FLca6Jlje7tqbNYewe4END1jE8HJu7jdgxNEpLfrX0P9SpW",
+    "role": "admin",
+    "balance": 0,
+    "accountStatus": "active",
+    "warningMessage": "",
+    "adminMessages": [],
+    "createdAt": "2026-09-16T00:31:10.386Z"
+  },
+  {
+    "id": "user_1789518670484_zm95r",
+    "username": "meddyuser",
+    "email": "meddymususwa126@gmail.com",
+    "passwordHash": "$2b$10$8Tfr8WWbeVxnBg0QSsiFG.KT3JCegRS.jJhqwpOUJDR7gLvWi5v4y",
+    "role": "admin",
+    "balance": 0,
+    "accountStatus": "active",
+    "warningMessage": "",
+    "adminMessages": [],
+    "createdAt": "2026-09-16T00:31:10.484Z"
   }
 ]
