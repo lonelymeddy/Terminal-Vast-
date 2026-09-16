@@ -112,6 +112,883 @@
           </div>
 
           <div class="wallet-card reveal">
+            <!-- ================================
+                 3D GOLD COINS
+            ================================ -->
+
+            <div id="gold-coins-3d"></div>
+
+            <style>
+            #gold-coins-3d {
+                width: 100%;
+                height: 320px;
+                position: relative;
+                overflow: hidden;
+                background: transparent;
+            }
+
+            #gold-coins-3d canvas {
+                display: block;
+                width: 100%;
+                height: 100%;
+            }
+            </style>
+
+            <script type="importmap">
+            {
+                "imports": {
+                    "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+                    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+                }
+            }
+            </script>
+
+            <script type="module">
+
+            import * as THREE from "three";
+
+            import {
+                OrbitControls
+            } from "three/addons/controls/OrbitControls.js";
+
+
+            /* =========================================
+               CONTAINER
+            ========================================= */
+
+            const container =
+                document.getElementById(
+                    "gold-coins-3d"
+                );
+
+
+            /* =========================================
+               SCENE
+            ========================================= */
+
+            const scene =
+                new THREE.Scene();
+
+
+            /* =========================================
+               CAMERA
+            ========================================= */
+
+            const camera =
+                new THREE.PerspectiveCamera(
+                    42,
+                    container.clientWidth /
+                    container.clientHeight,
+                    0.1,
+                    100
+                );
+
+            camera.position.set(
+                0,
+                3.2,
+                8
+            );
+
+
+            /* =========================================
+               RENDERER
+            ========================================= */
+
+            const renderer =
+                new THREE.WebGLRenderer({
+                    antialias: true,
+                    alpha: true
+                });
+
+            renderer.setSize(
+                container.clientWidth,
+                container.clientHeight
+            );
+
+            renderer.setPixelRatio(
+                Math.min(
+                    window.devicePixelRatio,
+                    2
+                )
+            );
+
+            renderer.shadowMap.enabled = true;
+
+            renderer.shadowMap.type =
+                THREE.PCFSoftShadowMap;
+
+            renderer.outputColorSpace =
+                THREE.SRGBColorSpace;
+
+            renderer.toneMapping =
+                THREE.ACESFilmicToneMapping;
+
+            renderer.toneMappingExposure =
+                1.25;
+
+            container.appendChild(
+                renderer.domElement
+            );
+
+
+            /* =========================================
+               CAMERA CONTROLS
+            ========================================= */
+
+            const controls =
+                new OrbitControls(
+                    camera,
+                    renderer.domElement
+                );
+
+            controls.enableDamping = true;
+
+            controls.dampingFactor = 0.06;
+
+            controls.enablePan = false;
+
+            controls.minDistance = 5;
+
+            controls.maxDistance = 12;
+
+            controls.minPolarAngle = 0.65;
+
+            controls.maxPolarAngle = 2.35;
+
+
+            /* =========================================
+               LIGHTING
+            ========================================= */
+
+            const ambientLight =
+                new THREE.AmbientLight(
+                    0xffdf8a,
+                    1.25
+                );
+
+            scene.add(
+                ambientLight
+            );
+
+
+            /* Main light */
+
+            const keyLight =
+                new THREE.DirectionalLight(
+                    0xfff2c7,
+                    5
+                );
+
+            keyLight.position.set(
+                4,
+                7,
+                6
+            );
+
+            keyLight.castShadow = true;
+
+            keyLight.shadow.mapSize.width =
+                2048;
+
+            keyLight.shadow.mapSize.height =
+                2048;
+
+            scene.add(
+                keyLight
+            );
+
+
+            /* Warm rim light */
+
+            const rimLight =
+                new THREE.PointLight(
+                    0xffa800,
+                    12,
+                    18
+                );
+
+            rimLight.position.set(
+                -5,
+                4,
+                -3
+            );
+
+            scene.add(
+                rimLight
+            );
+
+
+            /* Bright reflection light */
+
+            const whiteLight =
+                new THREE.PointLight(
+                    0xffffff,
+                    7,
+                    15
+                );
+
+            whiteLight.position.set(
+                4,
+                5,
+                4
+            );
+
+            scene.add(
+                whiteLight
+            );
+
+
+            /* =========================================
+               GOLD MATERIALS
+            ========================================= */
+
+            const goldMaterial =
+                new THREE.MeshStandardMaterial({
+
+                    color: 0xffc928,
+
+                    metalness: 1.0,
+
+                    roughness: 0.16
+                });
+
+
+            const darkGoldMaterial =
+                new THREE.MeshStandardMaterial({
+
+                    color: 0xb87500,
+
+                    metalness: 1.0,
+
+                    roughness: 0.22
+                });
+
+
+            const brightGoldMaterial =
+                new THREE.MeshStandardMaterial({
+
+                    color: 0xffdf58,
+
+                    metalness: 1.0,
+
+                    roughness: 0.12
+                });
+
+
+            /* =========================================
+               CREATE 3D COIN
+            ========================================= */
+
+            function createCoin(
+                radius = 1,
+                thickness = 0.22
+            ) {
+
+                const coin =
+                    new THREE.Group();
+
+
+                /* -------------------------------------
+                   MAIN COIN BODY
+                ------------------------------------- */
+
+                const bodyGeometry =
+                    new THREE.CylinderGeometry(
+                        radius,
+                        radius,
+                        thickness,
+                        96
+                    );
+
+                const body =
+                    new THREE.Mesh(
+                        bodyGeometry,
+                        goldMaterial
+                    );
+
+                body.rotation.x =
+                    Math.PI / 2;
+
+                body.castShadow = true;
+
+                body.receiveShadow = true;
+
+                coin.add(body);
+
+
+                /* -------------------------------------
+                   FRONT OUTER RIM
+                ------------------------------------- */
+
+                const rimGeometry =
+                    new THREE.TorusGeometry(
+                        radius * 0.86,
+                        radius * 0.065,
+                        16,
+                        96
+                    );
+
+                const frontRim =
+                    new THREE.Mesh(
+                        rimGeometry,
+                        brightGoldMaterial
+                    );
+
+                frontRim.position.z =
+                    thickness / 2 + 0.025;
+
+                frontRim.rotation.x =
+                    Math.PI / 2;
+
+                coin.add(frontRim);
+
+
+                /* -------------------------------------
+                   BACK OUTER RIM
+                ------------------------------------- */
+
+                const backRim =
+                    new THREE.Mesh(
+                        rimGeometry,
+                        darkGoldMaterial
+                    );
+
+                backRim.position.z =
+                    -thickness / 2 - 0.025;
+
+                backRim.rotation.x =
+                    Math.PI / 2;
+
+                coin.add(backRim);
+
+
+                /* -------------------------------------
+                   INNER RING
+                ------------------------------------- */
+
+                const innerRingGeometry =
+                    new THREE.TorusGeometry(
+                        radius * 0.70,
+                        radius * 0.025,
+                        12,
+                        96
+                    );
+
+                const innerRing =
+                    new THREE.Mesh(
+                        innerRingGeometry,
+                        brightGoldMaterial
+                    );
+
+                innerRing.position.z =
+                    thickness / 2 + 0.035;
+
+                innerRing.rotation.x =
+                    Math.PI / 2;
+
+                coin.add(innerRing);
+
+
+                /* -------------------------------------
+                   RAISED CENTER
+                ------------------------------------- */
+
+                const centerGeometry =
+                    new THREE.CylinderGeometry(
+                        radius * 0.57,
+                        radius * 0.57,
+                        thickness * 0.18,
+                        96
+                    );
+
+                const center =
+                    new THREE.Mesh(
+                        centerGeometry,
+                        brightGoldMaterial
+                    );
+
+                center.position.z =
+                    thickness / 2 + 0.045;
+
+                center.rotation.x =
+                    Math.PI / 2;
+
+                center.castShadow = true;
+
+                coin.add(center);
+
+
+                /* -------------------------------------
+                   EMBOSSED DOLLAR SYMBOL
+                ------------------------------------- */
+
+                const symbol =
+                    createDollarSymbol(
+                        radius * 0.43
+                    );
+
+                symbol.position.z =
+                    thickness / 2 + 0.075;
+
+                coin.add(symbol);
+
+
+                /* -------------------------------------
+                   DECORATIVE DOTS
+                ------------------------------------- */
+
+                for (
+                    let i = 0;
+                    i < 12;
+                    i++
+                ) {
+
+                    const angle =
+                        (i / 12) *
+                        Math.PI *
+                        2;
+
+                    const x =
+                        Math.cos(angle) *
+                        radius *
+                        0.77;
+
+                    const y =
+                        Math.sin(angle) *
+                        radius *
+                        0.77;
+
+                    const dotGeometry =
+                        new THREE.SphereGeometry(
+                            radius * 0.025,
+                            12,
+                            12
+                        );
+
+                    const dot =
+                        new THREE.Mesh(
+                            dotGeometry,
+                            brightGoldMaterial
+                        );
+
+                    dot.position.set(
+                        x,
+                        y,
+                        thickness / 2 + 0.045
+                    );
+
+                    coin.add(dot);
+                }
+
+
+                return coin;
+            }
+
+
+            /* =========================================
+               DOLLAR SYMBOL
+            ========================================= */
+
+            function createDollarSymbol(
+                size
+            ) {
+
+                const group =
+                    new THREE.Group();
+
+
+                const material =
+                    new THREE.MeshStandardMaterial({
+
+                        color: 0x9b6100,
+
+                        metalness: 1.0,
+
+                        roughness: 0.19
+                    });
+
+
+                /* Vertical bar */
+
+                const verticalGeometry =
+                    new THREE.BoxGeometry(
+                        size * 0.075,
+                        size * 0.95,
+                        size * 0.07
+                    );
+
+                const vertical =
+                    new THREE.Mesh(
+                        verticalGeometry,
+                        material
+                    );
+
+                group.add(
+                    vertical
+                );
+
+
+                /* Upper curve */
+
+                const upperGeometry =
+                    new THREE.TorusGeometry(
+                        size * 0.25,
+                        size * 0.065,
+                        12,
+                        32,
+                        Math.PI
+                    );
+
+                const upper =
+                    new THREE.Mesh(
+                        upperGeometry,
+                        material
+                    );
+
+                upper.rotation.z =
+                    Math.PI / 2;
+
+                upper.position.y =
+                    size * 0.20;
+
+                group.add(
+                    upper
+                );
+
+
+                /* Lower curve */
+
+                const lowerGeometry =
+                    new THREE.TorusGeometry(
+                        size * 0.25,
+                        size * 0.065,
+                        12,
+                        32,
+                        Math.PI
+                    );
+
+                const lower =
+                    new THREE.Mesh(
+                        lowerGeometry,
+                        material
+                    );
+
+                lower.rotation.z =
+                    -Math.PI / 2;
+
+                lower.position.y =
+                    -size * 0.20;
+
+                group.add(
+                    lower
+                );
+
+
+                return group;
+            }
+
+
+            /* =========================================
+               COINS
+            ========================================= */
+
+            const coins = [];
+
+
+            /* Back row */
+
+            for (
+                let i = 0;
+                i < 5;
+                i++
+            ) {
+
+                const coin =
+                    createCoin(
+                        1.05,
+                        0.22
+                    );
+
+                coin.position.set(
+                    (i - 2) * 0.72,
+                    0.25 + i * 0.03,
+                    -0.8
+                );
+
+                coin.rotation.set(
+                    Math.PI / 2,
+                    0,
+                    (i - 2) * 0.08
+                );
+
+                scene.add(
+                    coin
+                );
+
+                coins.push({
+                    mesh: coin,
+                    speed:
+                        0.004 +
+                        i * 0.0005
+                });
+            }
+
+
+            /* Large center coin */
+
+            const mainCoin =
+                createCoin(
+                    1.4,
+                    0.25
+                );
+
+            mainCoin.position.set(
+                0,
+                1.0,
+                0
+            );
+
+            mainCoin.rotation.x =
+                Math.PI / 2;
+
+            scene.add(
+                mainCoin
+            );
+
+            coins.push({
+                mesh: mainCoin,
+                speed: 0.008
+            });
+
+
+            /* Right coin */
+
+            const rightCoin =
+                createCoin(
+                    0.95,
+                    0.20
+                );
+
+            rightCoin.position.set(
+                1.9,
+                0.45,
+                0.1
+            );
+
+            rightCoin.rotation.x =
+                Math.PI / 2;
+
+            rightCoin.rotation.z =
+                -0.25;
+
+            scene.add(
+                rightCoin
+            );
+
+            coins.push({
+                mesh: rightCoin,
+                speed: 0.011
+            });
+
+
+            /* =========================================
+               GROUND SHADOW
+            ========================================= */
+
+            const groundGeometry =
+                new THREE.CircleGeometry(
+                    6,
+                    64
+                );
+
+            const groundMaterial =
+                new THREE.ShadowMaterial({
+                    opacity: 0.25
+                });
+
+            const ground =
+                new THREE.Mesh(
+                    groundGeometry,
+                    groundMaterial
+                );
+
+            ground.rotation.x =
+                -Math.PI / 2;
+
+            ground.position.y =
+                -0.72;
+
+            ground.receiveShadow = true;
+
+            scene.add(
+                ground
+            );
+
+
+            /* =========================================
+               GOLD PARTICLES
+            ========================================= */
+
+            const particleGeometry =
+                new THREE.SphereGeometry(
+                    0.025,
+                    8,
+                    8
+                );
+
+            const particleMaterial =
+                new THREE.MeshStandardMaterial({
+
+                    color: 0xffd43b,
+
+                    emissive: 0x8a5700,
+
+                    emissiveIntensity: 1.2,
+
+                    metalness: 1,
+
+                    roughness: 0.15
+                });
+
+
+            const particles = [];
+
+
+            for (
+                let i = 0;
+                i < 25;
+                i++
+            ) {
+
+                const particle =
+                    new THREE.Mesh(
+                        particleGeometry,
+                        particleMaterial
+                    );
+
+                particle.position.set(
+                    (Math.random() - 0.5) * 7,
+                    Math.random() * 4 - 0.5,
+                    (Math.random() - 0.5) * 4
+                );
+
+                particle.userData.offset =
+                    Math.random() * 10;
+
+                scene.add(
+                    particle
+                );
+
+                particles.push(
+                    particle
+                );
+            }
+
+
+            /* =========================================
+               ANIMATION
+            ========================================= */
+
+            const clock =
+                new THREE.Clock();
+
+
+            function animate() {
+
+                requestAnimationFrame(
+                    animate
+                );
+
+                const time =
+                    clock.getElapsedTime();
+
+
+                coins.forEach(
+                    (item, index) => {
+
+                        item.mesh.rotation.z +=
+                            item.speed;
+
+                        item.mesh.position.y +=
+                            Math.sin(
+                                time * 1.2 +
+                                index
+                            ) * 0.0007;
+                    }
+                );
+
+
+                particles.forEach(
+                    particle => {
+
+                        particle.position.y +=
+                            Math.sin(
+                                time * 0.8 +
+                                particle.userData.offset
+                            ) * 0.001;
+                    }
+                );
+
+
+                controls.update();
+
+                renderer.render(
+                    scene,
+                    camera
+                );
+            }
+
+
+            animate();
+
+
+            /* =========================================
+               RESPONSIVE RESIZE
+            ========================================= */
+
+            function resize() {
+
+                const width =
+                    container.clientWidth;
+
+                const height =
+                    container.clientHeight;
+
+                if (
+                    width === 0 ||
+                    height === 0
+                ) {
+                    return;
+                }
+
+                camera.aspect =
+                    width / height;
+
+                camera.updateProjectionMatrix();
+
+                renderer.setSize(
+                    width,
+                    height
+                );
+
+                renderer.setPixelRatio(
+                    Math.min(
+                        window.devicePixelRatio,
+                        2
+                    )
+                );
+            }
+
+
+            window.addEventListener(
+                "resize",
+                resize
+            );
+
+            resize();
+
+            </script>
+
             <div class="status-pill">
               <span class="status-dot"></span> Available Balance
             </div>
