@@ -183,10 +183,7 @@ app.post('/api/profile/avatar', auth.requireAuth, async (req, res) => {
 app.post('/api/auth/register', async (req, res) => {
     try {
         const { username, email, password } = req.body || {};
-        const userCount = auth.getAllUsersSafe().length;
-        // First user registered becomes admin automatically if no admin exists
-        const role = userCount === 0 ? 'admin' : 'user';
-        const user = await auth.registerUser({ username, email, password, role });
+        const user = await auth.registerUser({ username, email, password });
         req.session.user = user;
         recordHistory(user.id, user.username, 'join', 'Account Joined', 'Registered new account on Terminal Vast Bot platform');
         res.json({ status: 'ok', message: 'Registration successful', user });
@@ -275,7 +272,7 @@ app.get('/api/blog', (req, res) => {
     res.json({ status: 'ok', posts });
 });
 
-app.post('/api/blog/create', auth.requireAdmin, (req, res) => {
+app.post('/api/blog/create', auth.requireAuth, (req, res) => {
     try {
         const { title, content, image } = req.body || {};
         if (!title || !title.trim()) return res.status(400).json({ error: 'Article title is required.' });
@@ -1122,7 +1119,22 @@ conn.sendStatusMention = async (content, jids = []) => {
   conn.serializeM = (m) => smsg(conn, m, store);
 
   conn.ev.on('connection.update', async (update) => {
+    const status = update.connection;
     if (!webSession) {
+      if (status === 'connecting') {
+        primaryBotState = 'connecting';
+      } else if (status === 'open') {
+        primaryBotState = 'connected';
+        if (conn.user?.id) primaryBotPhone = conn.user.id.split(':')[0].split('@')[0];
+      } else if (status === 'close') {
+        const code = new Boom(update.lastDisconnect?.error)?.output?.statusCode;
+        if (code === DisconnectReason.loggedOut) {
+          primaryBotState = 'disconnected';
+        } else {
+          primaryBotState = 'reconnecting';
+        }
+      }
+
       let { Connecting } = require("./connect");
       Connecting({ update, conn, Boom, DisconnectReason, sleep, color, clientstart });
     }
@@ -1644,6 +1656,10 @@ function getUptime() {
     return runtime(process.uptime());
 }
 
+// Bot connection state tracking
+let primaryBotState = 'disconnected';
+let primaryBotPhone = process.env.PRIMARY_PHONE || null;
+
 // Web pairing session manager. Sessions are isolated by a stable hash, never by raw phone number.
 const webSessions = new Map();
 const pairingAttempts = new Map();
@@ -1697,12 +1713,49 @@ async function restoreWebSessions() {
     }
 }
 
-app.get(["/", "/dashboard", "/bot-control", "/analytics", "/users", "/settings-page", "/restart-page", "/topup", "/connect", "/settings", "/profile"], (req, res) => {
+app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api/') || req.path.includes('.')) {
+        return next();
+    }
     res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
 });
 
 app.get("/uptime", (req, res) => {
     res.json({ uptime: getUptime(), sessions: webSessions.size });
+});
+
+app.get("/api/bot/status", (req, res) => {
+    let overallStatus = primaryBotState;
+    let connectedPhones = [];
+
+    if (primaryBotState === 'connected' && primaryBotPhone) {
+        connectedPhones.push(primaryBotPhone);
+    }
+
+    for (const [id, session] of webSessions.entries()) {
+        if (session.status === 'connected') {
+            if (overallStatus !== 'connected') overallStatus = 'connected';
+            if (session.phone && !connectedPhones.includes(session.phone)) {
+                connectedPhones.push(session.phone);
+            }
+        } else if (session.status === 'connecting' || session.status === 'reconnecting') {
+            if (overallStatus !== 'connected') {
+                overallStatus = session.status;
+            }
+        } else if (session.status === 'error') {
+            if (overallStatus === 'disconnected') {
+                overallStatus = 'error';
+            }
+        }
+    }
+
+    res.json({
+        status: overallStatus,
+        connectedPhones,
+        activeSessionsCount: webSessions.size,
+        uptime: getUptime(),
+        lastUpdated: new Date().toISOString()
+    });
 });
 
 app.get("/api/status", (req, res) => {
