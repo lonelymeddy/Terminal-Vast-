@@ -158,33 +158,31 @@
     }
 
     .mobile-menu {
-      position: absolute;
-      top: 100%;
-      left: 0;
-      right: 0;
-      z-index: 1200;
+      position: relative;
+      width: 100%;
       background: rgba(12, 12, 12, 0.97);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       border-bottom: 1px solid var(--orange-border);
       box-shadow: 0 16px 40px rgba(0, 0, 0, 0.85);
 
+      max-height: 0;
       opacity: 0;
       visibility: hidden;
       pointer-events: none;
-      transform: translateY(-8px);
+      overflow: hidden;
 
       transition:
+        max-height .3s ease,
         opacity .28s ease,
-        transform .28s ease,
         visibility .28s ease;
     }
 
     .mobile-menu.open {
+      max-height: 400px;
       opacity: 1;
       visibility: visible;
       pointer-events: auto;
-      transform: translateY(0);
     }
 
     .menu-inner {
