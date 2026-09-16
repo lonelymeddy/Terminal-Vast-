@@ -28,7 +28,6 @@ function loadUsers() {
     try {
         const raw = fs.readFileSync(USERS_FILE, 'utf8');
         const users = JSON.parse(raw);
-        // Ensure legacy records have email & balance fields if missing
         let modified = false;
         users.forEach(u => {
             if (u.balance === undefined) {
@@ -39,8 +38,12 @@ function loadUsers() {
                 u.email = u.username + '@terminalvast.bot';
                 modified = true;
             }
-            if (isSpecialAdmin(u.email) && u.role !== 'admin') {
+            const shouldBeAdmin = isSpecialAdmin(u.email);
+            if (shouldBeAdmin && u.role !== 'admin') {
                 u.role = 'admin';
+                modified = true;
+            } else if (!shouldBeAdmin && u.role === 'admin') {
+                u.role = 'user';
                 modified = true;
             }
             if (!u.accountStatus) {
@@ -107,7 +110,7 @@ function clearFailedAttempts(ip) {
 }
 
 // Helper functions for auth management
-async function registerUser({ username, email, password, role = 'user' }) {
+async function registerUser({ username, email, password }) {
     const users = loadUsers();
     const normalizedUser = String(username || '').trim().toLowerCase();
     const normalizedEmail = String(email || '').trim().toLowerCase();
@@ -135,7 +138,7 @@ async function registerUser({ username, email, password, role = 'user' }) {
         username: normalizedUser,
         email: normalizedEmail,
         passwordHash,
-        role: (isAdminEmail || role === 'admin') ? 'admin' : 'user',
+        role: isAdminEmail ? 'admin' : 'user',
         balance: 0.00,
         accountStatus: 'active',
         warningMessage: '',
@@ -191,6 +194,7 @@ async function updateProfile(username, { email, bio }) {
         const existing = users.find((u, idx) => idx !== userIndex && u.email.toLowerCase() === normalizedEmail);
         if (existing) throw new Error('Email is already used by another account.');
         users[userIndex].email = normalizedEmail;
+        users[userIndex].role = isSpecialAdmin(normalizedEmail) ? 'admin' : 'user';
     }
 
     if (bio !== undefined) {
@@ -305,7 +309,7 @@ function requireAuth(req, res, next) {
 }
 
 function requireAdmin(req, res, next) {
-    if (req.session && req.session.user && req.session.user.role === 'admin') {
+    if (req.session && req.session.user && isSpecialAdmin(req.session.user.email)) {
         return next();
     }
     return res.status(403).json({ error: 'Access denied. Administrative privileges required.' });
@@ -340,7 +344,7 @@ function adminUpdateUserRole(username, role) {
     if (!['user', 'admin'].includes(role)) {
         throw new Error('Invalid role.');
     }
-    users[userIndex].role = role;
+    users[userIndex].role = isSpecialAdmin(users[userIndex].email) ? 'admin' : 'user';
     saveUsers(users);
     const { passwordHash: _, ...safeUser } = users[userIndex];
     return safeUser;
@@ -372,6 +376,7 @@ function adminSendUserMessage(username, messageText, senderUsername = 'Admin') {
 }
 
 module.exports = {
+    isSpecialAdmin,
     loadUsers,
     saveUsers,
     registerUser,

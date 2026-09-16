@@ -2,11 +2,16 @@ let currentUser = null;
 let currentActivePage = getPageFromPath() || localStorage.getItem('tv_active_page') || 'topup';
 
 function getPageFromPath() {
-    const pathname = window.location.pathname.replace(/^\/+|\/+$/g, '');
-    const validPages = ['topup', 'connect', 'settings', 'profile', 'blog', 'history', 'admin'];
-    if (validPages.includes(pathname.toLowerCase())) {
-        return pathname.toLowerCase();
-    }
+    const rawPath = window.location.pathname.replace(/^\/+|\/+$/g, '').toLowerCase();
+    if (!rawPath || rawPath === 'topup' || rawPath === 'dashboard' || rawPath === 'account') return 'topup';
+    if (rawPath === 'connect' || rawPath === 'bot-control') return 'connect';
+    if (rawPath === 'settings' || rawPath === 'settings-page') return 'settings';
+    if (rawPath === 'profile') return 'profile';
+    if (rawPath === 'profile/image') return 'profile-image';
+    if (rawPath === 'blog') return 'blog';
+    if (rawPath === 'blog/create') return 'blog-create';
+    if (rawPath === 'history') return 'history';
+    if (rawPath === 'admin') return 'admin';
     return null;
 }
 
@@ -14,6 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
     disablePageZoomGestures();
     initLandingPageEvents();
     initClock();
+    initCropperEvents();
     checkSession();
 });
 
@@ -250,18 +256,21 @@ function updateProfileAvatarDisplay() {
     if (!currentUser) return;
     const topbarAvatarEl = document.getElementById("topbarProfileAvatar");
     const profileBigAvatarEl = document.getElementById("profileBigAvatar");
+    const cropperPreviewBigEl = document.getElementById("cropperPreviewBig");
+    const cropperPreviewSmallEl = document.getElementById("cropperPreviewSmall");
 
     if (currentUser.avatar) {
-        if (topbarAvatarEl) {
-            topbarAvatarEl.innerHTML = `<img src="${currentUser.avatar}" alt="Avatar" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
-        }
-        if (profileBigAvatarEl) {
-            profileBigAvatarEl.innerHTML = `<img src="${currentUser.avatar}" alt="Avatar" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
-        }
+        const imgHTML = `<img src="${currentUser.avatar}" alt="Avatar" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+        if (topbarAvatarEl) topbarAvatarEl.innerHTML = imgHTML;
+        if (profileBigAvatarEl) profileBigAvatarEl.innerHTML = imgHTML;
+        if (cropperPreviewBigEl && !cropperImg) cropperPreviewBigEl.innerHTML = imgHTML;
+        if (cropperPreviewSmallEl && !cropperImg) cropperPreviewSmallEl.innerHTML = imgHTML;
     } else {
         const avatarLetter = (currentUser.username || 'U').charAt(0).toUpperCase();
         if (topbarAvatarEl) topbarAvatarEl.textContent = avatarLetter;
         if (profileBigAvatarEl) profileBigAvatarEl.textContent = avatarLetter;
+        if (cropperPreviewBigEl && !cropperImg) cropperPreviewBigEl.textContent = avatarLetter;
+        if (cropperPreviewSmallEl && !cropperImg) cropperPreviewSmallEl.textContent = avatarLetter;
     }
 }
 
@@ -553,6 +562,62 @@ async function handleAddBlogComment(e, postId) {
         await loadBlogPosts();
     } catch (err) {
         alert("Error: " + err.message);
+    }
+}
+
+let uploadedStandaloneBlogBase64Image = null;
+
+function handleStandaloneBlogImageFileSelect(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 8 * 1024 * 1024) return alert('Image file size must be smaller than 8MB.');
+
+    const nameDisplay = document.getElementById("standaloneBlogFileNameDisplay");
+    if (nameDisplay) nameDisplay.textContent = file.name;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+        uploadedStandaloneBlogBase64Image = reader.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+async function handleCreateBlogPostStandalone(e) {
+    e.preventDefault();
+    if (!currentUser) {
+        openAuthModal('login');
+        return;
+    }
+    const title = document.getElementById("standaloneBlogTitleInput").value.trim();
+    const urlImage = document.getElementById("standaloneBlogImageUrlInput").value.trim();
+    const content = document.getElementById("standaloneBlogContentInput").value.trim();
+    const submitBtn = document.getElementById("standaloneCreatePostSubmitBtn");
+
+    const finalImage = uploadedStandaloneBlogBase64Image || urlImage || null;
+
+    try {
+        await runWithSpinner(submitBtn, "Publishing article...", async () => {
+            const res = await fetch('/api/blog/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, content, image: finalImage })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed to publish post');
+
+            document.getElementById("standaloneBlogTitleInput").value = "";
+            document.getElementById("standaloneBlogImageUrlInput").value = "";
+            document.getElementById("standaloneBlogContentInput").value = "";
+            uploadedStandaloneBlogBase64Image = null;
+            const nameDisplay = document.getElementById("standaloneBlogFileNameDisplay");
+            if (nameDisplay) nameDisplay.textContent = "No file attached";
+
+            alert("Article published successfully!");
+            navigateToPage('blog');
+        });
+    } catch (err) {
+        alert("Publishing error: " + err.message);
     }
 }
 
@@ -976,9 +1041,81 @@ async function handleRestartEngine() {
 }
 
 /* ==========================================================================
-   PROFILE DETAILS & AVATAR UPLOAD LOGIC
+   INTERACTIVE PROFILE PICTURE CROPPER STUDIO (/profile/image)
    ========================================================================== */
-async function handleAvatarFileSelect(e) {
+let cropperImg = null;
+let cropperZoom = 1;
+let cropperPanX = 0;
+let cropperPanY = 0;
+let isDraggingCropper = false;
+let cropperDragStartX = 0;
+let cropperDragStartY = 0;
+
+function initCropperEvents() {
+    const canvas = document.getElementById("cropperCanvas");
+    if (!canvas) return;
+
+    canvas.addEventListener("mousedown", (e) => {
+        if (!cropperImg) return;
+        isDraggingCropper = true;
+        cropperDragStartX = e.clientX;
+        cropperDragStartY = e.clientY;
+        canvas.style.cursor = "grabbing";
+    });
+
+    window.addEventListener("mousemove", (e) => {
+        if (!isDraggingCropper || !cropperImg) return;
+        const dx = e.clientX - cropperDragStartX;
+        const dy = e.clientY - cropperDragStartY;
+        cropperDragStartX = e.clientX;
+        cropperDragStartY = e.clientY;
+
+        cropperPanX += dx;
+        cropperPanY += dy;
+        drawCropperCanvas();
+    });
+
+    window.addEventListener("mouseup", () => {
+        if (isDraggingCropper) {
+            isDraggingCropper = false;
+            if (canvas) canvas.style.cursor = "grab";
+        }
+    });
+
+    // Touch events for mobile support
+    canvas.addEventListener("touchstart", (e) => {
+        if (!cropperImg || e.touches.length !== 1) return;
+        isDraggingCropper = true;
+        cropperDragStartX = e.touches[0].clientX;
+        cropperDragStartY = e.touches[0].clientY;
+    }, { passive: true });
+
+    window.addEventListener("touchmove", (e) => {
+        if (!isDraggingCropper || !cropperImg || e.touches.length !== 1) return;
+        const dx = e.touches[0].clientX - cropperDragStartX;
+        const dy = e.touches[0].clientY - cropperDragStartY;
+        cropperDragStartX = e.touches[0].clientX;
+        cropperDragStartY = e.touches[0].clientY;
+
+        cropperPanX += dx;
+        cropperPanY += dy;
+        drawCropperCanvas();
+    }, { passive: true });
+
+    window.addEventListener("touchend", () => {
+        isDraggingCropper = false;
+    });
+
+    // Mouse wheel zoom
+    canvas.addEventListener("wheel", (e) => {
+        if (!cropperImg) return;
+        e.preventDefault();
+        const delta = e.deltaY < 0 ? 0.08 : -0.08;
+        adjustCropperZoom(delta);
+    }, { passive: false });
+}
+
+function handleCropperFileSelect(e) {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -987,31 +1124,209 @@ async function handleAvatarFileSelect(e) {
         return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-        alert('Image size must be smaller than 5MB.');
+    if (file.size > 8 * 1024 * 1024) {
+        alert('Image file size must be smaller than 8MB.');
         return;
     }
 
     const reader = new FileReader();
-    reader.onload = async () => {
-        const base64Avatar = reader.result;
-        try {
+    reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+            cropperImg = img;
+            cropperZoom = 1;
+            cropperPanX = 0;
+            cropperPanY = 0;
+
+            const slider = document.getElementById("cropperZoomSlider");
+            if (slider) slider.value = "1";
+
+            const placeholder = document.getElementById("cropperPlaceholder");
+            if (placeholder) placeholder.style.display = "none";
+
+            const controls = document.getElementById("cropperControls");
+            if (controls) controls.style.display = "flex";
+
+            const saveBtn = document.getElementById("saveCroppedAvatarBtn");
+            if (saveBtn) saveBtn.disabled = false;
+
+            drawCropperCanvas();
+        };
+        img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+function adjustCropperZoom(delta) {
+    if (!cropperImg) return;
+    cropperZoom = Math.min(3.0, Math.max(0.2, cropperZoom + delta));
+    const slider = document.getElementById("cropperZoomSlider");
+    if (slider) slider.value = String(cropperZoom);
+    drawCropperCanvas();
+}
+
+function onCropperZoomSliderChange(e) {
+    if (!cropperImg) return;
+    cropperZoom = parseFloat(e.target.value);
+    drawCropperCanvas();
+}
+
+function resetCropperPosition() {
+    if (!cropperImg) return;
+    cropperZoom = 1;
+    cropperPanX = 0;
+    cropperPanY = 0;
+    const slider = document.getElementById("cropperZoomSlider");
+    if (slider) slider.value = "1";
+    drawCropperCanvas();
+}
+
+function drawCropperCanvas() {
+    const canvas = document.getElementById("cropperCanvas");
+    if (!canvas || !cropperImg) return;
+    const ctx = canvas.getContext("2d");
+    const width = canvas.width;
+    const height = canvas.height;
+
+    // Clear canvas
+    ctx.clearRect(0, 0, width, height);
+
+    // Calculate image render dimensions
+    const aspect = cropperImg.width / cropperImg.height;
+    let baseW = width;
+    let baseH = height;
+    if (aspect > 1) {
+        baseH = width / aspect;
+    } else {
+        baseW = height * aspect;
+    }
+
+    const drawW = baseW * cropperZoom;
+    const drawH = baseH * cropperZoom;
+    const drawX = (width - drawW) / 2 + cropperPanX;
+    const drawY = (height - drawH) / 2 + cropperPanY;
+
+    // Draw transformed image
+    ctx.drawImage(cropperImg, drawX, drawY, drawW, drawH);
+
+    // Dark overlay with circular viewport cut-out
+    ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
+    ctx.beginPath();
+    ctx.rect(0, 0, width, height);
+    ctx.arc(width / 2, height / 2, width / 2 - 10, 0, Math.PI * 2, true);
+    ctx.fill();
+
+    // Border ring for target circle
+    ctx.strokeStyle = "var(--orange, #f97316)";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(width / 2, height / 2, width / 2 - 10, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Update live previews
+    updateCropperPreviews();
+}
+
+function updateCropperPreviews() {
+    if (!cropperImg) return;
+    const exportDataURL = generateCroppedBase64(160, 160);
+    if (!exportDataURL) return;
+
+    const bigEl = document.getElementById("cropperPreviewBig");
+    const smallEl = document.getElementById("cropperPreviewSmall");
+
+    const imgTag = `<img src="${exportDataURL}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+    if (bigEl) bigEl.innerHTML = imgTag;
+    if (smallEl) smallEl.innerHTML = imgTag;
+}
+
+function generateCroppedBase64(outW = 400, outH = 400) {
+    if (!cropperImg) return null;
+    const canvas = document.createElement("canvas");
+    canvas.width = outW;
+    canvas.height = outH;
+    const ctx = canvas.getContext("2d");
+
+    const width = 360;
+    const height = 360;
+    const aspect = cropperImg.width / cropperImg.height;
+    let baseW = width;
+    let baseH = height;
+    if (aspect > 1) {
+        baseH = width / aspect;
+    } else {
+        baseW = height * aspect;
+    }
+
+    const drawW = baseW * cropperZoom;
+    const drawH = baseH * cropperZoom;
+    const drawX = (width - drawW) / 2 + cropperPanX;
+    const drawY = (height - drawH) / 2 + cropperPanY;
+
+    // Scale to output resolution (400x400)
+    const scale = outW / width;
+    ctx.drawImage(cropperImg, drawX * scale, drawY * scale, drawW * scale, drawH * scale);
+
+    return canvas.toDataURL("image/jpeg", 0.9);
+}
+
+async function handleSaveCroppedAvatar() {
+    if (!cropperImg) return;
+    const base64Avatar = generateCroppedBase64(400, 400);
+    if (!base64Avatar) return;
+
+    const saveBtn = document.getElementById("saveCroppedAvatarBtn");
+
+    try {
+        await runWithSpinner(saveBtn, "Saving profile picture...", async () => {
             const res = await fetch('/api/profile/avatar', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ avatar: base64Avatar })
             });
             const data = await res.json();
-            if (!res.ok) throw new Error(data.error || 'Failed to update avatar');
+            if (!res.ok) throw new Error(data.error || 'Failed to save avatar');
 
             currentUser = data.user;
             updateProfileAvatarDisplay();
             alert('Profile picture updated successfully!');
-        } catch (err) {
-            alert('Avatar upload error: ' + err.message);
-        }
-    };
-    reader.readAsDataURL(file);
+            navigateToPage('profile');
+        });
+    } catch (err) {
+        alert('Avatar upload error: ' + err.message);
+    }
+}
+
+async function handleRemoveAvatar() {
+    if (!confirm("Are you sure you want to remove your profile picture?")) return;
+
+    try {
+        const res = await fetch('/api/profile/avatar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ avatar: null })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to remove avatar');
+
+        currentUser = data.user;
+        cropperImg = null;
+
+        const placeholder = document.getElementById("cropperPlaceholder");
+        if (placeholder) placeholder.style.display = "block";
+
+        const controls = document.getElementById("cropperControls");
+        if (controls) controls.style.display = "none";
+
+        const saveBtn = document.getElementById("saveCroppedAvatarBtn");
+        if (saveBtn) saveBtn.disabled = true;
+
+        updateProfileAvatarDisplay();
+        alert('Profile picture removed successfully.');
+        navigateToPage('profile');
+    } catch (err) {
+        alert('Error removing avatar: ' + err.message);
+    }
 }
 
 async function handleProfileUpdate(e) {
@@ -1057,22 +1372,43 @@ function navigateToPage(pageId, updateHistory = true) {
     localStorage.setItem('tv_active_page', pageId);
     closeSidebar();
 
-    // Scroll to top of window and dashboard content container
+    const ADMIN_EMAILS = ['delostvoyage@gmail.com', 'meddymususwa126@gmail.com'];
+    const isAdmin = currentUser && currentUser.email && ADMIN_EMAILS.includes(currentUser.email.trim().toLowerCase());
+    if (pageId === 'admin' && !isAdmin) {
+        pageId = 'topup';
+        currentActivePage = 'topup';
+    }
+
+    if ((pageId === 'blog-create' || pageId === 'profile-image') && !currentUser) {
+        openAuthModal('login');
+        return;
+    }
+
+    const routeMap = {
+        'topup': '/topup',
+        'connect': '/connect',
+        'settings': '/settings',
+        'profile': '/profile',
+        'profile-image': '/profile/image',
+        'blog': '/blog',
+        'blog-create': '/blog/create',
+        'history': '/history',
+        'admin': '/admin'
+    };
+
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     const dashContent = document.querySelector('.dash-content');
     if (dashContent) dashContent.scrollTop = 0;
 
-    if (updateHistory && window.history) {
-        const targetPath = `/${pageId}`;
+    if (updateHistory && window.history && routeMap[pageId]) {
+        const targetPath = routeMap[pageId];
         if (window.location.pathname !== targetPath) {
             window.history.pushState({ page: pageId }, '', targetPath);
         }
     }
 
-    // Show skeleton loading effect briefly
     showSkeletonLoading();
 
-    // Update active page class
     const pages = document.querySelectorAll(".dash-page");
     pages.forEach(p => p.classList.remove("active"));
 
@@ -1082,18 +1418,25 @@ function navigateToPage(pageId, updateHistory = true) {
     setTimeout(() => {
         hideSkeletonLoading();
 
-        const targetPage = document.getElementById(`page${capitalize(pageId)}`);
+        const targetPageId = pageId === 'profile-image' ? 'pageProfileImage' :
+                           pageId === 'blog-create' ? 'pageBlogCreate' :
+                           `page${capitalize(pageId)}`;
+
+        const targetPage = document.getElementById(targetPageId);
         if (targetPage) targetPage.classList.add("active");
 
-        const targetNavLink = document.getElementById(`navLink${capitalize(pageId)}`);
+        const targetNavLinkId = pageId === 'profile-image' ? 'navLinkProfile' :
+                              pageId === 'blog-create' ? 'navLinkBlog' :
+                              `navLink${capitalize(pageId)}`;
+
+        const targetNavLink = document.getElementById(targetNavLinkId);
         if (targetNavLink) targetNavLink.classList.add("active");
 
-        // Specific page data fetching on navigation
         if (pageId === 'blog') loadBlogPosts();
         if (pageId === 'history') loadHistoryLogs();
-        if (pageId === 'admin') loadAdminDashboardData();
+        if (pageId === 'admin' && isAdmin) loadAdminDashboardData();
+        if (pageId === 'connect') startBotStatusPolling();
 
-        // Ensure scrolled to top after target page rendered
         window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     }, 150);
 }
@@ -1215,12 +1558,91 @@ async function handleCustomTopUp(e) {
 /* ==========================================================================
    CONNECT WHATSAPP PAIRING
    ========================================================================== */
+let botStatusPollTimer = null;
+
+async function loadBotStatus() {
+    try {
+        const res = await fetch('/api/bot/status');
+        if (!res.ok) return;
+        const data = await res.json();
+        updateBotStatusUI(data);
+    } catch (err) {
+        console.error("Failed to load bot status:", err);
+        updateBotStatusUI({ status: 'error' });
+    }
+}
+
+function updateBotStatusUI(data) {
+    const status = data.status || 'disconnected';
+    const badgeEl = document.getElementById("botStatusBadge");
+    const textEl = document.getElementById("botStatusText");
+    const phonesEl = document.getElementById("botConnectedPhonesText");
+    const uptimeEl = document.getElementById("botUptimeText");
+    const sessionsEl = document.getElementById("botSessionsCountText");
+
+    if (phonesEl) {
+        if (data.connectedPhones && data.connectedPhones.length > 0) {
+            phonesEl.textContent = data.connectedPhones.map(p => `+${p}`).join(', ');
+        } else {
+            phonesEl.textContent = 'None';
+        }
+    }
+
+    if (uptimeEl) uptimeEl.textContent = data.uptime || '--';
+    if (sessionsEl) sessionsEl.textContent = data.activeSessionsCount !== undefined ? data.activeSessionsCount : '0';
+
+    if (!badgeEl || !textEl) return;
+
+    if (status === 'connected') {
+        badgeEl.style.background = "rgba(34, 197, 94, 0.15)";
+        badgeEl.style.color = "#4ade80";
+        badgeEl.style.border = "1px solid rgba(34, 197, 94, 0.4)";
+        textEl.textContent = "CONNECTED";
+    } else if (status === 'connecting') {
+        badgeEl.style.background = "rgba(234, 179, 8, 0.15)";
+        badgeEl.style.color = "#fef08a";
+        badgeEl.style.border = "1px solid rgba(234, 179, 8, 0.4)";
+        textEl.textContent = "CONNECTING...";
+    } else if (status === 'reconnecting') {
+        badgeEl.style.background = "rgba(249, 115, 22, 0.15)";
+        badgeEl.style.color = "#fdba74";
+        badgeEl.style.border = "1px solid rgba(249, 115, 22, 0.4)";
+        textEl.textContent = "RECONNECTING...";
+    } else if (status === 'error') {
+        badgeEl.style.background = "rgba(239, 68, 68, 0.15)";
+        badgeEl.style.color = "#fca5a5";
+        badgeEl.style.border = "1px solid rgba(239, 68, 68, 0.4)";
+        textEl.textContent = "ERROR";
+    } else {
+        badgeEl.style.background = "rgba(100, 116, 139, 0.15)";
+        badgeEl.style.color = "#cbd5e1";
+        badgeEl.style.border = "1px solid rgba(100, 116, 139, 0.4)";
+        textEl.textContent = "DISCONNECTED";
+    }
+}
+
+function startBotStatusPolling() {
+    stopBotStatusPolling();
+    loadBotStatus();
+    botStatusPollTimer = setInterval(loadBotStatus, 3000);
+}
+
+function stopBotStatusPolling() {
+    if (botStatusPollTimer) {
+        clearInterval(botStatusPollTimer);
+        botStatusPollTimer = null;
+    }
+}
+
 async function handlePairRequest(e) {
     e.preventDefault();
     const phone = document.getElementById("dashPhoneInput").value.trim();
     const submitBtn = document.getElementById("dashPairSubmitBtn");
     const resultBox = document.getElementById("dashPairResultBox");
     const codeDisplay = document.getElementById("dashPairCodeDisplay");
+
+    updateBotStatusUI({ status: 'connecting' });
+    startBotStatusPolling();
 
     try {
         await runWithSpinner(submitBtn, "Generating code...", async () => {
@@ -1238,9 +1660,11 @@ async function handlePairRequest(e) {
             } else if (data.status === 'connected') {
                 alert('This session is already connected!');
             }
+            loadBotStatus();
         });
     } catch (err) {
         alert("Pairing error: " + err.message);
+        loadBotStatus();
     }
 }
 
