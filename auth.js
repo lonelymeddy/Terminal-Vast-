@@ -22,21 +22,8 @@ const LOCK_TIME_MS = 15 * 60 * 1000; // 15 minutes
 
 function loadUsers() {
     if (!fs.existsSync(USERS_FILE)) {
-        // Seed default admin user if file doesn't exist
-        const defaultHash = bcrypt.hashSync('adminpassword', 10);
-        const defaultUsers = [
-            {
-                id: 'user_admin_001',
-                username: 'admin',
-                email: 'admin@terminalvast.bot',
-                passwordHash: defaultHash,
-                role: 'admin',
-                balance: 0.00,
-                createdAt: new Date().toISOString()
-            }
-        ];
-        fs.writeFileSync(USERS_FILE, JSON.stringify(defaultUsers, null, 2));
-        return defaultUsers;
+        fs.writeFileSync(USERS_FILE, JSON.stringify([], null, 2));
+        return [];
     }
     try {
         const raw = fs.readFileSync(USERS_FILE, 'utf8');
@@ -134,7 +121,7 @@ async function registerUser({ username, email, password, role = 'user' }) {
     if (!password || password.length < 6) {
         throw new Error('Password must be at least 6 characters long.');
     }
-    if (users.some(u => u.username.toLowerCase() === normalizedUser)) {
+    if (users.some(u => (u.username || '').toLowerCase() === normalizedUser)) {
         throw new Error('Username already exists.');
     }
     if (users.some(u => (u.email || '').toLowerCase() === normalizedEmail)) {
@@ -171,7 +158,7 @@ async function authenticateUser(loginInput, password, ip = '127.0.0.1') {
 
     const users = loadUsers();
     const query = String(loginInput || '').trim().toLowerCase();
-    const user = users.find(u => u.username.toLowerCase() === query || u.email.toLowerCase() === query);
+    const user = users.find(u => (u.username || '').toLowerCase() === query || (u.email || '').toLowerCase() === query);
 
     if (!user) {
         recordFailedAttempt(ip);
