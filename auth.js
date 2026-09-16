@@ -137,7 +137,7 @@ async function registerUser({ username, email, password, role = 'user' }) {
     if (users.some(u => u.username.toLowerCase() === normalizedUser)) {
         throw new Error('Username already exists.');
     }
-    if (users.some(u => u.email.toLowerCase() === normalizedEmail)) {
+    if (users.some(u => (u.email || '').toLowerCase() === normalizedEmail)) {
         throw new Error('Email address is already registered.');
     }
 

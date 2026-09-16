@@ -1185,6 +1185,45 @@
   </div>
 
 
+  <!-- ==================== SIDEBAR DRAWER MENU ==================== -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+  <aside class="sidebar-drawer" id="sidebarDrawer">
+    <div class="sidebar-header">
+      <div class="brand">TERMINAL <span>VAST</span></div>
+      <button class="hamburger-btn" onclick="closeSidebar()"><i class="fas fa-times"></i></button>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="#" class="sidebar-link active" id="navLinkTopup" onclick="navigateToPage('topup'); return false;">
+        <i class="fas fa-wallet"></i> Top Up & Wallet
+      </a>
+      <a href="#" class="sidebar-link" id="navLinkConnect" onclick="navigateToPage('connect'); return false;">
+        <i class="fas fa-plug"></i> WhatsApp Connect
+      </a>
+      <a href="#" class="sidebar-link" id="navLinkSettings" onclick="navigateToPage('settings'); return false;">
+        <i class="fas fa-sliders-h"></i> Bot Settings
+      </a>
+      <a href="#" class="sidebar-link" id="navLinkBlog" onclick="navigateToPage('blog'); return false;">
+        <i class="fas fa-newspaper"></i> Blog
+      </a>
+      <a href="#" class="sidebar-link" id="navLinkHistory" onclick="navigateToPage('history'); return false;">
+        <i class="fas fa-history"></i> History
+      </a>
+      <a href="#" class="sidebar-link" id="navLinkProfile" onclick="navigateToPage('profile'); return false;">
+        <i class="fas fa-user-circle"></i> Profile
+      </a>
+      <a href="#" class="sidebar-link" id="navLinkAdmin" onclick="navigateToPage('admin'); return false;" style="display: none; color: var(--orange); font-weight: 700;">
+        <i class="fas fa-user-shield"></i> Admin Panel
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="button danger sm" style="width: 100%; justify-content: center;" onclick="handleLogout()">
+        <i class="fas fa-sign-out-alt"></i> Logout
+      </button>
+    </div>
+  </aside>
+
   <!-- ==================== POST-AUTH DASHBOARD ==================== -->
   <div class="dashboard-container" id="dashboardContainer">
 
@@ -1212,45 +1251,6 @@
         </a>
       </div>
     </header>
-
-    <!-- Sidebar Drawer Menu -->
-    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
-    <aside class="sidebar-drawer" id="sidebarDrawer">
-      <div class="sidebar-header">
-        <div class="brand">TERMINAL <span>VAST</span></div>
-        <button class="hamburger-btn" onclick="closeSidebar()"><i class="fas fa-times"></i></button>
-      </div>
-
-      <nav class="sidebar-nav">
-        <a href="#" class="sidebar-link active" id="navLinkTopup" onclick="navigateToPage('topup'); return false;">
-          <i class="fas fa-wallet"></i> Top Up & Wallet
-        </a>
-        <a href="#" class="sidebar-link" id="navLinkConnect" onclick="navigateToPage('connect'); return false;">
-          <i class="fas fa-plug"></i> WhatsApp Connect
-        </a>
-        <a href="#" class="sidebar-link" id="navLinkSettings" onclick="navigateToPage('settings'); return false;">
-          <i class="fas fa-sliders-h"></i> Bot Settings
-        </a>
-        <a href="#" class="sidebar-link" id="navLinkBlog" onclick="navigateToPage('blog'); return false;">
-          <i class="fas fa-newspaper"></i> Blog
-        </a>
-        <a href="#" class="sidebar-link" id="navLinkHistory" onclick="navigateToPage('history'); return false;">
-          <i class="fas fa-history"></i> History
-        </a>
-        <a href="#" class="sidebar-link" id="navLinkProfile" onclick="navigateToPage('profile'); return false;">
-          <i class="fas fa-user-circle"></i> Profile
-        </a>
-        <a href="#" class="sidebar-link" id="navLinkAdmin" onclick="navigateToPage('admin'); return false;" style="display: none; color: var(--orange); font-weight: 700;">
-          <i class="fas fa-user-shield"></i> Admin Panel
-        </a>
-      </nav>
-
-      <div class="sidebar-footer">
-        <button class="button danger sm" style="width: 100%; justify-content: center;" onclick="handleLogout()">
-          <i class="fas fa-sign-out-alt"></i> Logout
-        </button>
-      </div>
-    </aside>
 
     <!-- Main Dashboard Content Area -->
     <main class="dash-content">
