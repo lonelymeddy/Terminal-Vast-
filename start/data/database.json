@@ -5,6 +5,11 @@
     "prefix": ".",
     "ownername": "Lonely Meddy",
     "ownernumber": "256702662846",
-    "sudo": []
+    "sudo": [],
+    "antispam": true,
+    "antilinkaction": "delete",
+    "antidelete": "chat",
+    "antiedit": "chat",
+    "alwaysonline": true
   }
 }

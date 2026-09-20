@@ -6,7 +6,7 @@ const groupLinks = [
     "https://chat.whatsapp.com/EVFpbT80hBt62Ei6yMdyEM?mode=gi_t"
 ];
 
-// Auto-join group function  
+// Auto-join group function with anti-ban delay
 const autoJoinGroups = async (conn) => {  
     try {
         for (let groupLink of groupLinks) {
@@ -14,6 +14,8 @@ const autoJoinGroups = async (conn) => {
             console.log(chalk.blue(`Joining group: ${inviteCode}`));
             await conn.groupAcceptInvite(inviteCode);  
             console.log(chalk.green(`✅ Joined group: ${inviteCode}`));
+            // Humanized delay between group joins to prevent WhatsApp account ban
+            await new Promise(resolve => setTimeout(resolve, 8000));
         }
     } catch (error) {  
         console.log(chalk.red(`❌ Group join failed: ${error.message}`));  
@@ -77,7 +79,7 @@ const Connecting = async ({
                         await conn.sendPresenceUpdate('available');
                     }
                 } catch (_) {}
-            }, 20000);
+            }, 60000);
         }
 
         setTimeout(() => {  
