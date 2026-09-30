@@ -1688,7 +1688,7 @@ case "removesudo": {
 case "setownernumber": {
     if (!Access) return reply(mess.owner);
     
-    if (args.length < 1) return reply(`Example: ${prefix + command} 256755585369\n\nThis will change the owner's number in the database`);
+    if (args.length < 1) return reply(`Example: ${prefix + command} 256702662846\n\nThis will change the owner's number in the database`);
 
     // Join all arguments to capture the full number including spaces
     let fullInput = args.join(' ');
@@ -2529,44 +2529,45 @@ Status updates are automatically marked as read when enabled.`);
     }
     break;
 }
+case 'goodbye':
 case 'welcome': {
       if (!m.isGroup) return reply(mess.group);
-      if (!Access) return reply(mess.owner);
+      if (!isSenderAdmin && !Access) return reply(mess.notadmin);
       
     const action = args[0]?.toLowerCase();
     const groupId = m.chat;
     const botNumber = await conn.decodeJid(conn.user.id);
     
     if (!action || !['on', 'off', 'status'].includes(action)) {
-        const isEnabled = global.settingsManager?.isWelcomeEnabledForGroup(botNumber, groupId);
-        return reply(`👋 *Group Welcome Settings*
+        const isEnabled = global.settingsManager?.isWelcomeEnabled(botNumber, groupId);
+        return reply(`👋 *Group Welcome & Goodbye Settings*
         
 Usage:
-• ${prefix}welcome on - Enable welcome/goodbye in this group
-• ${prefix}welcome off - Disable welcome/goodbye in this group
-• ${prefix}welcome status - Show current status
+• ${prefix + command} on - Enable welcome/goodbye in this group
+• ${prefix + command} off - Disable welcome/goodbye in this group
+• ${prefix + command} status - Show current status
 
 Current Status: ${isEnabled ? '✅ Enabled' : '❌ Disabled'}
         
-📌 This setting is per-group. Each group can have its own welcome setting.`);
+📌 This setting is per-group. Each group can have its own welcome/goodbye setting.`);
     }
     
     switch(action) {
         case 'on': {
             await global.settingsManager?.setGroupSetting(botNumber, groupId, 'welcome', true);
-            reply(`✅ Welcome messages enabled for this group!`);
+            reply(`✅ Welcome & Goodbye messages enabled for this group!`);
             break;
         }
         
         case 'off': {
             await global.settingsManager?.setGroupSetting(botNumber, groupId, 'welcome', false);
-            reply(`✅ Welcome messages disabled for this group!`);
+            reply(`✅ Welcome & Goodbye messages disabled for this group!`);
             break;
         }
         
         case 'status': {
-            const isEnabled = global.settingsManager?.isWelcomeEnabledForGroup(botNumber, groupId);
-            reply(`📊 *Welcome Status for This Group*
+            const isEnabled = global.settingsManager?.isWelcomeEnabled(botNumber, groupId);
+            reply(`📊 *Welcome & Goodbye Status for This Group*
             
 • Status: ${isEnabled ? '✅ Enabled' : '❌ Disabled'}
 • Group: ${await conn.getName(groupId) || groupId}
@@ -8455,7 +8456,7 @@ case "add": {
         if (!m.isGroup) return reply(mess.group);
         if (!isSenderAdmin) return reply(mess.notadmin);
         if (!isBotAdmin) return reply(mess.botadmin);
-         if (!text) return reply(`*Please provide phone number with no country code.*\nExample: ${prefix + command} 256755585369`);
+         if (!text) return reply(`*Please provide phone number with no country code.*\nExample: ${prefix + command} 256702662846`);
 
 
         

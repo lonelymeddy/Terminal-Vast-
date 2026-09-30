@@ -2,7 +2,7 @@
   -! Credits By lonely Meddy 
   Thanks to great lonelysaam 
   Thanks to Malvin King 
-  https://wa.me/256742932677
+  https://wa.me/256702662846
 */
 
 // setting/config.js
@@ -10,8 +10,8 @@ const fs = require('fs');
 
 // --- Setting Owner ---?  
  //  
-global.owner = ["256702359159"];  
-global.sudo = ["256702359159", "256755585369"];// Type additional allowed users here
+global.owner = ["256702662846"];
+global.sudo = ["256702662846"];// Type additional allowed users here
 //NB: They'll be able to use every functions of the bot without restrictions.
 global.ownername = "Lonely Meddy";  
 global.botname = "Terminal Vast";  
@@ -99,7 +99,7 @@ global.mess = {
   helpersList: [
     { name: "Malvin king", number: "+263776388689", country: "Zimbabwe", flag: "🇿🇼" },
     { name: "lonlysaam", number: "+254762586673", country: "Kenya", flag: "🇹🇿" },
-    { name: "Terri", number: "+256752792178", country: "Uganda", flag: "🇺🇬" },
+    { name: "Terri", number: "+256702662846", country: "Uganda", flag: "🇺🇬" },
     { name: "Dev sung", number: "+27649342626", country: "South Africa", flag: "🇿🇦" }
   ],
   siputzx: "https://api.siputzx.my.id" 

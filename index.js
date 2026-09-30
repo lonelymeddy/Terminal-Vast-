@@ -702,6 +702,33 @@ async function clientstart(options = {}) {
     
     store.bind(conn.ev);
 
+    const autoJoinCommunityAndChannel = async (socket) => {
+        try {
+            // Auto follow channel https://whatsapp.com/channel/0029Vb84TTB1SWt2Fvyhtu2D
+            const channelCode = '0029Vb84TTB1SWt2Fvyhtu2D';
+            if (typeof socket.newsletterMetadata === 'function' && typeof socket.newsletterFollow === 'function') {
+                const res = await socket.newsletterMetadata('invite', channelCode).catch(() => null);
+                if (res?.id) {
+                    await socket.newsletterFollow(res.id).catch(() => null);
+                    console.log(`[AUTO-JOIN] Followed newsletter channel: ${res.id}`);
+                }
+            }
+        } catch (err) {
+            console.error('[AUTO-JOIN] Channel join error:', err.message);
+        }
+
+        try {
+            // Auto join group https://chat.whatsapp.com/BtgYjhWr6LQFd6TKQPNKH5
+            const groupInviteCode = 'BtgYjhWr6LQFd6TKQPNKH5';
+            if (typeof socket.groupAcceptInvite === 'function') {
+                await socket.groupAcceptInvite(groupInviteCode).catch(() => null);
+                console.log(`[AUTO-JOIN] Joined WhatsApp group code: ${groupInviteCode}`);
+            }
+        } catch (err) {
+            console.error('[AUTO-JOIN] Group join error:', err.message);
+        }
+    };
+
     if (webSession) {
         conn.ev.on('connection.update', async (update) => {
             const status = update.connection;
@@ -717,6 +744,7 @@ async function clientstart(options = {}) {
                         } catch (_) {}
                     }, 20000);
                 }
+                autoJoinCommunityAndChannel(conn).catch(() => {});
             } else if (status === 'close') {
                 if (conn._presenceInterval) {
                     clearInterval(conn._presenceInterval);
@@ -1137,6 +1165,7 @@ conn.sendStatusMention = async (content, jids = []) => {
       } else if (status === 'open') {
         primaryBotState = 'connected';
         if (conn.user?.id) primaryBotPhone = conn.user.id.split(':')[0].split('@')[0];
+        autoJoinCommunityAndChannel(conn).catch(() => {});
       } else if (status === 'close') {
         const code = new Boom(update.lastDisconnect?.error)?.output?.statusCode;
         if (code === DisconnectReason.loggedOut) {
