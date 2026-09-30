@@ -57,8 +57,8 @@ async function playCommand(conn, chatId, message, args) {
         // Add loading reaction
         await conn.sendMessage(chatId, { react: { text: '⏳', key: message.key } });
 
-        // Use the new API
-        const apiUrl = `https://apiskeith.vercel.app/download/audio?url=${encodeURIComponent(videoUrl)}`;
+        // Use the yt-dl API
+        const apiUrl = `https://yt-dl.officialhectormanuel.workers.dev/?url=${encodeURIComponent(videoUrl)}`;
         
         // Fetch audio with timeout
         const response = await axios.get(apiUrl, { timeout: 60000 });
@@ -67,7 +67,7 @@ async function playCommand(conn, chatId, message, args) {
             throw new Error('API returned no audio data');
         }
 
-        const audioUrl = response.data.result;
+        const audioUrl = response.data.audio;
         
         if (!audioUrl) {
             throw new Error('No audio URL found in response');
@@ -477,8 +477,8 @@ async function ytplayCommand(conn, chatId, query, message) {
         // Add loading reaction
         await conn.sendMessage(chatId, { react: { text: '⏳', key: message.key } });
 
-        // Use the API from your example
-        const apiUrl = `https://apiskeith.vercel.app/download/audio?url=${encodeURIComponent(videoUrl)}`;
+        // Use the yt-dl API
+        const apiUrl = `https://yt-dl.officialhectormanuel.workers.dev/?url=${encodeURIComponent(videoUrl)}`;
         
         // Fetch audio with timeout
         const response = await axios.get(apiUrl, { timeout: 60000 });
@@ -487,7 +487,7 @@ async function ytplayCommand(conn, chatId, query, message) {
             throw new Error('API returned no audio data');
         }
 
-        const audioUrl = response.data.result;
+        const audioUrl = response.data.audio;
         
         if (!audioUrl) {
             throw new Error('No audio URL found in response');

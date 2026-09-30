@@ -607,9 +607,9 @@ async function clientstart(options = {}) {
         markOnlineOnConnect: true,
         connectTimeoutMs: 60000,
         defaultQueryTimeoutMs: 30000,
-        keepAliveIntervalMs: 15000,
+        keepAliveIntervalMs: 10000,
         retryRequestDelayMs: 500,
-        maxRetries: 10,
+        maxRetries: 20,
         
         // Performance optimizations
         generateHighQualityLinkPreview: false,
@@ -1215,7 +1215,7 @@ conn.ev.on('group-participants.update', async (anu) => {
 
 *Time: ${moment.tz(timezones).format('HH:mm:ss')}, ${moment.tz(timezones).format('DD/MM/YYYY')}*
 
-© Armwise LLC
+© Mcode Labs
 
 > ${global.wm}`,
                             mentions: [participantJid]
@@ -1408,7 +1408,7 @@ conn.ev.on('call', async (callData) => {
                         `*Caller:* @${from.split('@')[0]}\n` +
                         `*Time:* ${moment().tz(timezones).format('HH:mm:ss')}\n` +
                         `*Date:* ${moment().tz(timezones).format('DD/MM/YYYY')}\n\n` +
-                        `*Hi, I am ${global.botname}, a multi device advanced WhatsApp bot from Uganda , created by Armwise LLC.*\n\n` +
+                        `*Hi, I am ${global.botname}, a multi device advanced WhatsApp bot from Uganda , created by Mcode Labs.*\n\n` +
                         `*My owner cannot receive calls at this moment.*\n\n` +
                         `> ${global.wm}`;
                 } else {
@@ -1416,7 +1416,7 @@ conn.ev.on('call', async (callData) => {
                         `*Caller:* @${from.split('@')[0]}\n` +
                         `*Time:* ${moment().tz(timezones).format('HH:mm:ss')}\n` +
                         `*Date:* ${moment().tz(timezones).format('DD/MM/YYYY')}\n\n` +
-                        `* Hi, I am ${global.botname}, a multi device WhatsApp bot from Uganda , created by Armwise LLC.*\n\n` +
+                        `* Hi, I am ${global.botname}, a multi device WhatsApp bot from Uganda , created by Mcode Labs.*\n\n` +
                         `*My owner cannot receive calls at this moment. Please avoid unnecessary calling.*\n\n` +
                         `> ${global.wm}`;
                 }
@@ -1658,6 +1658,14 @@ setInterval(() => {
         });
     }
 }, 10 * 60 * 1000);
+
+// Keep-Alive Self Ping to prevent cloud hosting sleep/timeout
+setInterval(() => {
+    try {
+        const selfUrl = process.env.RENDER_EXTERNAL_URL || process.env.APP_URL || `http://127.0.0.1:${port}`;
+        axios.get(`${selfUrl}/uptime`).catch(() => {});
+    } catch (_) {}
+}, 4 * 60 * 1000);
 
 const porDir = path.join(__dirname, 'data');
 const porPath = path.join(porDir, 'Terminal Vast.html');
