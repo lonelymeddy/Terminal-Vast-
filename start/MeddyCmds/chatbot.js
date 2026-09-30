@@ -34,7 +34,7 @@ async function handleAIChatbot(m, conn, body, from, isGroup, isCmd, prefix) {
         const AI_CHAT_SCOPE = global.settingsManager?.getSetting(botNumber, 'AI_CHAT_SCOPE', 'all'); // 'all', 'group', 'private'
         
         // Check if AI chatbot is enabled
-        if (!AI_CHAT || AI_CHAT_SCOPE === 'off') {
+        if (!AI_CHAT || AI_CHAT === 'false' || AI_CHAT_SCOPE === 'off') {
             return false;
         }
 
@@ -54,11 +54,11 @@ async function handleAIChatbot(m, conn, body, from, isGroup, isCmd, prefix) {
             return false;
         }
         
-        // DON'T RESPOND TO THESE SPECIFIC NUMBERS
+        // Check ignored numbers if configured
         const senderNumber = m.sender.split('@')[0];
-        const ignoredNumbers = ['256702662846'];
+        const ignoredNumbers = global.settingsManager?.getSetting(botNumber, 'AI_CHAT_IGNORED', []) || [];
         
-        if (ignoredNumbers.includes(senderNumber)) {
+        if (Array.isArray(ignoredNumbers) && ignoredNumbers.includes(senderNumber)) {
             console.log(`𖠌 AI Chatbot: Ignoring messages from ${senderNumber}`);
             return false;
         }
@@ -124,19 +124,34 @@ async function handleAIChatbot(m, conn, body, from, isGroup, isCmd, prefix) {
             Respond as Mcode Labs AI:`;
 
             // Encode the prompt for the API
-            const query= encodeURIComponent(prompt);
+            const query = encodeURIComponent(prompt);
             
-            // Use the API endpoint
-            const apiUrl = `https://malvin-api.vercel.app/ai/venice?text=${query}`;
+            // Try primary API endpoint, fallback if unavailable
+            try {
+                const apiUrl = `https://apiskeith.vercel.app/ai/venice?q=${query}`;
+                const { data } = await axios.get(apiUrl, { timeout: 15000 });
+                if (data && data.result) {
+                    response = data.result;
+                } else if (data && data.message) {
+                    response = data.message;
+                }
+            } catch (e1) {
+                console.error("Primary AI endpoint failed, trying fallback:", e1.message);
+                try {
+                    const fallbackUrl = `https://malvin-api.vercel.app/ai/venice?text=${query}`;
+                    const { data } = await axios.get(fallbackUrl, { timeout: 15000 });
+                    if (data && data.result) {
+                        response = data.result;
+                    } else if (data && data.message) {
+                        response = data.message;
+                    }
+                } catch (e2) {
+                    console.error("Fallback AI endpoint failed:", e2.message);
+                }
+            }
 
-            const { data } = await axios.get(apiUrl);
-            
-            if (data && data.result) {
-                response = data.result;
-            } else if (data && data.message) {
-                response = data.message;
-            } else {
-                response = "I'm sorry, I couldn't process that request. Let's begin afresh.";
+            if (!response) {
+                response = "I'm sorry, I couldn't process that request right now. Let's begin afresh.";
             }
         }
 

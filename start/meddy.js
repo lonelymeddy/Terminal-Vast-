@@ -1362,9 +1362,30 @@ case 'setprefix': {
     break;
 }
 
+case 'anti':
+case 'antimenu': {
+    const antiMenuText = `🛡️ *ANTI MENU* 🛡️\n\n` +
+        `• ${prefix}antilink - Manage Anti-Link\n` +
+        `• ${prefix}autoviewstatus - Toggle Auto-View Status\n` +
+        `• ${prefix}autoreactstatus - Toggle Auto-React Status\n` +
+        `• ${prefix}autoreact - Toggle Auto-React\n` +
+        `• ${prefix}antisticker - Manage Anti-Sticker\n` +
+        `• ${prefix}antigroupmention - Manage Anti-Group Mention\n` +
+        `• ${prefix}antiban - Toggle Anti-Ban Protection\n` +
+        `• ${prefix}antibug - Toggle Anti-Bug Protection\n` +
+        `• ${prefix}antispam - Toggle Anti-Spam Protection\n` +
+        `• ${prefix}antitag - Manage Anti-Tag\n` +
+        `• ${prefix}antidelete - Manage Anti-Delete\n` +
+        `• ${prefix}antiedit - Manage Anti-Edit\n` +
+        `• ${prefix}anticall - Manage Anti-Call\n` +
+        `• ${prefix}antitagadmin - Toggle Anti-Tag Admin`;
+    reply(antiMenuText);
+    break;
+}
+
 case 'antisticker': {
     if (!m.isGroup) return reply(mess.group);
-    if (!isSenderAdmin) return reply(mess.notadmin);
+    if (!isSenderAdmin && !Access) return reply(mess.notadmin);
     const action = args[0]?.toLowerCase();
     if (!action || !['on', 'off'].includes(action)) {
         const isEnabled = getSetting(botNumber, 'antisticker', false);
@@ -1378,7 +1399,7 @@ case 'antisticker': {
 
 case 'antigroupmention': {
     if (!m.isGroup) return reply(mess.group);
-    if (!isSenderAdmin) return reply(mess.notadmin);
+    if (!isSenderAdmin && !Access) return reply(mess.notadmin);
     const action = args[0]?.toLowerCase();
     if (!action || !['on', 'off'].includes(action)) {
         const isEnabled = getSetting(botNumber, 'antigroupmention', false);
@@ -3040,10 +3061,56 @@ case 'chatbot': {
             `• ${prefix}chatbot scope <all/group/private/off>`);
     }
     
-    if (subcommand === 'on' || subcommand === 'off') {
-        const boolValue = subcommand === 'on';
-        await updateSetting(botNumber, 'AI_CHAT', boolValue);
-        reply(`✅ AI Chatbot ${boolValue ? 'enabled' : 'disabled'}`);
+    if (subcommand === 'on') {
+        const versionMenu = `🤖 *AI Chatbot Setup*\n\n` +
+            `Choose AI Chatbot version to activate:\n\n` +
+            `1️⃣ *Version 1: Voice Version* 🎙️\n` +
+            `2️⃣ *Version 2: Text Version* 📝\n\n` +
+            `_Reply with 1 or 2 (without prefix) to activate your preferred version._`;
+
+        const setupMsg = await conn.sendMessage(m.chat, { text: versionMenu }, { quoted: m });
+
+        const selectionHandler = async (msgUpdate) => {
+            try {
+                const choiceMsg = msgUpdate.messages[0];
+                if (!choiceMsg?.message || choiceMsg.key.remoteJid !== m.chat) return;
+
+                const choiceText = (choiceMsg.message.conversation || choiceMsg.message.extendedTextMessage?.text || "").trim();
+
+                // Check if reply references the setup message or directly answers 1 or 2
+                const isReplyToSetup = choiceMsg.message?.extendedTextMessage?.contextInfo?.stanzaId === setupMsg.key.id;
+
+                if (choiceText === '1' || choiceText === '2' || isReplyToSetup) {
+                    if (choiceText === '1') {
+                        conn.ev.off('messages.upsert', selectionHandler);
+                        await updateSetting(botNumber, 'AI_CHAT', true);
+                        await updateSetting(botNumber, 'AI_CHAT_MODE', 'voice');
+                        await conn.sendMessage(m.chat, {
+                            text: `✅ *AI Chatbot Activated!*\n🎙️ Mode set to: *Voice Version 1*`
+                        }, { quoted: choiceMsg });
+                    } else if (choiceText === '2') {
+                        conn.ev.off('messages.upsert', selectionHandler);
+                        await updateSetting(botNumber, 'AI_CHAT', true);
+                        await updateSetting(botNumber, 'AI_CHAT_MODE', 'text');
+                        await conn.sendMessage(m.chat, {
+                            text: `✅ *AI Chatbot Activated!*\n📝 Mode set to: *Text Version 2*`
+                        }, { quoted: choiceMsg });
+                    }
+                }
+            } catch (error) {
+                console.error('Chatbot version selection error:', error);
+            }
+        };
+
+        conn.ev.on('messages.upsert', selectionHandler);
+
+        setTimeout(() => {
+            conn.ev.off('messages.upsert', selectionHandler);
+        }, 120000);
+
+    } else if (subcommand === 'off') {
+        await updateSetting(botNumber, 'AI_CHAT', false);
+        reply(`✅ AI Chatbot disabled`);
     } else if (subcommand === 'mode') {
         const mode = args[1]?.toLowerCase();
         if (mode !== 'text' && mode !== 'voice') {
@@ -8202,7 +8269,7 @@ if (!Access) return reply(mess.owner);
 break
 case 'antilink': {
       if (!m.isGroup) return reply(mess.group);
-      if (!isSenderAdmin) return reply(mess.notadmin);
+      if (!isSenderAdmin && !Access) return reply(mess.notadmin);
       if (!isBotAdmin) return reply(mess.botadmin);
     
     const subcommand = args[0]?.toLowerCase();
@@ -8251,7 +8318,7 @@ Current Mode: ${getSetting(botNumber, 'antilinkaction', 'delete')}`);
 }
 case 'antitag': {
         if (!m.isGroup) return reply(mess.group);
-        if (!isSenderAdmin) return reply(mess.notadmin);
+        if (!isSenderAdmin && !Access) return reply(mess.notadmin);
         if (!isBotAdmin) return reply(mess.botadmin);
     
     const subcommand = args[0]?.toLowerCase();
