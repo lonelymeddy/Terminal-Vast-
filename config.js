@@ -17,7 +17,7 @@ global.ownername = "Lonely Meddy";
 global.botname = "Terminal Vast";  
 
 // ========= Setting Channel ========= //
-global.namachannel = "Armwise LLC Collections";
+global.namachannel = "Mcode Labs Collections";
 global.idchannel = "120363424070530590@newsletter";
 global.linkchannel = "";
 

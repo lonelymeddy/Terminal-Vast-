@@ -1,4 +1,5 @@
 const axios = require("axios");
+const googleTTS = require("google-tts-api");
 
 // Message memory for conversation context
 let messageMemory = new Map();
@@ -27,11 +28,21 @@ async function handleAIChatbot(m, conn, body, from, isGroup, isCmd, prefix) {
     try {
         const botNumber = await conn.decodeJid(conn.user.id);
         
-        // Get chatbot setting from JSON manager
+        // Get chatbot settings from JSON manager
         const AI_CHAT = global.settingsManager?.getSetting(botNumber, 'AI_CHAT', false);
+        const AI_CHAT_MODE = global.settingsManager?.getSetting(botNumber, 'AI_CHAT_MODE', 'text'); // 'text' or 'voice'
+        const AI_CHAT_SCOPE = global.settingsManager?.getSetting(botNumber, 'AI_CHAT_SCOPE', 'all'); // 'all', 'group', 'private'
         
         // Check if AI chatbot is enabled
-        if (!AI_CHAT) {
+        if (!AI_CHAT || AI_CHAT_SCOPE === 'off') {
+            return false;
+        }
+
+        // Scope check
+        if (AI_CHAT_SCOPE === 'group' && !isGroup) {
+            return false;
+        }
+        if (AI_CHAT_SCOPE === 'private' && isGroup) {
             return false;
         }
         
@@ -92,7 +103,7 @@ async function handleAIChatbot(m, conn, body, from, isGroup, isCmd, prefix) {
         
         if (isAskingAboutCreator) {
             // Special response for creator questions
-            response = "I am Armwise LLC AI, designed by Lonely Meddy , The owner and founder of Armwise LLC.";
+            response = "I am Mcode Labs AI, designed by Lonely Meddy, the owner and founder of Mcode Labs.";
         } else {
             // Get conversation context
             const context = messageMemory.has(from) 
@@ -100,7 +111,7 @@ async function handleAIChatbot(m, conn, body, from, isGroup, isCmd, prefix) {
                 : `user: ${body}`;
 
             // Create prompt with context and instructions
-            const prompt = `You are Armwise LLC AI, a powerful WhatsApp bot developed by Lonely Meddy from Uganda. 
+            const prompt = `You are Mcode Labs AI, a powerful WhatsApp bot developed by Lonely Meddy from Uganda.
             You respond smartly, confidently, and stay loyal to your creator. 
             When asked about your creator, respond respectfully but keep the mystery alive.
             If someone is being abusive, apologize and say "Let's begin afresh."
@@ -110,7 +121,7 @@ async function handleAIChatbot(m, conn, body, from, isGroup, isCmd, prefix) {
             
             Current message: ${body}
             
-            Respond as Armwise LLC AI:`;
+            Respond as Mcode Labs AI:`;
 
             // Encode the prompt for the API
             const query= encodeURIComponent(prompt);
@@ -130,14 +141,35 @@ async function handleAIChatbot(m, conn, body, from, isGroup, isCmd, prefix) {
         }
 
         // Add footer to response
-          const finalResponse = `${response}\n\n> *Armwise LLC AI*`;
+        const finalResponse = `${response}\n\n> *Mcode Labs AI*`;
         
         // Add AI response to memory
         updateMemory(from, response, false);
         
-        await conn.sendMessage(from, {
-            text: finalResponse
-        }, { quoted: m });
+        if (AI_CHAT_MODE === 'voice') {
+            try {
+                const cleanText = response.replace(/[*_~`#]/g, '').substring(0, 200).trim();
+                const audioUrl = googleTTS.getAudioUrl(cleanText || "I understand", {
+                    lang: 'en',
+                    slow: false,
+                    host: 'https://translate.google.com',
+                });
+                await conn.sendMessage(from, {
+                    audio: { url: audioUrl },
+                    mimetype: 'audio/mp4',
+                    ptt: true
+                }, { quoted: m });
+            } catch (ttsErr) {
+                console.error("TTS generation failed, falling back to text:", ttsErr);
+                await conn.sendMessage(from, {
+                    text: finalResponse
+                }, { quoted: m });
+            }
+        } else {
+            await conn.sendMessage(from, {
+                text: finalResponse
+            }, { quoted: m });
+        }
 
         console.log("𖠌 AI: Response sent successfully");
         return true;

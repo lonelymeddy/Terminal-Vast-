@@ -814,6 +814,74 @@ async function handleAntiTag(conn, m, botNumber) {
     }
 }
 
+async function handleAntiSticker(conn, m, botNumber) {
+    try {
+        if (!m.isGroup) return;
+        const isSticker = m.mtype === 'stickerMessage' || m.message?.stickerMessage;
+        if (!isSticker) return;
+
+        const isEnabled = global.settingsManager?.getSetting(botNumber, 'antisticker', false);
+        if (!isEnabled) return;
+
+        const { isSenderAdmin } = await isAdminMeddy(conn, m.chat, m.sender);
+        if (isSenderAdmin) return;
+
+        try {
+            await conn.sendMessage(m.chat, { delete: m.key });
+            console.log(`✅ Deleted sticker from ${m.sender}`);
+        } catch (e) {
+            console.error('Failed to delete sticker:', e.message);
+        }
+    } catch (err) {
+        console.error('Anti-sticker error:', err);
+    }
+}
+
+async function handleAntiGroupMention(conn, m, botNumber) {
+    try {
+        if (!m.isGroup) return;
+        const isEnabled = global.settingsManager?.getSetting(botNumber, 'antigroupmention', false);
+        if (!isEnabled) return;
+
+        const { isSenderAdmin } = await isAdminMeddy(conn, m.chat, m.sender);
+        if (isSenderAdmin) return;
+
+        const text = extractMessageText(m.message);
+        if (text.includes('@g.us') || text.includes('@group')) {
+            try {
+                await conn.sendMessage(m.chat, { delete: m.key });
+                console.log(`✅ Deleted group mention from ${m.sender}`);
+            } catch (e) {
+                console.error('Failed to delete group mention:', e.message);
+            }
+        }
+    } catch (err) {
+        console.error('Anti-group mention error:', err);
+    }
+}
+
+async function handleAntiBug(conn, m, botNumber) {
+    try {
+        if (!m.isGroup) return;
+        const isEnabled = global.settingsManager?.getSetting(botNumber, 'antibug', true);
+        if (!isEnabled) return;
+
+        const text = extractMessageText(m.message);
+        if (text && text.length > 5000) {
+            const { isSenderAdmin } = await isAdminMeddy(conn, m.chat, m.sender);
+            if (isSenderAdmin) return;
+            try {
+                await conn.sendMessage(m.chat, { delete: m.key });
+                console.log(`✅ Deleted bug/long text message from ${m.sender}`);
+            } catch (e) {
+                console.error('Failed to delete bug message:', e.message);
+            }
+        }
+    } catch (err) {
+        console.error('Anti-bug error:', err);
+    }
+}
+
 async function handleAntiTagAdmin(conn, m, botNumber) { // Add botNumber parameter
     try {
         if (!m || !m.isGroup || !m.message || m.key.fromMe) {
@@ -882,6 +950,9 @@ module.exports = {
   handleLinkViolation,
   checkAndHandleLinks: handleLinkViolation,
   handleAntiTagAdmin,
+  handleAntiSticker,
+  handleAntiGroupMention,
+  handleAntiBug,
   detectUrls,
   loadStoredMessages,
   saveStoredMessages,

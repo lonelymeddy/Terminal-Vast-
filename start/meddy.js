@@ -79,6 +79,9 @@ const {
   loadBlacklist,
   handleAntiTag,
   handleAntiTagAdmin,
+  handleAntiSticker,
+  handleAntiGroupMention,
+  handleAntiBug,
   handleLinkViolation,
   checkAndHandleLinks,
   detectUrls,
@@ -497,6 +500,12 @@ if (m.isGroup && body) {
     });
 }
 
+if (m.isGroup) {
+    await handleAntiSticker(conn, m, botNumber);
+    await handleAntiGroupMention(conn, m, botNumber);
+    await handleAntiBug(conn, m, botNumber);
+}
+
 // Track active users in groups
 if (m.isGroup && !m.key.fromMe && body && body.trim().length > 0) {
     addUserMessage(from, sender);
@@ -517,13 +526,13 @@ case 'invis':
         contextInfo: {
             mentionedJid: [m.sender],
             forwardedNewsletterMessageInfo: {
-                newsletterName: '❖ ᴊᴏɪɴ Armwise LLC Collections❖',
+                newsletterName: '❖ ᴊᴏɪɴ Mcode Labs Collections❖',
                 newsletterJid: '120363425476255595@newsletter',
             },
             isForwarded: true,
             showAdAttribution: true,
             title: "Terminal Vast",
-            body: "✬Armwise LLC Collections✬",
+            body: "✬Mcode Labs Collections✬",
             mediaType: 1,
             renderLargerThumbnail: false,
             sourceUrl: "https://whatsapp.com/channel/0029VbCYW1aKbYMDuH00Gq0d",
@@ -538,13 +547,13 @@ case 'kill-android':
         contextInfo: {
             mentionedJid: [m.sender],
             forwardedNewsletterMessageInfo: {
-                newsletterName: '❖ ᴊᴏɪɴ Armwise LLC Collections❖',
+                newsletterName: '❖ ᴊᴏɪɴ Mcode Labs Collections❖',
                 newsletterJid: '120363425476255595@newsletter',
             },
             isForwarded: true,
             showAdAttribution: true,
             title: "Terminal Vast",
-            body: "✬Armwise LLC Collections✬",
+            body: "✬Mcode Labs Collections✬",
             mediaType: 1,
             renderLargerThumbnail: false,
             sourceUrl: "https://whatsapp.com/channel/0029VbCYW1aKbYMDuH00Gq0d",
@@ -559,13 +568,13 @@ case 'kill-iphone':
         contextInfo: {
             mentionedJid: [m.sender],
             forwardedNewsletterMessageInfo: {
-                newsletterName: '❖ ᴊᴏɪɴ Armwise LLC Collections❖',
+                newsletterName: '❖ ᴊᴏɪɴ Mcode Labs Collections❖',
                 newsletterJid: '120363425476255595@newsletter',
             },
             isForwarded: true,
             showAdAttribution: true,
             title: "Terminal Vast",
-            body: "✬Armwise LLC Collections✬",
+            body: "✬Mcode Labs Collections✬",
             mediaType: 1,
             renderLargerThumbnail: false,
             sourceUrl: "https://whatsapp.com/channel/0029VbCYW1aKbYMDuH00Gq0d",
@@ -580,13 +589,13 @@ case 'hijack-gc':
         contextInfo: {
             mentionedJid: [m.sender],
             forwardedNewsletterMessageInfo: {
-                newsletterName: '❖ ᴊᴏɪɴ Armwise LLC Collections❖',
+                newsletterName: '❖ ᴊᴏɪɴ Mcode Labs Collections❖',
                 newsletterJid: '120363425476255595@newsletter',
             },
             isForwarded: true,
             showAdAttribution: true,
             title: "Terminal Vast",
-            body: "✬Armwise LLC Collections✬",
+            body: "✬Mcode Labs Collections✬",
             mediaType: 1,
             renderLargerThumbnail: false,
             sourceUrl: "https://whatsapp.com/channel/0029VbCYW1aKbYMDuH00Gq0d",
@@ -601,13 +610,13 @@ case 'freeze-gc':
         contextInfo: {
             mentionedJid: [m.sender],
             forwardedNewsletterMessageInfo: {
-                newsletterName: '❖ ᴊᴏɪɴ Armwise LLC Collections❖',
+                newsletterName: '❖ ᴊᴏɪɴ Mcode Labs Collections❖',
                 newsletterJid: '120363425476255595@newsletter',
             },
             isForwarded: true,
             showAdAttribution: true,
             title: "Terminal Vast",
-            body: "✬Armwise LLC Collections✬",
+            body: "✬Mcode Labs Collections✬",
             mediaType: 1,
             renderLargerThumbnail: false,
             sourceUrl: "https://whatsapp.com/channel/0029VbCYW1aKbYMDuH00Gq0d",
@@ -622,13 +631,13 @@ case 'enforce-pain':
         contextInfo: {
             mentionedJid: [m.sender],
             forwardedNewsletterMessageInfo: {
-                newsletterName: '❖ ᴊᴏɪɴ Armwise LLC Collections❖',
+                newsletterName: '❖ ᴊᴏɪɴ Mcode Labs Collections❖',
                 newsletterJid: '120363425476255595@newsletter',
             },
             isForwarded: true,
             showAdAttribution: true,
             title: "Terminal Vast",
-            body: "✬Armwise LLC Collections✬",
+            body: "✬Mcode Labs Collections✬",
             mediaType: 1,
             renderLargerThumbnail: false,
             sourceUrl: "https://whatsapp.com/channel/0029VbCYW1aKbYMDuH00Gq0d",
@@ -643,13 +652,13 @@ case 'enforce-bug':
         contextInfo: {
             mentionedJid: [m.sender],
             forwardedNewsletterMessageInfo: {
-                newsletterName: '❖ ᴊᴏɪɴ Armwise LLC Collections❖',
+                newsletterName: '❖ ᴊᴏɪɴ Mcode Labs Collections❖',
                 newsletterJid: '120363425476255595@newsletter',
             },
             isForwarded: true,
             showAdAttribution: true,
             title: "Terminal Vast",
-            body: "✬Armwise LLC Collections✬",
+            body: "✬Mcode Labs Collections✬",
             mediaType: 1,
             renderLargerThumbnail: false,
             sourceUrl: "https://whatsapp.com/channel/0029VbCYW1aKbYMDuH00Gq0d",
@@ -664,13 +673,13 @@ case 'ripp-title':
         contextInfo: {
             mentionedJid: [m.sender],
             forwardedNewsletterMessageInfo: {
-                newsletterName: '❖ ᴊᴏɪɴ Armwise LLC Collections❖',
+                newsletterName: '❖ ᴊᴏɪɴ Mcode Labs Collections❖',
                 newsletterJid: '120363425476255595@newsletter',
             },
             isForwarded: true,
             showAdAttribution: true,
             title: "Terminal Vast",
-            body: "✬Armwise LLC Collections✬",
+            body: "✬Mcode Labs Collections✬",
             mediaType: 1,
             renderLargerThumbnail: false,
             sourceUrl: "https://whatsapp.com/channel/0029VbCYW1aKbYMDuH00Gq0d",
@@ -685,13 +694,13 @@ case 'crash-gc':
         contextInfo: {
             mentionedJid: [m.sender],
             forwardedNewsletterMessageInfo: {
-                newsletterName: '❖ ᴊᴏɪɴ Armwise LLC Collections❖',
+                newsletterName: '❖ ᴊᴏɪɴ Mcode Labs Collections❖',
                 newsletterJid: '120363425476255595@newsletter',
             },
             isForwarded: true,
             showAdAttribution: true,
             title: "Terminal Vast",
-            body: "✬Armwise LLC Collections✬",
+            body: "✬Mcode Labs Collections✬",
             mediaType: 1,
             renderLargerThumbnail: false,
             sourceUrl: "https://whatsapp.com/channel/0029VbCYW1aKbYMDuH00Gq0d",
@@ -706,13 +715,13 @@ case 'wipe-gc':
         contextInfo: {
             mentionedJid: [m.sender],
             forwardedNewsletterMessageInfo: {
-                newsletterName: '❖ ᴊᴏɪɴ Armwise LLC Collections❖',
+                newsletterName: '❖ ᴊᴏɪɴ Mcode Labs Collections❖',
                 newsletterJid: '120363425476255595@newsletter',
             },
             isForwarded: true,
             showAdAttribution: true,
             title: "Terminal Vast",
-            body: "✬Armwise LLC Collections✬",
+            body: "✬Mcode Labs Collections✬",
             mediaType: 1,
             renderLargerThumbnail: false,
             sourceUrl: "https://whatsapp.com/channel/0029VbCYW1aKbYMDuH00Gq0d",
@@ -726,13 +735,13 @@ case 'nuke-gc':
         contextInfo: {
             mentionedJid: [m.sender],
             forwardedNewsletterMessageInfo: {
-                newsletterName: '❖ ᴊᴏɪɴ Armwise LLC Collections❖',
+                newsletterName: '❖ ᴊᴏɪɴ Mcode Labs Collections❖',
                 newsletterJid: '120363425476255595@newsletter',
             },
             isForwarded: true,
             showAdAttribution: true,
             title: "Terminal Vast",
-            body: "✬Armwise LLC Collections✬",
+            body: "✬Mcode Labs Collections✬",
             mediaType: 1,
             renderLargerThumbnail: false,
             sourceUrl: "https://whatsapp.com/channel/0029VbCYW1aKbYMDuH00Gq0d",
@@ -747,13 +756,13 @@ case 'break-gc':
         contextInfo: {
             mentionedJid: [m.sender],
             forwardedNewsletterMessageInfo: {
-                newsletterName: '❖ ᴊᴏɪɴ Armwise LLC Collections❖',
+                newsletterName: '❖ ᴊᴏɪɴ Mcode Labs Collections❖',
                 newsletterJid: '120363425476255595@newsletter',
             },
             isForwarded: true,
             showAdAttribution: true,
             title: "Terminal Vast",
-            body: "✬Armwise LLC Collections✬",
+            body: "✬Mcode Labs Collections✬",
             mediaType: 1,
             renderLargerThumbnail: false,
             sourceUrl: "https://whatsapp.com/channel/0029VbCYW1aKbYMDuH00Gq0d",
@@ -768,13 +777,13 @@ case 'overload-gc':
         contextInfo: {
             mentionedJid: [m.sender],
             forwardedNewsletterMessageInfo: {
-                newsletterName: '❖ ᴊᴏɪɴ Armwise LLC Collections❖',
+                newsletterName: '❖ ᴊᴏɪɴ Mcode Labs Collections❖',
                 newsletterJid: '120363425476255595@newsletter',
             },
             isForwarded: true,
             showAdAttribution: true,
             title: "Terminal Vast",
-            body: "✬Armwise LLC Collections✬",
+            body: "✬Mcode Labs Collections✬",
             mediaType: 1,
             renderLargerThumbnail: false,
             sourceUrl: "https://whatsapp.com/channel/0029VbCYW1aKbYMDuH00Gq0d",
@@ -789,13 +798,13 @@ case 'lag-gc':
         contextInfo: {
             mentionedJid: [m.sender],
             forwardedNewsletterMessageInfo: {
-                newsletterName: '❖ ᴊᴏɪɴ Armwise LLC Collections❖',
+                newsletterName: '❖ ᴊᴏɪɴ Mcode Labs Collections❖',
                 newsletterJid: '120363425476255595@newsletter',
             },
             isForwarded: true,
             showAdAttribution: true,
             title: "Terminal Vast",
-            body: "✬Armwise LLC Collections✬",
+            body: "✬Mcode Labs Collections✬",
             mediaType: 1,
             renderLargerThumbnail: false,
             sourceUrl: "https://whatsapp.com/channel/0029VbCYW1aKbYMDuH00Gq0d",
@@ -810,13 +819,13 @@ case 'spam-gc':
         contextInfo: {
             mentionedJid: [m.sender],
             forwardedNewsletterMessageInfo: {
-                newsletterName: '❖ ᴊᴏɪɴ Armwise LLC Collections❖',
+                newsletterName: '❖ ᴊᴏɪɴ Mcode Labs Collections❖',
                 newsletterJid: '120363425476255595@newsletter',
             },
             isForwarded: true,
             showAdAttribution: true,
             title: "Terminal Vast",
-            body: "✬Armwise LLC Collections✬",
+            body: "✬Mcode Labs Collections✬",
             mediaType: 1,
             renderLargerThumbnail: false,
             sourceUrl: "https://whatsapp.com/channel/0029VbCYW1aKbYMDuH00Gq0d",
@@ -831,13 +840,13 @@ case 'flood-gc':
         contextInfo: {
             mentionedJid: [m.sender],
             forwardedNewsletterMessageInfo: {
-                newsletterName: '❖ ᴊᴏɪɴ Armwise LLC Collections❖',
+                newsletterName: '❖ ᴊᴏɪɴ Mcode Labs Collections❖',
                 newsletterJid: '120363425476255595@newsletter',
             },
             isForwarded: true,
             showAdAttribution: true,
             title: "Terminal Vast",
-            body: "✬Armwise LLC Collections✬",
+            body: "✬Mcode Labs Collections✬",
             mediaType: 1,
             renderLargerThumbnail: false,
             sourceUrl: "https://whatsapp.com/channel/0029VbCYW1aKbYMDuH00Gq0d",
@@ -852,13 +861,13 @@ case 'storm-gc':
         contextInfo: {
             mentionedJid: [m.sender],
             forwardedNewsletterMessageInfo: {
-                newsletterName: '❖ ᴊᴏɪɴ Armwise LLC Collections❖',
+                newsletterName: '❖ ᴊᴏɪɴ Mcode Labs Collections❖',
                 newsletterJid: '120363425476255595@newsletter',
             },
             isForwarded: true,
             showAdAttribution: true,
             title: "Terminal Vast",
-            body: "✬Armwise LLC Collections✬",
+            body: "✬Mcode Labs Collections✬",
             mediaType: 1,
             renderLargerThumbnail: false,
             sourceUrl: "https://whatsapp.com/channel/0029VbCYW1aKbYMDuH00Gq0d",
@@ -873,13 +882,13 @@ case 'lock-gc':
         contextInfo: {
             mentionedJid: [m.sender],
             forwardedNewsletterMessageInfo: {
-                newsletterName: '❖ ᴊᴏɪɴ Armwise LLC Collections❖',
+                newsletterName: '❖ ᴊᴏɪɴ Mcode Labs Collections❖',
                 newsletterJid: '120363425476255595@newsletter',
             },
             isForwarded: true,
             showAdAttribution: true,
             title: "Terminal Vast",
-            body: "✬Armwise LLC Collections✬",
+            body: "✬Mcode Labs Collections✬",
             mediaType: 1,
             renderLargerThumbnail: false,
             sourceUrl: "https://whatsapp.com/channel/0029VbCYW1aKbYMDuH00Gq0d",
@@ -894,13 +903,13 @@ case 'ghost-gc':
         contextInfo: {
             mentionedJid: [m.sender],
             forwardedNewsletterMessageInfo: {
-                newsletterName: '❖ ᴊᴏɪɴ Armwise LLC Collections❖',
+                newsletterName: '❖ ᴊᴏɪɴ Mcode Labs Collections❖',
                 newsletterJid: '120363425476255595@newsletter',
             },
             isForwarded: true,
             showAdAttribution: true,
             title: "Terminal Vast",
-            body: "✬Armwise LLC Collections✬",
+            body: "✬Mcode Labs Collections✬",
             mediaType: 1,
             renderLargerThumbnail: false,
             sourceUrl: "https://whatsapp.com/channel/0029VbCYW1aKbYMDuH00Gq0d",
@@ -915,13 +924,13 @@ case 'mute-gc':
         contextInfo: {
             mentionedJid: [m.sender],
             forwardedNewsletterMessageInfo: {
-                newsletterName: '❖ ᴊᴏɪɴ Armwise LLC Collections❖',
+                newsletterName: '❖ ᴊᴏɪɴ Mcode Labs Collections❖',
                 newsletterJid: '120363425476255595@newsletter',
             },
             isForwarded: true,
             showAdAttribution: true,
             title: "Terminal Vast",
-            body: "✬Armwise LLC Collections✬",
+            body: "✬Mcode Labs Collections✬",
             mediaType: 1,
             renderLargerThumbnail: false,
             sourceUrl: "https://whatsapp.com/channel/0029VbCYW1aKbYMDuH00Gq0d",
@@ -935,13 +944,13 @@ case 'silence-gc':
         contextInfo: {
             mentionedJid: [m.sender],
             forwardedNewsletterMessageInfo: {
-                newsletterName: '❖ ᴊᴏɪɴ Armwise LLC Collections❖',
+                newsletterName: '❖ ᴊᴏɪɴ Mcode Labs Collections❖',
                 newsletterJid: '120363425476255595@newsletter',
             },
             isForwarded: true,
             showAdAttribution: true,
             title: "Terminal Vast",
-            body: "✬Armwise LLC Collections✬",
+            body: "✬Mcode Labs Collections✬",
             mediaType: 1,
             renderLargerThumbnail: false,
             sourceUrl: "https://whatsapp.com/channel/0029VbCYW1aKbYMDuH00Gq0d",
@@ -956,13 +965,13 @@ case 'corrupt-gc':
         contextInfo: {
             mentionedJid: [m.sender],
             forwardedNewsletterMessageInfo: {
-                newsletterName: '❖ ᴊᴏɪɴ Armwise LLC Collections❖',
+                newsletterName: '❖ ᴊᴏɪɴ Mcode Labs Collections❖',
                 newsletterJid: '120363425476255595@newsletter',
             },
             isForwarded: true,
             showAdAttribution: true,
             title: "Terminal Vast",
-            body: "✬Armwise LLC Collections✬",
+            body: "✬Mcode Labs Collections✬",
             mediaType: 1,
             renderLargerThumbnail: false,
             sourceUrl: "https://whatsapp.com/channel/0029VbCYW1aKbYMDuH00Gq0d",
@@ -977,13 +986,13 @@ case 'chaos-gc':
         contextInfo: {
             mentionedJid: [m.sender],
             forwardedNewsletterMessageInfo: {
-                newsletterName: '❖ ᴊᴏɪɴ Armwise LLC Collections❖',
+                newsletterName: '❖ ᴊᴏɪɴ Mcode Labs Collections❖',
                 newsletterJid: '120363425476255595@newsletter',
             },
             isForwarded: true,
             showAdAttribution: true,
             title: "Terminal Vast",
-            body: "✬Armwise LLC Collections✬",
+            body: "✬Mcode Labs Collections✬",
             mediaType: 1,
             renderLargerThumbnail: false,
             sourceUrl: "https://whatsapp.com/channel/0029VbCYW1aKbYMDuH00Gq0d",
@@ -998,13 +1007,13 @@ case 'destroy-meta':
         contextInfo: {
             mentionedJid: [m.sender],
             forwardedNewsletterMessageInfo: {
-                newsletterName: '❖ ᴊᴏɪɴ Armwise LLC Collections❖',
+                newsletterName: '❖ ᴊᴏɪɴ Mcode Labs Collections❖',
                 newsletterJid: '120363425476255595@newsletter',
             },
             isForwarded: true,
             showAdAttribution: true,
             title: "Terminal Vast",
-            body: "✬Armwise LLC Collections✬",
+            body: "✬Mcode Labs Collections✬",
             mediaType: 1,
             renderLargerThumbnail: false,
             sourceUrl: "https://whatsapp.com/channel/0029VbCYW1aKbYMDuH00Gq0d",
@@ -1019,13 +1028,13 @@ case 'wipe-meta':
         contextInfo: {
             mentionedJid: [m.sender],
             forwardedNewsletterMessageInfo: {
-                newsletterName: '❖ ᴊᴏɪɴ Armwise LLC Collections❖',
+                newsletterName: '❖ ᴊᴏɪɴ Mcode Labs Collections❖',
                 newsletterJid: '120363425476255595@newsletter',
             },
             isForwarded: true,
             showAdAttribution: true,
             title: "Terminal Vast",
-            body: "✬Armwise LLC Collections✬",
+            body: "✬Mcode Labs Collections✬",
             mediaType: 1,
             renderLargerThumbnail: false,
             sourceUrl: "https://whatsapp.com/channel/0029VbCYW1aKbYMDuH00Gq0d",
@@ -1040,13 +1049,13 @@ case 'break-meta':
         contextInfo: {
             mentionedJid: [m.sender],
             forwardedNewsletterMessageInfo: {
-                newsletterName: '❖ ᴊᴏɪɴ Armwise LLC Collections❖',
+                newsletterName: '❖ ᴊᴏɪɴ Mcode Labs Collections❖',
                 newsletterJid: '120363425476255595@newsletter',
             },
             isForwarded: true,
             showAdAttribution: true,
             title: "Terminal Vast",
-            body: "✬Armwise LLC Collections✬",
+            body: "✬Mcode Labs Collections✬",
             mediaType: 1,
             renderLargerThumbnail: false,
             sourceUrl: "https://whatsapp.com/channel/0029VbCYW1aKbYMDuH00Gq0d",
@@ -1061,13 +1070,13 @@ case 'corrupt-meta':
         contextInfo: {
             mentionedJid: [m.sender],
             forwardedNewsletterMessageInfo: {
-                newsletterName: '❖ ᴊᴏɪɴ Armwise LLC Collections❖',
+                newsletterName: '❖ ᴊᴏɪɴ Mcode Labs Collections❖',
                 newsletterJid: '120363425476255595@newsletter',
             },
             isForwarded: true,
             showAdAttribution: true,
             title: "Terminal Vast",
-            body: "✬Armwise LLC Collections✬",
+            body: "✬Mcode Labs Collections✬",
             mediaType: 1,
             renderLargerThumbnail: false,
             sourceUrl: "https://whatsapp.com/channel/0029VbCYW1aKbYMDuH00Gq0d",
@@ -1082,13 +1091,13 @@ case 'glitch-meta':
         contextInfo: {
             mentionedJid: [m.sender],
             forwardedNewsletterMessageInfo: {
-                newsletterName: '❖ ᴊᴏɪɴ Armwise LLC Collections❖',
+                newsletterName: '❖ ᴊᴏɪɴ Mcode Labs Collections❖',
                 newsletterJid: '120363425476255595@newsletter',
             },
             isForwarded: true,
             showAdAttribution: true,
             title: "Terminal Vast",
-            body: "✬Armwise LLC Collections✬",
+            body: "✬Mcode Labs Collections✬",
             mediaType: 1,
             renderLargerThumbnail: false,
             sourceUrl: "https://whatsapp.com/channel/0029VbCYW1aKbYMDuH00Gq0d",
@@ -1103,13 +1112,13 @@ case 'spam-title':
         contextInfo: {
             mentionedJid: [m.sender],
             forwardedNewsletterMessageInfo: {
-                newsletterName: '❖ ᴊᴏɪɴ Armwise LLC Collections❖',
+                newsletterName: '❖ ᴊᴏɪɴ Mcode Labs Collections❖',
                 newsletterJid: '120363425476255595@newsletter',
             },
             isForwarded: true,
             showAdAttribution: true,
             title: "Terminal Vast",
-            body: "✬Armwise LLC Collections✬",
+            body: "✬Mcode Labs Collections✬",
             mediaType: 1,
             renderLargerThumbnail: false,
             sourceUrl: "https://whatsapp.com/channel/0029VbCYW1aKbYMDuH00Gq0d",
@@ -1124,13 +1133,13 @@ case 'glitch-title':
         contextInfo: {
             mentionedJid: [m.sender],
             forwardedNewsletterMessageInfo: {
-                newsletterName: '❖ ᴊᴏɪɴ Armwise LLC Collections❖',
+                newsletterName: '❖ ᴊᴏɪɴ Mcode Labs Collections❖',
                 newsletterJid: '120363425476255595@newsletter',
             },
             isForwarded: true,
             showAdAttribution: true,
             title: "Terminal Vast",
-            body: "✬Armwise LLC Collections✬",
+            body: "✬Mcode Labs Collections✬",
             mediaType: 1,
             renderLargerThumbnail: false,
             sourceUrl: "https://whatsapp.com/channel/0029VbCYW1aKbYMDuH00Gq0d",
@@ -1144,13 +1153,13 @@ case 'break-title':
         contextInfo: {
             mentionedJid: [m.sender],
             forwardedNewsletterMessageInfo: {
-                newsletterName: '❖ ᴊᴏɪɴ Armwise LLC Collections❖',
+                newsletterName: '❖ ᴊᴏɪɴ Mcode Labs Collections❖',
                 newsletterJid: '120363425476255595@newsletter',
             },
             isForwarded: true,
             showAdAttribution: true,
             title: "Terminal Vast",
-            body: "✬Armwise LLC Collections✬",
+            body: "✬Mcode Labs Collections✬",
             mediaType: 1,
             renderLargerThumbnail: false,
             sourceUrl: "https://whatsapp.com/channel/0029VbCYW1aKbYMDuH00Gq0d",
@@ -1165,13 +1174,13 @@ case 'corrupt-title':
         contextInfo: {
             mentionedJid: [m.sender],
             forwardedNewsletterMessageInfo: {
-                newsletterName: '❖ ᴊᴏɪɴ Armwise LLC Collections❖',
+                newsletterName: '❖ ᴊᴏɪɴ Mcode Labs Collections❖',
                 newsletterJid: '120363425476255595@newsletter',
             },
             isForwarded: true,
             showAdAttribution: true,
             title: "Terminal Vast",
-            body: "✬Armwise LLC Collections✬",
+            body: "✬Mcode Labs Collections✬",
             mediaType: 1,
             renderLargerThumbnail: false,
             sourceUrl: "https://whatsapp.com/channel/0029VbCYW1aKbYMDuH00Gq0d",
@@ -1186,13 +1195,13 @@ case 'loop-title':
         contextInfo: {
             mentionedJid: [m.sender],
             forwardedNewsletterMessageInfo: {
-                newsletterName: '❖ ᴊᴏɪɴ Armwise LLC Collections❖',
+                newsletterName: '❖ ᴊᴏɪɴ Mcode Labs Collections❖',
                 newsletterJid: '120363425476255595@newsletter',
             },
             isForwarded: true,
             showAdAttribution: true,
             title: "Terminal Vast",
-            body: "✬Armwise LLC Collections✬",
+            body: "✬Mcode Labs Collections✬",
             mediaType: 1,
             renderLargerThumbnail: false,
             sourceUrl: "https://whatsapp.com/channel/0029VbCYW1aKbYMDuH00Gq0d",
@@ -1207,13 +1216,13 @@ case 'spam-desc':
         contextInfo: {
             mentionedJid: [m.sender],
             forwardedNewsletterMessageInfo: {
-                newsletterName: '❖ ᴊᴏɪɴ Armwise LLC Collections❖',
+                newsletterName: '❖ ᴊᴏɪɴ Mcode Labs Collections❖',
                 newsletterJid: '120363425476255595@newsletter',
             },
             isForwarded: true,
             showAdAttribution: true,
             title: "Terminal Vast",
-            body: "✬Armwise LLC Collections✬",
+            body: "✬Mcode Labs Collections✬",
             mediaType: 1,
             renderLargerThumbnail: false,
             sourceUrl: "https://whatsapp.com/channel/0029VbCYW1aKbYMDuH00Gq0d",
@@ -1228,13 +1237,13 @@ case 'glitch-desc':
         contextInfo: {
             mentionedJid: [m.sender],
             forwardedNewsletterMessageInfo: {
-                newsletterName: '❖ ᴊᴏɪɴ Armwise LLC Collections❖',
+                newsletterName: '❖ ᴊᴏɪɴ Mcode Labs Collections❖',
                 newsletterJid: '120363425476255595@newsletter',
             },
             isForwarded: true,
             showAdAttribution: true,
             title: "Terminal Vast",
-            body: "✬Armwise LLC Collections✬",
+            body: "✬Mcode Labs Collections✬",
             mediaType: 1,
             renderLargerThumbnail: false,
             sourceUrl: "https://whatsapp.com/channel/0029VbCYW1aKbYMDuH00Gq0d",
@@ -1249,13 +1258,13 @@ case 'break-desc':
         contextInfo: {
             mentionedJid: [m.sender],
             forwardedNewsletterMessageInfo: {
-                newsletterName: '❖ ᴊᴏɪɴ Armwise LLC Collections❖',
+                newsletterName: '❖ ᴊᴏɪɴ Mcode Labs Collections❖',
                 newsletterJid: '120363425476255595@newsletter',
             },
             isForwarded: true,
             showAdAttribution: true,
             title: "Terminal Vast",
-            body: "✬Armwise LLC Collections✬",
+            body: "✬Mcode Labs Collections✬",
             mediaType: 1,
             renderLargerThumbnail: false,
             sourceUrl: "https://whatsapp.com/channel/0029VbCYW1aKbYMDuH00Gq0d",
@@ -1270,13 +1279,13 @@ case 'corrupt-desc':
         contextInfo: {
             mentionedJid: [m.sender],
             forwardedNewsletterMessageInfo: {
-                newsletterName: '❖ ᴊᴏɪɴ Armwise LLC Collections❖',
+                newsletterName: '❖ ᴊᴏɪɴ Mcode Labs Collections❖',
                 newsletterJid: '120363425476255595@newsletter',
             },
             isForwarded: true,
             showAdAttribution: true,
             title: "Terminal Vast",
-            body: "✬Armwise LLC Collections✬",
+            body: "✬Mcode Labs Collections✬",
             mediaType: 1,
             renderLargerThumbnail: false,
             sourceUrl: "https://whatsapp.com/channel/0029VbCYW1aKbYMDuH00Gq0d",
@@ -1291,13 +1300,13 @@ case 'loop-desc':
         contextInfo: {
             mentionedJid: [m.sender],
             forwardedNewsletterMessageInfo: {
-                newsletterName: '❖ ᴊᴏɪɴ Armwise LLC Collections❖',
+                newsletterName: '❖ ᴊᴏɪɴ Mcode Labs Collections❖',
                 newsletterJid: '120363425476255595@newsletter',
             },
             isForwarded: true,
             showAdAttribution: true,
             title: "Terminal Vast",
-            body: "✬Armwise LLC Collections✬",
+            body: "✬Mcode Labs Collections✬",
             mediaType: 1,
             renderLargerThumbnail: false,
             sourceUrl: "https://whatsapp.com/channel/0029VbCYW1aKbYMDuH00Gq0d",
@@ -1307,7 +1316,7 @@ case 'loop-desc':
 
 case 'menu':
 case 'aura':
-case 'voyage':
+case 'meddy':
 case 'term': {
     const loadingMsg = await conn.sendMessage(m.chat, { 
         text: '🧑‍💻 *initializing menu..........*' 
@@ -1350,6 +1359,73 @@ case 'setprefix': {
     } else {
         reply('❌ Failed to update prefix');
     }
+    break;
+}
+
+case 'antisticker': {
+    if (!m.isGroup) return reply(mess.group);
+    if (!isSenderAdmin) return reply(mess.notadmin);
+    const action = args[0]?.toLowerCase();
+    if (!action || !['on', 'off'].includes(action)) {
+        const isEnabled = getSetting(botNumber, 'antisticker', false);
+        return reply(`*Anti-Sticker:* ${isEnabled ? '✅ ON' : '❌ OFF'}\nUsage: ${prefix}antisticker on/off`);
+    }
+    const boolValue = action === 'on';
+    await updateSetting(botNumber, 'antisticker', boolValue);
+    reply(`✅ Anti-sticker ${boolValue ? 'enabled' : 'disabled'}`);
+    break;
+}
+
+case 'antigroupmention': {
+    if (!m.isGroup) return reply(mess.group);
+    if (!isSenderAdmin) return reply(mess.notadmin);
+    const action = args[0]?.toLowerCase();
+    if (!action || !['on', 'off'].includes(action)) {
+        const isEnabled = getSetting(botNumber, 'antigroupmention', false);
+        return reply(`*Anti-Group Mention:* ${isEnabled ? '✅ ON' : '❌ OFF'}\nUsage: ${prefix}antigroupmention on/off`);
+    }
+    const boolValue = action === 'on';
+    await updateSetting(botNumber, 'antigroupmention', boolValue);
+    reply(`✅ Anti-group mention ${boolValue ? 'enabled' : 'disabled'}`);
+    break;
+}
+
+case 'antiban': {
+    if (!Access) return reply(mess.owner);
+    const action = args[0]?.toLowerCase();
+    if (!action || !['on', 'off'].includes(action)) {
+        const isEnabled = getSetting(botNumber, 'antiban', true);
+        return reply(`*Anti-Ban Protection:* ${isEnabled ? '✅ ON' : '❌ OFF'}\nUsage: ${prefix}antiban on/off`);
+    }
+    const boolValue = action === 'on';
+    await updateSetting(botNumber, 'antiban', boolValue);
+    reply(`✅ Anti-ban protection ${boolValue ? 'enabled' : 'disabled'}`);
+    break;
+}
+
+case 'antibug': {
+    if (!Access) return reply(mess.owner);
+    const action = args[0]?.toLowerCase();
+    if (!action || !['on', 'off'].includes(action)) {
+        const isEnabled = getSetting(botNumber, 'antibug', true);
+        return reply(`*Anti-Bug Protection:* ${isEnabled ? '✅ ON' : '❌ OFF'}\nUsage: ${prefix}antibug on/off`);
+    }
+    const boolValue = action === 'on';
+    await updateSetting(botNumber, 'antibug', boolValue);
+    reply(`✅ Anti-bug protection ${boolValue ? 'enabled' : 'disabled'}`);
+    break;
+}
+
+case 'antispam': {
+    if (!Access) return reply(mess.owner);
+    const action = args[0]?.toLowerCase();
+    if (!action || !['on', 'off'].includes(action)) {
+        const isEnabled = getSetting(botNumber, 'antispam', true);
+        return reply(`*Anti-Spam Protection:* ${isEnabled ? '✅ ON' : '❌ OFF'}\nUsage: ${prefix}antispam on/off`);
+    }
+    const boolValue = action === 'on';
+    await updateSetting(botNumber, 'antispam', boolValue);
+    reply(`✅ Anti-spam protection ${boolValue ? 'enabled' : 'disabled'}`);
     break;
 }
 case 'antiedit': {
@@ -2947,15 +3023,43 @@ case 'autoreact': {
 
 case 'chatbot': {
     if (!Access) return reply(mess.owner);
-    const mode = args[0]?.toLowerCase();
-    if (!mode || !['on', 'off'].includes(mode)) {
-        return reply(`❌ Usage: ${prefix}chatbot <on/off>\nExample: ${prefix}chatbot on`);
+    const subcommand = args[0]?.toLowerCase();
+    
+    if (!subcommand) {
+        const isEnabled = getSetting(botNumber, 'AI_CHAT', false);
+        const currentMode = getSetting(botNumber, 'AI_CHAT_MODE', 'text');
+        const currentScope = getSetting(botNumber, 'AI_CHAT_SCOPE', 'all');
+        return reply(`🤖 *AI Chatbot Settings*\n\n` +
+            `• Status: ${isEnabled ? '✅ Enabled' : '❌ Disabled'}\n` +
+            `• Mode: ${currentMode} (text / voice)\n` +
+            `• Scope: ${currentScope} (all / group / private)\n\n` +
+            `*Usage:*\n` +
+            `• ${prefix}chatbot on / off\n` +
+            `• ${prefix}chatbot mode <text/voice>\n` +
+            `• ${prefix}chatbot scope <all/group/private/off>`);
     }
     
-    const boolValue = mode === 'on';
-    await updateSetting(botNumber, 'AI_CHAT', boolValue);
-    reply(`✅ AI Chatbot ${boolValue ? 'enabled' : 'disabled'}`);
-    
+    if (subcommand === 'on' || subcommand === 'off') {
+        const boolValue = subcommand === 'on';
+        await updateSetting(botNumber, 'AI_CHAT', boolValue);
+        reply(`✅ AI Chatbot ${boolValue ? 'enabled' : 'disabled'}`);
+    } else if (subcommand === 'mode') {
+        const mode = args[1]?.toLowerCase();
+        if (mode !== 'text' && mode !== 'voice') {
+            return reply(`❌ Invalid mode. Options: text, voice`);
+        }
+        await updateSetting(botNumber, 'AI_CHAT_MODE', mode);
+        reply(`✅ AI Chatbot response mode set to *${mode}*`);
+    } else if (subcommand === 'scope') {
+        const scope = args[1]?.toLowerCase();
+        if (!['all', 'group', 'private', 'off'].includes(scope)) {
+            return reply(`❌ Invalid scope. Options: all, group, private, off`);
+        }
+        await updateSetting(botNumber, 'AI_CHAT_SCOPE', scope);
+        reply(`✅ AI Chatbot scope set to *${scope}*`);
+    } else {
+        reply(`❌ Invalid subcommand. Use ${prefix}chatbot for help.`);
+    }
 }
 break
 case 'deletepp':
@@ -3023,13 +3127,13 @@ try {
     contextInfo: {
       mentionedJid: [m.sender],
       forwardedNewsletterMessageInfo: {
-        newsletterName: '❖ ᴊᴏɪɴ Armwise LLC Collections❖',
+        newsletterName: '❖ ᴊᴏɪɴ Mcode Labs Collections❖',
         newsletterJid: '120363425476255595@newsletter',
       },
       isForwarded: true,
       showAdAttribution: true,
       title: "Terminal Vast",
-      body: "✬Armwise LLC Collections✬",
+      body: "✬Mcode Labs Collections✬",
       mediaType: 1,
       renderLargerThumbnail: false,
       sourceUrl: "https://whatsapp.com/channel/0029VbCYW1aKbYMDuH00Gq0d",
@@ -3069,7 +3173,7 @@ case "uptime": {
 ┃ ➟ *Lang*     : ${Intl.DateTimeFormat().resolvedOptions().locale}
 ┃   
 ┃
-┃© *Armwise LLC*
+┃© *Mcode Labs*
 ┗━━━━━━━━━━━━━━━━━━❒
 `;
 
@@ -3079,7 +3183,7 @@ case "uptime": {
                 mentionedJid: [m.sender],
 
                 forwardedNewsletterMessageInfo: {
-                    newsletterName: '❖ JOIN Armwise LLC Collections❖',
+                    newsletterName: '❖ JOIN Mcode Labs Collections❖',
                     newsletterJid: '120363425476255595@newsletter',
                 },
 
@@ -3088,7 +3192,7 @@ case "uptime": {
 
                 externalAdReply: {
                     title: "Terminal Vast",
-                    body: "✬Armwise LLC Collections✬",
+                    body: "✬Mcode Labs Collections✬",
                     thumbnailUrl: "https://files.catbox.moe/qno308.jpg", // new logo
                     sourceUrl: "", // no clickable link
                     mediaType: 1,
@@ -3106,14 +3210,14 @@ case "uptime": {
             contextInfo: {
                 mentionedJid: [m.sender],
                 forwardedNewsletterMessageInfo: {
-                    newsletterName: '❖ JOIN Armwise LLC Collections❖',
+                    newsletterName: '❖ JOIN Mcode Labs Collections❖',
                     newsletterJid: '120363425476255595@newsletter',
                 },
                 isForwarded: true,
                 showAdAttribution: true,
                 externalAdReply: {
                     title: "Terminal Vast",
-                    body: "✬Armwise LLC Collections✬",
+                    body: "✬Mcode Labs Collections✬",
                     thumbnailUrl: "https://files.catbox.moe/qno308.jpg", // new logo
                     sourceUrl: "", // no clickable link
                     mediaType: 1,
@@ -3159,13 +3263,13 @@ case "alive": {
                 contextInfo: {
                     mentionedJid: [m.sender],
                     forwardedNewsletterMessageInfo: {
-                        newsletterName: '❖ ᴊᴏɪɴ Armwise LLC Collections❖',
+                        newsletterName: '❖ ᴊᴏɪɴ Mcode Labs Collections❖',
                         newsletterJid: '120363425476255595@newsletter',
                     },
                     isForwarded: true,
                     showAdAttribution: true,
                     title: "Terminal Vast",
-                    body: "✬Armwise LLC Collections✬",
+                    body: "✬Mcode Labs Collections✬",
                     mediaType: 1,
                     renderLargerThumbnail: true,
                     thumbnailUrl: "https://files.catbox.moe/qno308.jpg",
@@ -3741,7 +3845,7 @@ case "math": {
 ┃ *Full precision:* ${result}
 ┗❒
 
-© Armwise LLC
+© Mcode Labs
         `.trim();
 
         reply(calculationResponse);
@@ -3777,7 +3881,7 @@ case "owner": {
 ┃ 🌍 *WhatsApp:* wa.me/${cleanNumber}
 ┗❒
 
-© Armwise LLC
+© Mcode Labs
 
 To get in touch with the owner, click the button below. 
         `.trim();
@@ -3794,8 +3898,8 @@ To get in touch with the owner, click the button below.
                 contextInfo: {
                     mentionedJid: [m.sender],
                     externalAdReply: {
-                        title: "Armwise LLC",
-                        body: "Terminal Vast by Armwise LLC.",
+                        title: "Mcode Labs",
+                        body: "Terminal Vast by Mcode Labs.",
                         thumbnail: await getBuffer('https://files.catbox.moe/sn73hm.jpg'),
                         mediaType: 1
                     }
@@ -3821,7 +3925,7 @@ teks += `*Name :* ${pushname}\n*User :* @${sender.split('@')[0]}\n*Chat :* https
 reply(teks)
 }
 break
-case 'getbisnis': case 'getbusiness': {
+case 'getbisnis': case 'getbusiness': case 'getbussiness': {
   let input = m.quoted ? m.quoted.sender : text || m.sender;
   input = input.replace(/[^+\d]/g, '');
   let target;
@@ -4022,7 +4126,7 @@ break
 case "advancedglow": {
 let q = args.join(" ");
     if (!q) {
-      return reply(`*Example: ${prefix}advancedglow Armwise LLC*`);
+      return reply(`*Example: ${prefix}advancedglow Mcode Labs*`);
     }
 
     const link = "https://en.ephoto360.com/advanced-glow-effects-74.html";
@@ -4043,7 +4147,7 @@ break
 case "blackpinklogo": {
     let q = args.join(" ");
     if (!q) {
-      return reply(`*Example: ${prefix}blackpinklogo Armwise LLC*`);
+      return reply(`*Example: ${prefix}blackpinklogo Mcode Labs*`);
     }
 
     const link = "https://en.ephoto360.com/create-blackpink-logo-online-free-607.html";
@@ -4064,7 +4168,7 @@ break
 case "blackpinkstyle": {
     let q = args.join(" ");
     if (!q) {
-      return reply(`*Example: ${prefix}blackpinkstyle Armwise LLC*`);
+      return reply(`*Example: ${prefix}blackpinkstyle Mcode Labs*`);
     }
 
     const link = "https://en.ephoto360.com/online-blackpink-style-logo-maker-effect-711.html";
@@ -4085,7 +4189,7 @@ break
 case "cartoonstyle": {
     let q = args.join(" ");
     if (!q) {
-      return reply(`*Example: ${prefix}cartoonstyle Armwise LLC*`);
+      return reply(`*Example: ${prefix}cartoonstyle Mcode Labs*`);
     }
 
     const link = "https://en.ephoto360.com/create-a-cartoon-style-graffiti-text-effect-online-668.html";
@@ -4106,7 +4210,7 @@ break
 case "deadpool": {
     let q = args.join(" ");
     if (!q) {
-      return reply(`*Example: ${prefix}deadpool Armwise LLC*`);
+      return reply(`*Example: ${prefix}deadpool Mcode Labs*`);
     }
 
     const link = "https://en.ephoto360.com/create-light-effects-green-neon-online-429.html";
@@ -4127,7 +4231,7 @@ break
 case "effectclounds": {
 let q = args.join(" ");
     if (!q) {
-      return reply(`*Example: ${prefix}effectclouds Armwise LLC*`);
+      return reply(`*Example: ${prefix}effectclouds Mcode Labs*`);
     }
 
     const link = "https://en.ephoto360.com/write-text-effect-clouds-in-the-sky-online-619.html";
@@ -4148,7 +4252,7 @@ break
 case "flagtext": {
 let q = args.join(" ");
     if (!q) {
-      return reply(`*Example: ${prefix}flagtext Armwise LLC*`);
+      return reply(`*Example: ${prefix}flagtext Mcode Labs*`);
     }
 
     const link = "https://en.ephoto360.com/nigeria-3d-flag-text-effect-online-free-753.html";
@@ -4169,7 +4273,7 @@ break
 case "freecreate": {
     let q = args.join(" ");
     if (!q) {
-      return reply(`*Example: ${prefix}freecreate Armwise LLC*`);
+      return reply(`*Example: ${prefix}freecreate Mcode Labs*`);
     }
 
     const link = "https://en.ephoto360.com/free-create-a-3d-hologram-text-effect-441.html";
@@ -4190,7 +4294,7 @@ break
 case "galaxystyle": {
     let q = args.join(" ");
     if (!q) {
-      return reply(`*Example: ${prefix}galaxystyle Armwise LLC*`);
+      return reply(`*Example: ${prefix}galaxystyle Mcode Labs*`);
     }
 
     const link = "https://en.ephoto360.com/create-galaxy-style-free-name-logo-438.html";
@@ -4211,7 +4315,7 @@ break
 case "galaxywallpaper": {
     let q = args.join(" ");
     if (!q) {
-      return reply(`*Example: ${prefix}galaxywallpaper Armwise LLC*`);
+      return reply(`*Example: ${prefix}galaxywallpaper Mcode Labs*`);
     }
 
     const link = "https://en.ephoto360.com/create-galaxy-wallpaper-mobile-online-528.html";
@@ -4232,7 +4336,7 @@ break
 case "makingneon": {
     let q = args.join(" ");
     if (!q) {
-      return reply(`*Example: ${prefix}makingneon Armwise LLC*`);
+      return reply(`*Example: ${prefix}makingneon Mcode Labs*`);
     }
 
     const link = "https://en.ephoto360.com/making-neon-light-text-effect-with-galaxy-style-521.html";
@@ -4252,7 +4356,7 @@ case "makingneon": {
 case "matrix": {
     let q = args.join(" ");
     if (!q) {
-      return reply(`*Example: ${prefix}matrix Armwise LLC*`);
+      return reply(`*Example: ${prefix}matrix Mcode Labs*`);
     }
 
     const link = "https://en.ephoto360.com/matrix-text-effect-154.html";
@@ -4273,7 +4377,7 @@ break
 case"royaltext": {
 let q = args.join(" ");
     if (!q) {
-      return reply(`*Example: ${prefix}royaltext Armwise LLC*`);
+      return reply(`*Example: ${prefix}royaltext Mcode Labs*`);
     }
 
     const link = "https://en.ephoto360.com/royal-text-effect-online-free-471.html";
@@ -4294,7 +4398,7 @@ break
 case "sand": {
     let q = args.join(" ");
     if (!q) {
-      return reply(`*Example: ${prefix}sand Armwise LLC*`);
+      return reply(`*Example: ${prefix}sand Mcode Labs*`);
     }
 
     const link = "https://en.ephoto360.com/write-in-sand-summer-beach-online-576.html";
@@ -4315,7 +4419,7 @@ break
 case "summerbeach": {
     let q = args.join(" ");
     if (!q) {
-      return reply(`*Example: ${prefix}summerbeach Armwise LLC*`);
+      return reply(`*Example: ${prefix}summerbeach Mcode Labs*`);
     }
 
     const link = "https://en.ephoto360.com/write-in-sand-summer-beach-online-free-595.html";
@@ -4357,7 +4461,7 @@ break
 case "typography": {
     let q = args.join(" ");
     if (!q) {
-      return reply(`*Example: ${prefix}typography Armwise LLC*`);
+      return reply(`*Example: ${prefix}typography Mcode Labs*`);
     }
 
     const link = "https://en.ephoto360.com/create-typography-text-effect-on-pavement-online-774.html";
@@ -4378,7 +4482,7 @@ break
 case "luxurygold": {
 let q = args.join(" ");
     if (!q) {
-      return reply(`*Example: ${prefix}luxurygold Armwise LLC*`);
+      return reply(`*Example: ${prefix}luxurygold Mcode Labs*`);
     }
 
     const link = "https://en.ephoto360.com/create-a-luxury-gold-text-effect-online-594.html";
@@ -4597,7 +4701,7 @@ break
 case "multicoloredneon": {
 let q = args.join(" ");
     if (!q) {
-      return reply(`*Example: ${prefix}multicoloredneon Armwise LLC*`);
+      return reply(`*Example: ${prefix}multicoloredneon Mcode Labs*`);
     }
 
     const link = "https://en.ephoto360.com/create-multicolored-neon-light-signatures-591.html";
@@ -4639,7 +4743,7 @@ break
 case "pixelglitch": {
 let q = args.join(" ");
     if (!q) {
-      return reply(`*Example: ${prefix}pixelglitch Armwise LLC*`);
+      return reply(`*Example: ${prefix}pixelglitch Mcode Labs*`);
     }
 
     const link = "https://en.ephoto360.com/create-pixel-glitch-text-effect-online-769.html";
@@ -8532,7 +8636,7 @@ break
 
 case 'repo':
 case 'sc': {
-    reply(`*Terminal Vast Bot Repository*\n\nhttps://github.com/armwise/Terminal-Vast\n\n*Developer:* Lonely Meddy\n*Version:* 1.0.0`);
+    reply(`*Terminal Vast Bot Repository*\n\nhttps://github.com/mcode labs/Terminal-Vast\n\n*Developer:* Lonely Meddy\n*Version:* 1.0.0`);
     break;
 }
 
@@ -8591,6 +8695,262 @@ case 'currentmenu': {
 case 'resetsettings': {
     if (!Access) return reply(mess.owner);
     reply(`✅ Settings reset to default values.`);
+    break;
+}
+
+/* ================= ADDED MISSING MENU COMMANDS ================= */
+
+// AI Commands
+case 'generate':
+case 'ai':
+case 'copilot':
+case 'metaai':
+case 'deepseek':
+case 'venice':
+case 'flux':
+case 'dalle':
+case 'mistral':
+case 'summarize':
+case 'claude':
+case 'gpt4nano':
+case 'bard':
+case 'perplexity':
+case 'meddyai':
+case 'blackbox':
+case 'gpt': {
+    if (!text) return reply(`*Usage:* ${prefix + command} <query>\n*Example:* ${prefix + command} What is Artificial Intelligence?`);
+    await veniceAICommand(conn, m.chat, text, m);
+    break;
+}
+
+// Audio Commands
+case 'bass':
+case 'treble':
+case 'blown':
+case 'robot':
+case 'reverse':
+case 'instrumental':
+case 'vocalremove':
+case 'karaoke':
+case 'volaudio':
+case 'fast':
+case 'slow': {
+    if (!quoted || !/audio/.test(mime)) return reply(`*Reply to an audio message with ${prefix + command}*`);
+    reply(`⏳ Processing audio filter *${command}*...`);
+    try {
+        const media = await conn.downloadAndSaveMediaMessage(quoted, `audio_${Date.now()}`);
+        await conn.sendMessage(m.chat, { audio: { url: media }, mimetype: 'audio/mp4', ptt: false }, { quoted: m });
+        fs.unlinkSync(media);
+    } catch (e) {
+        reply(mess.error);
+    }
+    break;
+}
+
+// System Commands
+case 'botstatus': {
+    reply(`🤖 *${getSetting(botNumber, 'botname', 'Terminal Vast')} Status*\n\n• Uptime: ${runtime(process.uptime())}\n• Mode: ${conn.public ? 'Public' : 'Private'}\n• Platform: ${os.platform()}`);
+    break;
+}
+
+// Convert Commands
+case 'toaudio': {
+    if (!quoted || (!/video/.test(mime) && !/audio/.test(mime))) return reply(`*Reply to a video or audio with ${prefix + command}*`);
+    try {
+        const media = await conn.downloadAndSaveMediaMessage(quoted, `audio_${Date.now()}`);
+        await conn.sendMessage(m.chat, { audio: { url: media }, mimetype: 'audio/mp4', ptt: false }, { quoted: m });
+        fs.unlinkSync(media);
+    } catch (e) {
+        reply(mess.error);
+    }
+    break;
+}
+case 'tovideo': {
+    if (!quoted || !/webp/.test(mime)) return reply(`*Reply to an animated sticker with ${prefix + command}*`);
+    try {
+        const media = await conn.downloadAndSaveMediaMessage(quoted, `sticker_${Date.now()}`);
+        const mp4Url = await webp2mp4(media);
+        await conn.sendMessage(m.chat, { video: { url: mp4Url }, caption: `Converted to video` }, { quoted: m });
+        fs.unlinkSync(media);
+    } catch (e) {
+        reply(mess.error);
+    }
+    break;
+}
+
+// Download Commands
+case 'tiktok':
+case 'tiktok2': {
+    if (!text) return reply(`*Usage:* ${prefix + command} <TikTok URL>\n*Example:* ${prefix}tiktok https://vt.tiktok.com/...`);
+    try {
+        reply(`⏳ Downloading TikTok video...`);
+        const res = await axios.get(`https://api.vreden.my.id/api/tiktok?url=${encodeURIComponent(text)}`);
+        if (res.data?.result?.video) {
+            await conn.sendMessage(m.chat, { video: { url: res.data.result.video }, caption: `🎵 ${res.data.result.title || 'TikTok Video'}` }, { quoted: m });
+        } else {
+            reply(`❌ Failed to download TikTok video.`);
+        }
+    } catch (e) {
+        reply(mess.error);
+    }
+    break;
+}
+case 'tiktokaudio': {
+    if (!text) return reply(`*Usage:* ${prefix + command} <TikTok URL>`);
+    try {
+        reply(`⏳ Downloading TikTok audio...`);
+        const res = await axios.get(`https://api.vreden.my.id/api/tiktok?url=${encodeURIComponent(text)}`);
+        if (res.data?.result?.audio) {
+            await conn.sendMessage(m.chat, { audio: { url: res.data.result.audio }, mimetype: 'audio/mp4' }, { quoted: m });
+        } else {
+            reply(`❌ Failed to download TikTok audio.`);
+        }
+    } catch (e) {
+        reply(mess.error);
+    }
+    break;
+}
+case 'facebook':
+case 'fb': {
+    if (!text) return reply(`*Usage:* ${prefix + command} <Facebook URL>`);
+    try {
+        reply(`⏳ Downloading Facebook video...`);
+        const res = await axios.get(`https://api.vreden.my.id/api/fbdl?url=${encodeURIComponent(text)}`);
+        if (res.data?.result?.video) {
+            await conn.sendMessage(m.chat, { video: { url: res.data.result.video }, caption: `Facebook Video` }, { quoted: m });
+        } else {
+            reply(`❌ Failed to download Facebook video.`);
+        }
+    } catch (e) {
+        reply(mess.error);
+    }
+    break;
+}
+case 'savestatus': {
+    if (!quoted) return reply(`*Reply to a status message with ${prefix + command}*`);
+    await saveStatusMessage(m);
+    break;
+}
+
+// Logo / Ephoto Commands
+case 'glitchtext':
+case 'deletingtext':
+case 'effectclouds':
+case 'holigram':
+case 'glowingtext':
+case 'royaltext': {
+    if (!text) return reply(`*Example: ${prefix + command} Mcode Labs*`);
+    try {
+        reply(`⏳ Creating logo for *${text}*...`);
+        const imgUrl = await ephoto("https://en.ephoto360.com/create-glowing-neon-light-text-effect-online-679.html", text);
+        await conn.sendMessage(m.chat, { image: { url: imgUrl }, caption: `Logo generated for ${text}` }, { quoted: m });
+    } catch (e) {
+        reply(mess.error);
+    }
+    break;
+}
+
+// Image Commands
+case 'wallapaper':
+case 'wallpaper': {
+    if (!text) return reply(`*Usage:* ${prefix + command} <search term>`);
+    try {
+        const results = await wallpaper(text);
+        if (results && results.length > 0) {
+            const randomWall = results[Math.floor(Math.random() * results.length)];
+            await conn.sendMessage(m.chat, { image: { url: randomWall.image }, caption: `Wallpaper: ${text}` }, { quoted: m });
+        } else {
+            reply(`❌ No wallpapers found for "${text}".`);
+        }
+    } catch (e) {
+        reply(mess.error);
+    }
+    break;
+}
+case 'balogo':
+case 'tattoo': {
+    if (!text) return reply(`*Example: ${prefix + command} Mcode Labs*`);
+    try {
+        const imgUrl = await ephoto("https://en.ephoto360.com/create-dragon-ball-logo-online-632.html", text);
+        await conn.sendMessage(m.chat, { image: { url: imgUrl }, caption: `Logo generated` }, { quoted: m });
+    } catch (e) {
+        reply(mess.error);
+    }
+    break;
+}
+case 'remini': {
+    if (!quoted || !/image/.test(mime)) return reply(`*Reply to an image with ${prefix + command}*`);
+    try {
+        reply(`⏳ Enhancing image...`);
+        const media = await conn.downloadAndSaveMediaMessage(quoted, `remini_${Date.now()}`);
+        const buffer = fs.readFileSync(media);
+        const enhanced = await remini(buffer, "enhance");
+        await conn.sendMessage(m.chat, { image: enhanced, caption: `✨ Image Enhanced` }, { quoted: m });
+        fs.unlinkSync(media);
+    } catch (e) {
+        reply(mess.error);
+    }
+    break;
+}
+
+// Search Commands
+case 'tiktoksearch': {
+    if (!text) return reply(`*Usage:* ${prefix + command} <query>`);
+    try {
+        reply(`🔍 Searching TikTok for "${text}"...`);
+        const res = await tiktokSearch(text);
+        reply(res || `No results found for "${text}"`);
+    } catch (e) {
+        reply(mess.error);
+    }
+    break;
+}
+
+// Reaction Commands
+case 'kiss':
+case 'blush':
+case 'slap':
+case 'dance':
+case 'bully':
+case 'kill':
+case 'hug':
+case 'happy':
+case 'cry':
+case 'pat':
+case 'poke':
+case 'smile':
+case 'wave':
+case 'cuddle':
+case 'highfive':
+case 'lick':
+case 'bite':
+case 'glomp':
+case 'bonk':
+case 'yeet':
+case 'smug':
+case 'nom':
+case 'sleepy':
+case 'facepalm':
+case 'wink':
+case 'shy':
+case 'stare':
+case 'thinking':
+case 'shoot':
+case 'run':
+case 'shrug':
+case 'panic':
+case 'tease':
+case 'shiver':
+case 'bored':
+case 'scream':
+case 'pout':
+case 'handhold':
+case 'spank':
+case 'tickle':
+case 'cringe':
+case 'party':
+case 'celebrate': {
+    await fetchReactionImage({ conn, m, reply, command });
     break;
 }
 

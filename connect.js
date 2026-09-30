@@ -108,13 +108,13 @@ const Connecting = async ({
                 contextInfo: {
                     mentionedJid: [conn.user.id],
                     forwardedNewsletterMessageInfo: {
-                        newsletterName: '❖ ᴊᴏɪɴ Armwise LLC Collections❖',
+                    newsletterName: '❖ ᴊᴏɪɴ Mcode Labs Collections❖',
                         newsletterJid: '120363425476255595@newsletter',
                     },
                     isForwarded: true,
                     showAdAttribution: true,
                     title: "Terminal Vast",
-                    body: "✬Armwise LLC Collections✬",
+                body: "✬Mcode Labs Collections✬",
                     mediaType: 1,
                     renderLargerThumbnail: false,
                     sourceUrl: "https://whatsapp.com/channel/0029VbCYW1aKbYMDuH00Gq0d",

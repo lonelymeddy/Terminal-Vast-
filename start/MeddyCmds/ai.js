@@ -5,13 +5,13 @@ async function veniceAICommand(conn, chatId, query, message) {
     try {
         if (!query) {
             return await conn.sendMessage(chatId, {
-                text: " *Armwise LLC AI*\n\nFeel free to ask me anything!\n\nExample:\n.voyage Introduction to JavaScript\n.venice What is quantum computing?"
+                text: " *Mcode Labs AI*\n\nFeel free to ask me anything!\n\nExample:\n.meddy Introduction to JavaScript\n.venice What is quantum computing?"
             }, { quoted: message });
         }
 
         // Send thinking message - will NOT be deleted
         await conn.sendMessage(chatId, {
-            text: "𖠌*Armwise LLC AI Thinking...*"
+            text: "𖠌*Mcode Labs AI Thinking...*"
         }, { quoted: message });
 
         const apiUrl = `https://apiskeith.vercel.app/ai/venice?q=${encodeURIComponent(query)}`;
@@ -27,7 +27,7 @@ async function veniceAICommand(conn, chatId, query, message) {
             throw new Error('No AI response received');
         }
 
-        const formattedResponse = `𖠌 *Armwise LLC AI*\n\n${aiResponse}\n\n_🔍 Query: ${query}_`;
+        const formattedResponse = `𖠌 *Mcode Labs AI*\n\n${aiResponse}\n\n_🔍 Query: ${query}_`;
 
         await conn.sendMessage(chatId, {
             text: formattedResponse

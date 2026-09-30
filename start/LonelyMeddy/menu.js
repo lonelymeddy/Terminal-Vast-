@@ -40,6 +40,7 @@ const menuPresets = {
         'image',
         'other',
         'owner',
+        'anti',
         'reaction',
         'religion',
         'search'
@@ -66,7 +67,7 @@ async function generateMenu(conn, m, prefix, global) {
     const menuSections = {
 
         header: {
-            title: '𖠌 *Armwise LLC* ',
+            title: '𖠌 *Mcode Labs* ',
             content: [
                 `𖠌 *ᴀɢᴇɴᴛ*: ${getSetting(botNumber, 'ownername', 'Not set')}`,
                 `𖠌 *BOTNAME*: ${getSetting(botNumber, 'botname', 'Terminal')}`,
@@ -133,6 +134,8 @@ async function generateMenu(conn, m, prefix, global) {
 
         owner: { title: ' *OWNER MENU* ', commands: ['addowner', 'idch', 'createch', 'creategroup', 'del', 'setpp', 'delpp', 'private', 'public', 'lastseen', 'setprefix', 'togroupstatus', 'groupid', 'readreceipts', 'reportbug', 'clearchat', 'groupjids', 'broadcast', 'react', 'restart', 'currentmenu', 'addignorelist', 'delignorelist', 'deljunk', 'cleansession', 'settings', 'update', 'listblocked', 'listsudo', 'setprofilename', 'listignored', 'online', 'join', 'leave', 'setbio', 'resetsettings', 'backup', 'reqeust', 'block', 'toviewonce', 'setownername', 'setbotname', 'unblock', 'unblockall', 'gcaddprivacy', 'ppprivancy', 'vv', 'vv2', 'idch', 'getpp'] },
 
+        anti: { title: ' *ANTI MENU* ', commands: ['antilink', 'autoviewstatus', 'autoreactstatus', 'autoreact', 'antisticker', 'antigroupmention', 'antiban', 'antibug', 'antispam', 'antitag', 'antidelete', 'antiedit', 'anticall', 'antitagadmin'] },
+
         reaction: { title: ' *REACT MENU* ', commands: ['kiss', 'blush', 'kick', 'slap', 'dance', 'bully', 'kill', 'hug', 'happy', 'cry', 'pat', 'poke', 'smile', 'wave', 'cuddle', 'highfive', 'lick', 'bite', 'glomp', 'bonk', 'yeet', 'smug', 'nom', 'sleepy', 'facepalm', 'wink', 'shy', 'stare', 'thinking', 'shoot', 'run', 'shrug', 'panic', 'tease', 'shiver', 'bored', 'scream', 'pout', 'handhold', 'spank', 'tickle', 'cringe', 'party', 'celebrate'] },
 
         religion: { title: ' *SPIRITUAL MENU* ', commands: ['Bible', 'Biblelist', 'Quran'] },
@@ -159,7 +162,7 @@ async function generateMenu(conn, m, prefix, global) {
             }
         }
 
-        menu += ` ©2026 Armwise LLC`;
+        menu += ` ©2026 Mcode Labs`;
         return menu;
     };
 
@@ -176,13 +179,13 @@ async function sendMenu(conn, m, prefix, global) {
             contextInfo: {
                 mentionedJid: [m.sender],
                 forwardedNewsletterMessageInfo: {
-                    newsletterName: '❖ ᴊᴏɪɴ Armwise LLC Collections❖',
+                    newsletterName: '❖ ᴊᴏɪɴ Mcode Labs Collections❖',
                     newsletterJid: '120363407328182190@newsletter',
                 },
                 isForwarded: true,
                 showAdAttribution: true,
                 title: global.botname || 'Terminal Vast',
-                body: '✬Armwise LLC Collections✬',
+                body: '✬Mcode Labs Collections✬',
                 mediaType: 3,
                 renderLargerThumbnail: false,
                 thumbnail: global.cina || 'https://files.catbox.moe/sn73hm.jpg',
