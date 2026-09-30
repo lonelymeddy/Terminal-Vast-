@@ -3,7 +3,7 @@ const path = require('path');
 const bcrypt = require('bcryptjs');
 
 const USERS_FILE = path.join(__dirname, 'data', 'auth-users.json');
-const ADMIN_EMAILS = ['delostvoyage@gmail.com', 'meddymususwa126@gmail.com'];
+const ADMIN_EMAILS = ['delostvoyage@gmail.com', 'voyagedelost@gmail.com'];
 
 // Ensure data directory exists
 if (!fs.existsSync(path.dirname(USERS_FILE))) {
@@ -41,9 +41,6 @@ function loadUsers() {
             const shouldBeAdmin = isSpecialAdmin(u.email);
             if (shouldBeAdmin && u.role !== 'admin') {
                 u.role = 'admin';
-                modified = true;
-            } else if (!shouldBeAdmin && u.role === 'admin') {
-                u.role = 'user';
                 modified = true;
             }
             if (!u.accountStatus) {
@@ -161,7 +158,12 @@ async function authenticateUser(loginInput, password, ip = '127.0.0.1') {
 
     const users = loadUsers();
     const query = String(loginInput || '').trim().toLowerCase();
-    const user = users.find(u => (u.username || '').toLowerCase() === query || (u.email || '').toLowerCase() === query);
+
+    // Find user matching email OR username
+    const user = users.find(u =>
+        (u.email || '').toLowerCase() === query ||
+        (u.username || '').toLowerCase() === query
+    );
 
     if (!user) {
         recordFailedAttempt(ip);
@@ -179,10 +181,14 @@ async function authenticateUser(loginInput, password, ip = '127.0.0.1') {
     return safeUser;
 }
 
-async function updateProfile(username, { email, bio }) {
+async function updateProfile(identifier, { email, bio }) {
     const users = loadUsers();
-    const normalizedUser = String(username || '').trim().toLowerCase();
-    const userIndex = users.findIndex(u => u.username.toLowerCase() === normalizedUser);
+    const query = String(identifier || '').trim().toLowerCase();
+    const userIndex = users.findIndex(u =>
+        (u.email || '').toLowerCase() === query ||
+        (u.username || '').toLowerCase() === query ||
+        (u.id || '').toLowerCase() === query
+    );
 
     if (userIndex === -1) {
         throw new Error('User not found.');
@@ -194,7 +200,9 @@ async function updateProfile(username, { email, bio }) {
         const existing = users.find((u, idx) => idx !== userIndex && u.email.toLowerCase() === normalizedEmail);
         if (existing) throw new Error('Email is already used by another account.');
         users[userIndex].email = normalizedEmail;
-        users[userIndex].role = isSpecialAdmin(normalizedEmail) ? 'admin' : 'user';
+        if (isSpecialAdmin(normalizedEmail)) {
+            users[userIndex].role = 'admin';
+        }
     }
 
     if (bio !== undefined) {
@@ -206,10 +214,14 @@ async function updateProfile(username, { email, bio }) {
     return safeUser;
 }
 
-async function updateAvatar(username, avatarData) {
+async function updateAvatar(identifier, avatarData) {
     const users = loadUsers();
-    const normalizedUser = String(username || '').trim().toLowerCase();
-    const userIndex = users.findIndex(u => u.username.toLowerCase() === normalizedUser);
+    const query = String(identifier || '').trim().toLowerCase();
+    const userIndex = users.findIndex(u =>
+        (u.email || '').toLowerCase() === query ||
+        (u.username || '').toLowerCase() === query ||
+        (u.id || '').toLowerCase() === query
+    );
 
     if (userIndex === -1) {
         throw new Error('User not found.');
@@ -221,10 +233,14 @@ async function updateAvatar(username, avatarData) {
     return safeUser;
 }
 
-async function changePassword(username, oldPassword, newPassword) {
+async function changePassword(identifier, oldPassword, newPassword) {
     const users = loadUsers();
-    const normalizedUser = String(username || '').trim().toLowerCase();
-    const userIndex = users.findIndex(u => u.username.toLowerCase() === normalizedUser);
+    const query = String(identifier || '').trim().toLowerCase();
+    const userIndex = users.findIndex(u =>
+        (u.email || '').toLowerCase() === query ||
+        (u.username || '').toLowerCase() === query ||
+        (u.id || '').toLowerCase() === query
+    );
 
     if (userIndex === -1) {
         throw new Error('User not found.');
@@ -247,10 +263,14 @@ async function changePassword(username, oldPassword, newPassword) {
     return true;
 }
 
-async function resetPasswordInternal(username, newPassword) {
+async function resetPasswordInternal(identifier, newPassword) {
     const users = loadUsers();
-    const normalizedUser = String(username || '').trim().toLowerCase();
-    const userIndex = users.findIndex(u => u.username.toLowerCase() === normalizedUser);
+    const query = String(identifier || '').trim().toLowerCase();
+    const userIndex = users.findIndex(u =>
+        (u.email || '').toLowerCase() === query ||
+        (u.username || '').toLowerCase() === query ||
+        (u.id || '').toLowerCase() === query
+    );
 
     if (userIndex === -1) {
         throw new Error('User not found.');
@@ -266,10 +286,14 @@ async function resetPasswordInternal(username, newPassword) {
     return true;
 }
 
-function topUpBalance(username, amount) {
+function topUpBalance(identifier, amount) {
     const users = loadUsers();
-    const normalizedUser = String(username || '').trim().toLowerCase();
-    const userIndex = users.findIndex(u => u.username.toLowerCase() === normalizedUser);
+    const query = String(identifier || '').trim().toLowerCase();
+    const userIndex = users.findIndex(u =>
+        (u.email || '').toLowerCase() === query ||
+        (u.username || '').toLowerCase() === query ||
+        (u.id || '').toLowerCase() === query
+    );
 
     if (userIndex === -1) {
         throw new Error('User not found.');
@@ -287,10 +311,14 @@ function topUpBalance(username, amount) {
     return safeUser;
 }
 
-function getUserBalance(username) {
+function getUserBalance(identifier) {
     const users = loadUsers();
-    const normalizedUser = String(username || '').trim().toLowerCase();
-    const user = users.find(u => u.username.toLowerCase() === normalizedUser);
+    const query = String(identifier || '').trim().toLowerCase();
+    const user = users.find(u =>
+        (u.email || '').toLowerCase() === query ||
+        (u.username || '').toLowerCase() === query ||
+        (u.id || '').toLowerCase() === query
+    );
     if (!user) return 0.00;
     return user.balance || 0.00;
 }
@@ -309,16 +337,23 @@ function requireAuth(req, res, next) {
 }
 
 function requireAdmin(req, res, next) {
-    if (req.session && req.session.user && isSpecialAdmin(req.session.user.email)) {
-        return next();
+    if (req.session && req.session.user) {
+        const user = req.session.user;
+        if (isSpecialAdmin(user.email) || user.role === 'admin') {
+            return next();
+        }
     }
     return res.status(403).json({ error: 'Access denied. Administrative privileges required.' });
 }
 
-function adminUpdateUserStatus(username, { status, warningMessage }) {
+function adminUpdateUserStatus(identifier, { status, warningMessage }) {
     const users = loadUsers();
-    const normalizedUser = String(username || '').trim().toLowerCase();
-    const userIndex = users.findIndex(u => u.username.toLowerCase() === normalizedUser);
+    const query = String(identifier || '').trim().toLowerCase();
+    const userIndex = users.findIndex(u =>
+        (u.email || '').toLowerCase() === query ||
+        (u.id || '').toLowerCase() === query ||
+        (u.username || '').toLowerCase() === query
+    );
     if (userIndex === -1) throw new Error('User not found.');
 
     if (status) {
@@ -335,26 +370,46 @@ function adminUpdateUserStatus(username, { status, warningMessage }) {
     return safeUser;
 }
 
-function adminUpdateUserRole(username, role) {
+function adminUpdateUserRole(identifier, role) {
     const users = loadUsers();
-    const normalizedUser = String(username || '').trim().toLowerCase();
-    const userIndex = users.findIndex(u => u.username.toLowerCase() === normalizedUser);
+    const query = String(identifier || '').trim().toLowerCase();
+    const userIndex = users.findIndex(u =>
+        (u.email || '').toLowerCase() === query ||
+        (u.id || '').toLowerCase() === query ||
+        (u.username || '').toLowerCase() === query
+    );
     if (userIndex === -1) throw new Error('User not found.');
 
     if (!['user', 'admin'].includes(role)) {
         throw new Error('Invalid role.');
     }
-    users[userIndex].role = isSpecialAdmin(users[userIndex].email) ? 'admin' : 'user';
+    users[userIndex].role = role;
     saveUsers(users);
     const { passwordHash: _, ...safeUser } = users[userIndex];
     return safeUser;
 }
 
-function adminSendUserMessage(username, messageText, senderUsername = 'Admin') {
-    const users = loadUsers();
-    const normalizedUser = String(username || '').trim().toLowerCase();
+function adminDeleteUser(identifier) {
+    let users = loadUsers();
+    const query = String(identifier || '').trim().toLowerCase();
+    const initialLen = users.length;
+    users = users.filter(u =>
+        (u.email || '').toLowerCase() !== query &&
+        (u.id || '').toLowerCase() !== query &&
+        (u.username || '').toLowerCase() !== query
+    );
+    if (users.length === initialLen) {
+        throw new Error('User not found.');
+    }
+    saveUsers(users);
+    return true;
+}
 
-    if (normalizedUser === 'all') {
+function adminSendUserMessage(identifier, messageText, senderUsername = 'Admin') {
+    const users = loadUsers();
+    const query = String(identifier || '').trim().toLowerCase();
+
+    if (query === 'all') {
         const timestamp = new Date().toISOString();
         const msgObj = { id: 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4), text: messageText, sender: senderUsername, createdAt: timestamp, read: false };
         users.forEach(u => {
@@ -364,7 +419,11 @@ function adminSendUserMessage(username, messageText, senderUsername = 'Admin') {
         saveUsers(users);
         return { count: users.length };
     } else {
-        const userIndex = users.findIndex(u => u.username.toLowerCase() === normalizedUser);
+        const userIndex = users.findIndex(u =>
+            (u.email || '').toLowerCase() === query ||
+            (u.id || '').toLowerCase() === query ||
+            (u.username || '').toLowerCase() === query
+        );
         if (userIndex === -1) throw new Error('Target user not found.');
         if (!Array.isArray(users[userIndex].adminMessages)) users[userIndex].adminMessages = [];
         const msgObj = { id: 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4), text: messageText, sender: senderUsername, createdAt: new Date().toISOString(), read: false };
@@ -376,6 +435,7 @@ function adminSendUserMessage(username, messageText, senderUsername = 'Admin') {
 }
 
 module.exports = {
+    ADMIN_EMAILS,
     isSpecialAdmin,
     loadUsers,
     saveUsers,
@@ -390,6 +450,7 @@ module.exports = {
     updateAvatar,
     adminUpdateUserStatus,
     adminUpdateUserRole,
+    adminDeleteUser,
     adminSendUserMessage,
     requireAuth,
     requireAdmin
