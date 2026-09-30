@@ -1713,6 +1713,14 @@ async function restoreWebSessions() {
     }
 }
 
+app.get(['/privacy', '/privacy.html'], (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend', 'privacy.html'));
+});
+
+app.get(['/terms', '/terms.html'], (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend', 'terms.html'));
+});
+
 app.get('*', (req, res, next) => {
     if (req.path.startsWith('/api/') || req.path.includes('.')) {
         return next();
