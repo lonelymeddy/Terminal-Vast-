@@ -249,6 +249,17 @@ app.post('/api/admin/user/role', auth.requireAdmin, (req, res) => {
     }
 });
 
+app.post('/api/admin/user/delete', auth.requireAdmin, (req, res) => {
+    try {
+        const { username } = req.body || {};
+        auth.adminDeleteUser(username);
+        recordHistory('admin', req.session.user.username, 'admin_action', 'Account Deleted', `Admin deleted user account "${username}"`);
+        res.json({ status: 'ok', message: `User ${username} has been deleted successfully.` });
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
+
 app.post('/api/admin/message/send', auth.requireAdmin, (req, res) => {
     try {
         const { targetUsername, message } = req.body || {};
@@ -272,7 +283,7 @@ app.get('/api/blog', (req, res) => {
     res.json({ status: 'ok', posts });
 });
 
-app.post('/api/blog/create', auth.requireAuth, (req, res) => {
+app.post('/api/blog/create', auth.requireAdmin, (req, res) => {
     try {
         const { title, content, image } = req.body || {};
         if (!title || !title.trim()) return res.status(400).json({ error: 'Article title is required.' });

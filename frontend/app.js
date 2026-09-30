@@ -225,14 +225,15 @@ function renderAuthenticatedUI() {
     updateWalletDisplay(currentUser.balance || 0);
 
     // Admin UI checks
-    const isAdmin = currentUser.role === 'admin';
+    const ADMIN_EMAILS = ['delostvoyage@gmail.com', 'voyagedelost@gmail.com'];
+    const isAdmin = currentUser.role === 'admin' || (currentUser.email && ADMIN_EMAILS.includes(currentUser.email.trim().toLowerCase()));
     const navLinkAdmin = document.getElementById("navLinkAdmin");
     const adminPassageContainer = document.getElementById("adminPassageContainer");
-    const blogAdminActionBtn = document.getElementById("blogAdminActionBtn");
+    const blogActionContainer = document.getElementById("blogActionContainer");
 
     if (navLinkAdmin) navLinkAdmin.style.display = isAdmin ? "flex" : "none";
     if (adminPassageContainer) adminPassageContainer.style.display = isAdmin ? "block" : "none";
-    if (blogAdminActionBtn) blogAdminActionBtn.style.display = isAdmin ? "block" : "none";
+    if (blogActionContainer) blogActionContainer.style.display = isAdmin ? "block" : "none";
 
     // Direct Messages / Warnings Banner Display
     renderDirectMessagesAndWarnings();
@@ -782,12 +783,17 @@ function renderAdminTablesAndSelects(users) {
                 <td><span class="status-pill" style="font-size: 10px; font-weight: 700;">${(u.role || 'user').toUpperCase()}</span></td>
                 <td><span class="status-pill" style="font-size: 10px; font-weight: 700; color: ${u.accountStatus === 'banned' ? '#f87171' : u.accountStatus === 'warned' ? '#fef08a' : '#4ade80'};">${(u.accountStatus || 'active').toUpperCase()}</span></td>
                 <td style="color: var(--orange); font-weight: 700;">$${parseFloat(u.balance || 0).toFixed(2)}</td>
+                <td>
+                    <button class="button danger sm" onclick="handleAdminDeleteUser('${u.email}')" title="Delete User">
+                        <i class="fas fa-trash-alt"></i> Delete
+                    </button>
+                </td>
             </tr>
         `).join('');
     }
 
-    // Populate User Dropdowns for Moderation, Top-Up, Messages & Roles
-    const optionsHTML = users.map(u => `<option value="${u.username}">${u.username} (${u.email})</option>`).join('');
+    // Populate User Dropdowns using email as unique identifier
+    const optionsHTML = users.map(u => `<option value="${u.email}">${u.username} (${u.email})</option>`).join('');
 
     const selMod = document.getElementById("adminStatusUserSelect");
     const selTop = document.getElementById("adminTopupUserSelect");
@@ -849,6 +855,26 @@ async function handleAdminStatusChange(e) {
         });
     } catch (err) {
         alert("Error: " + err.message);
+    }
+}
+
+async function handleAdminDeleteUser(username) {
+    if (!username) return;
+    if (!confirm(`Are you sure you want to permanently delete account for user "${username}"?`)) return;
+
+    try {
+        const res = await fetch('/api/admin/user/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to delete user');
+
+        alert(data.message || `Deleted account for ${username}`);
+        await loadAdminDashboardData();
+    } catch (err) {
+        alert("Delete error: " + err.message);
     }
 }
 
@@ -1372,8 +1398,8 @@ function navigateToPage(pageId, updateHistory = true) {
     localStorage.setItem('tv_active_page', pageId);
     closeSidebar();
 
-    const ADMIN_EMAILS = ['delostvoyage@gmail.com', 'meddymususwa126@gmail.com'];
-    const isAdmin = currentUser && currentUser.email && ADMIN_EMAILS.includes(currentUser.email.trim().toLowerCase());
+    const ADMIN_EMAILS = ['delostvoyage@gmail.com', 'voyagedelost@gmail.com'];
+    const isAdmin = currentUser && (currentUser.role === 'admin' || (currentUser.email && ADMIN_EMAILS.includes(currentUser.email.trim().toLowerCase())));
     if (pageId === 'admin' && !isAdmin) {
         pageId = 'topup';
         currentActivePage = 'topup';
