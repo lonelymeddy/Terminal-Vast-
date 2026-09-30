@@ -93,7 +93,7 @@ async function generateMenu(conn, m, prefix, global) {
         pairingSite: {
             title: ' *PAIRING SITE* ',
             commands: [
-                'https://terminal-vast-platform.onrender.com/'
+                'https://terminal-vast-platform-qoa5.onrender.com/'
             ],
         },
         

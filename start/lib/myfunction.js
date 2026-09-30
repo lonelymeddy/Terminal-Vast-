@@ -1,7 +1,7 @@
 /*
 
   -! Credits By Meddy tech 
-  https://wa.me/256742932677
+  https://wa.me/256702662846
   Thanks to Malvin king
   Lonlysaam 
 

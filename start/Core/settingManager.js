@@ -153,6 +153,10 @@ class SettingsManager {
         return this.get(botNumber, 'welcome', false);
     }
 
+    isWelcomeEnabledForGroup(botNumber, groupId) {
+        return this.isWelcomeEnabled(botNumber, groupId);
+    }
+
     // Alias for getAllSettings
     getAllSettings(botNumber) {
         return this.getBotSettings(botNumber);
@@ -190,6 +194,7 @@ module.exports = {
     getGroupSetting,
     setGroupSetting,
     isWelcomeEnabled,
+    isWelcomeEnabledForGroup: isWelcomeEnabled,
     
     // Sudo functions
     getSudo: (botNumber) => settingsManager.getSudo(botNumber),

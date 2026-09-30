@@ -56,7 +56,7 @@ async function handleAIChatbot(m, conn, body, from, isGroup, isCmd, prefix) {
         
         // DON'T RESPOND TO THESE SPECIFIC NUMBERS
         const senderNumber = m.sender.split('@')[0];
-        const ignoredNumbers = ['256702662846', '256702359159'];
+        const ignoredNumbers = ['256702662846'];
         
         if (ignoredNumbers.includes(senderNumber)) {
             console.log(`𖠌 AI Chatbot: Ignoring messages from ${senderNumber}`);

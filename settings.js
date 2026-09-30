@@ -8,7 +8,7 @@ const settings = {
   ownername: config.ownername || "Lonely Meddy", // Owner name
   botname: config.botname || "Terminal Vast", // custom bot name
   prefa: config.prefa || ['.', '!'], // Command prefixes
-  owner: config.owner || ["256702359159"] // Owner phone numbers
+  owner: config.owner || ["256702662846"] // Owner phone numbers
 };
 
 // Export settings for use in other modules
