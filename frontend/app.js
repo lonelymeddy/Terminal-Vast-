@@ -1,35 +1,29 @@
 let currentUser = null;
-let currentActivePage = getPageFromPath() || localStorage.getItem('tv_active_page') || 'topup';
+let currentTab = getTabFromPath() || localStorage.getItem('tv_active_tab') || 'dashboard';
+let currentProfileSubpage = 'overview';
 
-function getPageFromPath() {
+function getTabFromPath() {
     const rawPath = window.location.pathname.replace(/^\/+|\/+$/g, '').toLowerCase();
-    if (!rawPath || rawPath === 'topup' || rawPath === 'dashboard' || rawPath === 'account') return 'topup';
-    if (rawPath === 'connect' || rawPath === 'bot-control') return 'connect';
-    if (rawPath === 'settings' || rawPath === 'settings-page') return 'settings';
-    if (rawPath === 'profile') return 'profile';
-    if (rawPath === 'profile/image') return 'profile-image';
-    if (rawPath === 'blog') return 'blog';
-    if (rawPath === 'blog/create') return 'blog-create';
-    if (rawPath === 'history') return 'history';
-    if (rawPath === 'admin') return 'admin';
+    if (!rawPath || rawPath === 'dashboard' || rawPath === 'home') return 'dashboard';
+    if (rawPath === 'pair' || rawPath === 'connect') return 'pair';
+    if (rawPath === 'topup' || rawPath === 'wallet') return 'topup';
+    if (rawPath === 'settings') return 'settings';
+    if (rawPath.startsWith('profile') || rawPath === 'blog' || rawPath === 'history' || rawPath === 'admin') return 'profile';
     return null;
 }
 
 document.addEventListener("DOMContentLoaded", () => {
     disablePageZoomGestures();
-    initLandingPageEvents();
     initClock();
     initCropperEvents();
     checkSession();
 });
 
 function disablePageZoomGestures() {
-    // Prevent multi-touch gesture zoom (iOS Safari)
     document.addEventListener('gesturestart', (e) => {
         e.preventDefault();
     });
 
-    // Prevent double-tap zoom
     let lastTouchEnd = 0;
     document.addEventListener('touchend', (e) => {
         const now = Date.now();
@@ -39,7 +33,6 @@ function disablePageZoomGestures() {
         lastTouchEnd = now;
     }, false);
 
-    // Prevent Ctrl + Wheel zoom
     document.addEventListener('wheel', (e) => {
         if (e.ctrlKey) {
             e.preventDefault();
@@ -48,19 +41,18 @@ function disablePageZoomGestures() {
 }
 
 window.addEventListener("popstate", () => {
-    const page = getPageFromPath() || 'topup';
+    const tab = getTabFromPath() || 'dashboard';
     if (currentUser) {
-        navigateToPage(page, false);
+        switchTab(tab, false);
     }
 });
 
 /* ==========================================================================
-   LOADING SPINNER HELPER (Minimum 6 Seconds Load)
+   LOADING SPINNER HELPER
    ========================================================================== */
-async function runWithSpinner(buttonEl, loadingText, asyncTaskFn, minMs = 6000) {
+async function runWithSpinner(buttonEl, loadingText, asyncTaskFn, minMs = 500) {
     if (!buttonEl) return await asyncTaskFn();
     const originalText = buttonEl.innerHTML;
-    const isPrimary = buttonEl.classList.contains("primary");
     buttonEl.disabled = true;
     buttonEl.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${loadingText}`;
 
@@ -87,81 +79,15 @@ async function runWithSpinner(buttonEl, loadingText, asyncTaskFn, minMs = 6000) 
 }
 
 /* ==========================================================================
-   LANDING PAGE EVENTS & INTERACTIVITY
-   ========================================================================== */
-function initLandingPageEvents() {
-    const menuButton = document.getElementById("menuButton");
-    const mobileMenu = document.getElementById("mobileMenu");
-    const menuLinks = document.querySelectorAll(".menu-link");
-
-    if (menuButton && mobileMenu) {
-        menuButton.addEventListener("click", () => {
-            const isOpen = mobileMenu.classList.toggle("open");
-            menuButton.classList.toggle("active", isOpen);
-            menuButton.setAttribute("aria-expanded", String(isOpen));
-        });
-
-        menuLinks.forEach(link => {
-            link.addEventListener("click", () => {
-                menuLinks.forEach(item => item.classList.remove("active"));
-                link.classList.add("active");
-                mobileMenu.classList.remove("open");
-                menuButton.classList.remove("active");
-            });
-        });
-    }
-
-    const faqItems = document.querySelectorAll(".faq-item");
-    faqItems.forEach(item => {
-        const question = item.querySelector(".faq-question");
-        const answer = item.querySelector(".faq-answer");
-
-        if (question && answer) {
-            question.addEventListener("click", () => {
-                const wasOpen = item.classList.contains("open");
-                faqItems.forEach(otherItem => {
-                    otherItem.classList.remove("open");
-                    const otherAnswer = otherItem.querySelector(".faq-answer");
-                    if (otherAnswer) otherAnswer.style.maxHeight = null;
-                });
-
-                if (!wasOpen) {
-                    item.classList.add("open");
-                    answer.style.maxHeight = answer.scrollHeight + "px";
-                }
-            });
-        }
-    });
-
-    const yearSpan = document.getElementById("year");
-    if (yearSpan) yearSpan.textContent = new Date().getFullYear();
-
-    const reveals = document.querySelectorAll(".reveal");
-    if ("IntersectionObserver" in window) {
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add("visible");
-                }
-            });
-        }, { threshold: 0.01, rootMargin: "0px 0px 100px 0px" });
-        reveals.forEach(el => observer.observe(el));
-    } else {
-        reveals.forEach(el => el.classList.add("visible"));
-    }
-}
-
-/* ==========================================================================
-   LIVE CLOCK WITH DATE & TIME
+   LIVE CLOCK
    ========================================================================== */
 function initClock() {
     function updateClock() {
         const now = new Date();
-        const timeStr = now.toLocaleTimeString();
-        const dateStr = now.toLocaleDateString();
+        const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         const clockValue = document.getElementById("clockValue");
         if (clockValue) {
-            clockValue.textContent = `${timeStr} • ${dateStr}`;
+            clockValue.textContent = timeStr;
         }
     }
     updateClock();
@@ -180,115 +106,93 @@ async function checkSession() {
             renderAuthenticatedUI();
         } else {
             currentUser = null;
-            renderUnauthenticatedUI();
+            openAuthModal('login');
+            renderAuthenticatedUI(); // Render base UI anyway
         }
     } catch (err) {
         console.error("Session check error:", err);
-        renderUnauthenticatedUI();
+        renderAuthenticatedUI();
     }
 }
 
 function renderAuthenticatedUI() {
-    document.getElementById("landingView").style.display = "none";
-    document.getElementById("dashboardContainer").classList.add("active");
+    const tabFromPath = getTabFromPath();
+    if (tabFromPath) currentTab = tabFromPath;
 
-    const pathPage = getPageFromPath();
-    const savedPage = localStorage.getItem('tv_active_page');
-    if (pathPage) {
-        currentActivePage = pathPage;
-    } else if (savedPage) {
-        currentActivePage = savedPage;
-    }
-
-    // Update Topbar Avatar & Info
     updateProfileAvatarDisplay();
 
-    document.getElementById("profileUsernameDisplay").textContent = currentUser.username;
-    document.getElementById("profileEmailDisplay").textContent = currentUser.email || 'N/A';
-    document.getElementById("profileRoleBadge").textContent = currentUser.role || 'user';
+    if (currentUser) {
+        const uDisp = document.getElementById("profileUsernameDisplay");
+        if (uDisp) uDisp.textContent = currentUser.username;
 
-    const editEmail = document.getElementById("editProfileEmail");
-    if (editEmail) editEmail.value = currentUser.email || '';
+        const eDisp = document.getElementById("profileEmailDisplay");
+        if (eDisp) eDisp.textContent = currentUser.email || 'N/A';
 
-    const editBio = document.getElementById("editProfileBio");
-    if (editBio) editBio.value = currentUser.bio || '';
+        const rBadge = document.getElementById("profileRoleBadge");
+        if (rBadge) rBadge.textContent = currentUser.role || 'user';
 
-    const joinedEl = document.getElementById("profileJoinedDisplay");
-    if (joinedEl) {
-        if (currentUser.createdAt) {
-            joinedEl.textContent = new Date(currentUser.createdAt).toLocaleDateString();
-        } else {
-            joinedEl.textContent = '2026';
+        const editEmail = document.getElementById("editProfileEmail");
+        if (editEmail) editEmail.value = currentUser.email || '';
+
+        const editBio = document.getElementById("editProfileBio");
+        if (editBio) editBio.value = currentUser.bio || '';
+
+        const joinedEl = document.getElementById("profileJoinedDisplay");
+        if (joinedEl) {
+            if (currentUser.createdAt) {
+                joinedEl.textContent = new Date(currentUser.createdAt).toLocaleDateString();
+            } else {
+                joinedEl.textContent = '2026';
+            }
         }
+
+        updateWalletDisplay(currentUser.balance || 0);
+
+        // Check Admin
+        const ADMIN_EMAILS = ['delostvoyage@gmail.com', 'voyagedelost@gmail.com'];
+        const isAdmin = currentUser.role === 'admin' || (currentUser.email && ADMIN_EMAILS.includes(currentUser.email.trim().toLowerCase()));
+
+        const pSubNavAdmin = document.getElementById("pSubNavAdmin");
+        if (pSubNavAdmin) pSubNavAdmin.style.display = isAdmin ? "flex" : "none";
+
+        const blogActionContainer = document.getElementById("blogActionContainer");
+        if (blogActionContainer) blogActionContainer.style.display = isAdmin ? "block" : "none";
+
+        renderDirectMessagesAndWarnings();
     }
 
-    updateWalletDisplay(currentUser.balance || 0);
-
-    // Admin UI checks
-    const ADMIN_EMAILS = ['delostvoyage@gmail.com', 'voyagedelost@gmail.com'];
-    const isAdmin = currentUser.role === 'admin' || (currentUser.email && ADMIN_EMAILS.includes(currentUser.email.trim().toLowerCase()));
-    const navLinkAdmin = document.getElementById("navLinkAdmin");
-    const adminPassageContainer = document.getElementById("adminPassageContainer");
-    const blogActionContainer = document.getElementById("blogActionContainer");
-
-    if (navLinkAdmin) navLinkAdmin.style.display = isAdmin ? "flex" : "none";
-    if (adminPassageContainer) adminPassageContainer.style.display = isAdmin ? "block" : "none";
-    if (blogActionContainer) blogActionContainer.style.display = isAdmin ? "block" : "none";
-
-    // Direct Messages / Warnings Banner Display
-    renderDirectMessagesAndWarnings();
-
-    // Show initial skeleton loading on dashboard login / session load
-    showSkeletonLoading();
-    const pages = document.querySelectorAll(".dash-page");
-    pages.forEach(p => p.classList.remove("active"));
-
-    // Initial load for dashboard pages
+    // Load initial data
     loadBotSettings();
     loadSudoAndSessions();
-    if (isAdmin) loadAdminDashboardData();
+    loadBotStatus();
 
-    setTimeout(() => {
-        navigateToPage(currentActivePage);
-    }, 200);
+    switchTab(currentTab, false);
 }
 
 function updateProfileAvatarDisplay() {
     if (!currentUser) return;
     const topbarAvatarEl = document.getElementById("topbarProfileAvatar");
     const profileBigAvatarEl = document.getElementById("profileBigAvatar");
-    const cropperPreviewBigEl = document.getElementById("cropperPreviewBig");
-    const cropperPreviewSmallEl = document.getElementById("cropperPreviewSmall");
 
     if (currentUser.avatar) {
         const imgHTML = `<img src="${currentUser.avatar}" alt="Avatar" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
         if (topbarAvatarEl) topbarAvatarEl.innerHTML = imgHTML;
         if (profileBigAvatarEl) profileBigAvatarEl.innerHTML = imgHTML;
-        if (cropperPreviewBigEl && !cropperImg) cropperPreviewBigEl.innerHTML = imgHTML;
-        if (cropperPreviewSmallEl && !cropperImg) cropperPreviewSmallEl.innerHTML = imgHTML;
     } else {
         const avatarLetter = (currentUser.username || 'U').charAt(0).toUpperCase();
-        if (topbarAvatarEl) topbarAvatarEl.textContent = avatarLetter;
-        if (profileBigAvatarEl) profileBigAvatarEl.textContent = avatarLetter;
-        if (cropperPreviewBigEl && !cropperImg) cropperPreviewBigEl.textContent = avatarLetter;
-        if (cropperPreviewSmallEl && !cropperImg) cropperPreviewSmallEl.textContent = avatarLetter;
+        if (topbarAvatarEl) topbarAvatarEl.innerHTML = `<span style="font-weight:700;">${avatarLetter}</span>`;
+        if (profileBigAvatarEl) profileBigAvatarEl.innerHTML = `<span style="font-weight:800; font-size:32px;">${avatarLetter}</span>`;
     }
-}
-
-function renderUnauthenticatedUI() {
-    document.getElementById("landingView").style.display = "block";
-    document.getElementById("dashboardContainer").classList.remove("active");
-    closeSidebar();
 }
 
 function updateWalletDisplay(balance) {
     const formatted = `$${parseFloat(balance || 0).toFixed(2)}`;
-    const landingWallet = document.getElementById("landingWalletBalance");
     const dashWallet = document.getElementById("dashWalletBalanceDisplay");
+    const topupWallet = document.getElementById("dashWalletBalanceDisplay_topupPage");
     const profileWallet = document.getElementById("profileBalanceDisplay");
 
-    if (landingWallet) landingWallet.textContent = formatted;
     if (dashWallet) dashWallet.textContent = formatted;
+    if (topupWallet) topupWallet.textContent = formatted;
     if (profileWallet) profileWallet.textContent = formatted;
 }
 
@@ -313,26 +217,27 @@ function toggleAuthMode(mode) {
     if (mode === 'register') {
         loginForm.style.display = "none";
         regForm.style.display = "block";
-        modalSubtitle.textContent = "Create a new Terminal Vast account";
+        if (modalSubtitle) modalSubtitle.textContent = "Create a new Terminal Vast account";
     } else {
         loginForm.style.display = "block";
         regForm.style.display = "none";
-        modalSubtitle.textContent = "Account Authentication";
+        if (modalSubtitle) modalSubtitle.textContent = "Sign in to your account";
     }
 }
 
 function showAuthAlert(msg, type = 'error') {
     const alertBox = document.getElementById("authAlert");
+    if (!alertBox) return;
     alertBox.style.display = "block";
     alertBox.textContent = msg;
     if (type === 'error') {
-        alertBox.style.background = "rgba(239, 68, 68, 0.15)";
-        alertBox.style.border = "1px solid rgba(239, 68, 68, 0.4)";
-        alertBox.style.color = "#fca5a5";
+        alertBox.style.background = "var(--danger-light)";
+        alertBox.style.border = "1px solid var(--danger-border)";
+        alertBox.style.color = "var(--danger)";
     } else {
-        alertBox.style.background = "rgba(34, 197, 94, 0.15)";
-        alertBox.style.border = "1px solid rgba(34, 197, 94, 0.4)";
-        alertBox.style.color = "#86efac";
+        alertBox.style.background = "var(--success-light)";
+        alertBox.style.border = "1px solid var(--success-border)";
+        alertBox.style.color = "#059669";
     }
 }
 
@@ -398,8 +303,8 @@ async function handleLogout() {
         await fetch('/api/auth/logout', { method: 'POST' });
     } catch (_) {}
     currentUser = null;
-    localStorage.removeItem('tv_active_page');
-    renderUnauthenticatedUI();
+    localStorage.removeItem('tv_active_tab');
+    openAuthModal('login');
 }
 
 async function handlePasswordChange(e) {
@@ -428,7 +333,104 @@ async function handlePasswordChange(e) {
 }
 
 /* ==========================================================================
-   BLOG PAGE FUNCTIONALITY (User & Admin Perspective)
+   PRIMARY NAVIGATION (5 TABS ROUTER)
+   Dashboard | Pair | Top Up | Settings | Profile
+   ========================================================================== */
+function switchTab(tabId, updateHistory = true) {
+    currentTab = tabId;
+    localStorage.setItem('tv_active_tab', tabId);
+
+    const validTabs = ['dashboard', 'pair', 'topup', 'settings', 'profile'];
+    if (!validTabs.includes(tabId)) tabId = 'dashboard';
+
+    // Highlight Desktop Tabs
+    const deskTabs = document.querySelectorAll(".desktop-nav .nav-tab");
+    deskTabs.forEach(t => t.classList.remove("active"));
+    const deskTarget = document.getElementById(`deskTab${capitalize(tabId)}`);
+    if (deskTarget) deskTarget.classList.add("active");
+
+    // Highlight Mobile Bottom Tabs
+    const mobTabs = document.querySelectorAll(".bottom-nav .bottom-tab");
+    mobTabs.forEach(t => t.classList.remove("active"));
+    const mobTarget = document.getElementById(`mobTab${capitalize(tabId)}`);
+    if (mobTarget) mobTarget.classList.add("active");
+
+    // Hide all pages
+    const pages = document.querySelectorAll(".app-page");
+    pages.forEach(p => p.classList.remove("active"));
+
+    // Show target page
+    const targetPage = document.getElementById(`page${capitalize(tabId)}`);
+    if (targetPage) targetPage.classList.add("active");
+
+    // Push History State
+    if (updateHistory && window.history) {
+        const route = `/${tabId}`;
+        if (window.location.pathname !== route) {
+            window.history.pushState({ tab: tabId }, '', route);
+        }
+    }
+
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+
+    // Actions on tab switch
+    if (tabId === 'pair') startBotStatusPolling();
+    else stopBotStatusPolling();
+}
+
+/* ==========================================================================
+   PROFILE DEDICATED SIDEBAR NAVIGATION
+   ========================================================================== */
+function switchProfileSubpage(subpageId) {
+    currentProfileSubpage = subpageId;
+
+    // Subpage Navigation Links
+    const links = document.querySelectorAll(".profile-sidebar .profile-nav-link");
+    links.forEach(l => l.classList.remove("active"));
+
+    const navTargetMap = {
+        'overview': 'pSubNavOverview',
+        'edit': 'pSubNavEdit',
+        'avatar': 'pSubNavAvatar',
+        'security': 'pSubNavSecurity',
+        'history': 'pSubNavHistory',
+        'blog': 'pSubNavBlog',
+        'blog-create': 'pSubNavBlog',
+        'admin': 'pSubNavAdmin'
+    };
+
+    const targetLink = document.getElementById(navTargetMap[subpageId]);
+    if (targetLink) targetLink.classList.add("active");
+
+    // Subpages Views
+    const subpages = document.querySelectorAll(".profile-subpage");
+    subpages.forEach(s => s.classList.remove("active"));
+
+    const pageTargetMap = {
+        'overview': 'pSubPageOverview',
+        'edit': 'pSubPageEdit',
+        'avatar': 'pSubPageAvatar',
+        'security': 'pSubPageSecurity',
+        'history': 'pSubPageHistory',
+        'blog': 'pSubPageBlog',
+        'blog-create': 'pSubPageBlogCreate',
+        'admin': 'pSubPageAdmin'
+    };
+
+    const targetSubpage = document.getElementById(pageTargetMap[subpageId]);
+    if (targetSubpage) targetSubpage.classList.add("active");
+
+    if (subpageId === 'history') loadHistoryLogs();
+    if (subpageId === 'blog') loadBlogPosts();
+    if (subpageId === 'admin') loadAdminDashboardData();
+}
+
+function capitalize(s) {
+    return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+/* ==========================================================================
+   BLOG FUNCTIONALITY
    ========================================================================== */
 let uploadedBlogBase64Image = null;
 
@@ -444,8 +446,8 @@ async function loadBlogPosts() {
         const posts = data.posts || [];
         if (posts.length === 0) {
             container.innerHTML = `
-                <div class="dash-card" style="text-align: center; padding: 40px 20px;">
-                    <i class="fas fa-newspaper" style="font-size: 36px; color: var(--muted-2); margin-bottom: 12px;"></i>
+                <div class="app-card" style="text-align: center; padding: 40px 20px;">
+                    <i class="fas fa-newspaper" style="font-size: 36px; color: var(--muted-light); margin-bottom: 12px;"></i>
                     <h3 style="color: var(--text);">No blog articles published yet</h3>
                     <p style="color: var(--muted); font-size: 13.5px;">Check back later for updates and announcements.</p>
                 </div>
@@ -464,22 +466,18 @@ async function loadBlogPosts() {
 
             return `
                 <article class="blog-card" id="blogPostCard_${post.id}">
-                    ${post.image ? `
-                        <div class="blog-image-wrap">
-                            <img src="${post.image}" alt="${post.title}" loading="lazy">
-                        </div>
-                    ` : ''}
+                    ${post.image ? `<img src="${post.image}" alt="${post.title}" class="blog-img" loading="lazy">` : ''}
 
                     <div class="blog-meta">
-                        <span><i class="fas fa-user-circle" style="color: var(--orange);"></i> ${post.author || 'Admin'}</span>
+                        <span><i class="fas fa-user-circle" style="color: var(--primary);"></i> ${post.author || 'Admin'}</span>
                         <span>•</span>
                         <span><i class="fas fa-calendar-alt"></i> ${new Date(post.createdAt).toLocaleDateString()}</span>
                     </div>
 
                     <h2 class="blog-title">${post.title}</h2>
-                    <div class="blog-content">${post.content}</div>
+                    <div class="blog-body">${post.content}</div>
 
-                    <div class="blog-actions">
+                    <div class="blog-footer">
                         <button class="react-btn ${userLiked ? 'active-like' : ''}" onclick="toggleBlogReaction('${post.id}', 'like')">
                             <i class="fas fa-thumbs-up"></i> <span>${likesCount}</span>
                         </button>
@@ -493,28 +491,26 @@ async function loadBlogPosts() {
                         </span>
 
                         ${isAdmin ? `
-                            <button class="button danger sm" onclick="deleteBlogPost('${post.id}')" title="Delete Article (Admin)">
-                                <i class="fas fa-trash-alt"></i> Delete
+                            <button class="btn danger sm" onclick="deleteBlogPost('${post.id}')" title="Delete Article (Admin)">
+                                <i class="fas fa-trash-alt"></i>
                             </button>
                         ` : ''}
                     </div>
 
                     <!-- Comment Section -->
-                    <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border);">
-                        <h4 style="font-size: 14px; color: var(--text); margin-bottom: 12px;"><i class="fas fa-comments" style="color: var(--orange);"></i> Discussion &amp; Comments</h4>
-
-                        <form onsubmit="handleAddBlogComment(event, '${post.id}')" style="display: flex; gap: 8px; margin-bottom: 16px;">
-                            <input type="text" class="form-input" placeholder="Write a comment..." required style="padding: 8px 12px; font-size: 13px;">
-                            <button type="submit" class="button primary sm" style="white-space: nowrap;">Comment</button>
+                    <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border);">
+                        <form onsubmit="handleAddBlogComment(event, '${post.id}')" style="display: flex; gap: 8px; margin-bottom: 12px;">
+                            <input type="text" class="form-control" placeholder="Write a comment..." required style="min-height: 36px; padding: 6px 12px; font-size: 13px;">
+                            <button type="submit" class="btn primary sm" style="white-space: nowrap;">Comment</button>
                         </form>
 
-                        <div style="display: flex; flex-direction: column; gap: 10px;">
-                            ${commentsList.length === 0 ? `<span style="font-size: 12px; color: var(--muted-2);">No comments yet. Be the first to comment!</span>` : ''}
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            ${commentsList.length === 0 ? `<span style="font-size: 12px; color: var(--muted);">No comments yet.</span>` : ''}
                             ${commentsList.map(c => `
-                                <div style="background: var(--surface-2); padding: 10px 14px; border-radius: var(--radius); font-size: 13px;">
-                                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                                        <span style="font-weight: 600; color: var(--orange);">${c.username}</span>
-                                        <span style="font-size: 11px; color: var(--muted-2);">${new Date(c.createdAt).toLocaleTimeString()}</span>
+                                <div style="background: var(--surface-2); padding: 8px 12px; border-radius: var(--radius-sm); font-size: 13px;">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                                        <strong style="color: var(--primary);">${c.username}</strong>
+                                        <span style="font-size: 11px; color: var(--muted);">${new Date(c.createdAt).toLocaleTimeString()}</span>
                                     </div>
                                     <div style="color: var(--text);">${c.text}</div>
                                 </div>
@@ -530,7 +526,7 @@ async function loadBlogPosts() {
 }
 
 async function toggleBlogReaction(postId, type) {
-    if (!currentUser) return alert('Please log in to react to blog posts.');
+    if (!currentUser) return openAuthModal('login');
     try {
         const res = await fetch('/api/blog/react', {
             method: 'POST',
@@ -545,7 +541,7 @@ async function toggleBlogReaction(postId, type) {
 
 async function handleAddBlogComment(e, postId) {
     e.preventDefault();
-    if (!currentUser) return alert('Please log in to add comments.');
+    if (!currentUser) return openAuthModal('login');
     const inputEl = e.target.querySelector('input');
     const text = inputEl.value.trim();
     if (!text) return;
@@ -586,10 +582,8 @@ function handleStandaloneBlogImageFileSelect(e) {
 
 async function handleCreateBlogPostStandalone(e) {
     e.preventDefault();
-    if (!currentUser) {
-        openAuthModal('login');
-        return;
-    }
+    if (!currentUser) return openAuthModal('login');
+
     const title = document.getElementById("standaloneBlogTitleInput").value.trim();
     const urlImage = document.getElementById("standaloneBlogImageUrlInput").value.trim();
     const content = document.getElementById("standaloneBlogContentInput").value.trim();
@@ -615,57 +609,7 @@ async function handleCreateBlogPostStandalone(e) {
             if (nameDisplay) nameDisplay.textContent = "No file attached";
 
             alert("Article published successfully!");
-            navigateToPage('blog');
-        });
-    } catch (err) {
-        alert("Publishing error: " + err.message);
-    }
-}
-
-function handleBlogImageFileSelect(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    if (file.size > 5 * 1024 * 1024) return alert('Image file size must be smaller than 5MB.');
-
-    const nameDisplay = document.getElementById("blogFileNameDisplay");
-    if (nameDisplay) nameDisplay.textContent = file.name;
-
-    const reader = new FileReader();
-    reader.onload = () => {
-        uploadedBlogBase64Image = reader.result;
-    };
-    reader.readAsDataURL(file);
-}
-
-async function handleCreateBlogPost(e) {
-    e.preventDefault();
-    const title = document.getElementById("blogTitleInput").value.trim();
-    const urlImage = document.getElementById("blogImageUrlInput").value.trim();
-    const content = document.getElementById("blogContentInput").value.trim();
-    const submitBtn = document.getElementById("createPostSubmitBtn");
-
-    const finalImage = uploadedBlogBase64Image || urlImage || null;
-
-    try {
-        await runWithSpinner(submitBtn, "Publishing article...", async () => {
-            const res = await fetch('/api/blog/create', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title, content, image: finalImage })
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || 'Failed to publish post');
-
-            document.getElementById("blogTitleInput").value = "";
-            document.getElementById("blogImageUrlInput").value = "";
-            document.getElementById("blogContentInput").value = "";
-            uploadedBlogBase64Image = null;
-            const nameDisplay = document.getElementById("blogFileNameDisplay");
-            if (nameDisplay) nameDisplay.textContent = "No file attached";
-
-            alert("Article published successfully!");
-            navigateToPage('blog');
+            switchProfileSubpage('blog');
         });
     } catch (err) {
         alert("Publishing error: " + err.message);
@@ -691,7 +635,7 @@ async function deleteBlogPost(postId) {
 }
 
 /* ==========================================================================
-   HISTORY PAGE LOGIC
+   HISTORY LOGS
    ========================================================================== */
 async function loadHistoryLogs() {
     const container = document.getElementById("historyLogsList");
@@ -704,20 +648,17 @@ async function loadHistoryLogs() {
 
         const logs = data.history || [];
         if (logs.length === 0) {
-            container.innerHTML = `<span style="color: var(--muted-2); font-size: 13px;">No history records found.</span>`;
+            container.innerHTML = `<span style="color: var(--muted); font-size: 13px;">No activity history recorded yet.</span>`;
             return;
         }
 
         container.innerHTML = logs.map(h => `
             <div class="history-item">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-weight: 700; color: var(--text); font-size: 14px;">${h.title}</span>
+                    <strong style="color: var(--text); font-size: 14px;">${h.title}</strong>
                     <span style="font-size: 11px; color: var(--muted);"><i class="fas fa-clock"></i> ${new Date(h.date).toLocaleString()}</span>
                 </div>
-                <div style="font-size: 13px; color: var(--muted);">${h.description}</div>
-                ${currentUser && currentUser.role === 'admin' ? `
-                    <div style="font-size: 11px; color: var(--orange); margin-top: 2px;">User: ${h.username || 'System'}</div>
-                ` : ''}
+                <div style="font-size: 13px; color: var(--text-secondary);">${h.description}</div>
             </div>
         `).join('');
     } catch (err) {
@@ -726,7 +667,7 @@ async function loadHistoryLogs() {
 }
 
 /* ==========================================================================
-   ADMIN PANEL DASHBOARD (7 SECTIONS)
+   ADMIN PANEL
    ========================================================================== */
 let adminUsersCache = [];
 
@@ -746,16 +687,10 @@ function switchAdminSection(sectionId) {
         'adminSecTopup': 'tabBtnSecTopup',
         'adminSecMessages': 'tabBtnSecMessages',
         'adminSecRoles': 'tabBtnSecRoles',
-        'adminSecPayments': 'tabBtnSecPayments',
-        'adminSecBlog': 'tabBtnSecBlog'
+        'adminSecPayments': 'tabBtnSecPayments'
     };
     const targetTab = document.getElementById(tabMap[sectionId]);
     if (targetTab) targetTab.classList.add("active");
-}
-
-function navigateToAdminSection(sectionId) {
-    navigateToPage('admin');
-    switchAdminSection(sectionId);
 }
 
 async function loadAdminDashboardData() {
@@ -772,28 +707,25 @@ async function loadAdminDashboardData() {
 }
 
 function renderAdminTablesAndSelects(users) {
-    // 1. Users Table
     const tbodyUsers = document.getElementById("adminUsersTableBody");
     if (tbodyUsers) {
         tbodyUsers.innerHTML = users.map(u => `
             <tr>
                 <td><strong>${u.username}</strong></td>
                 <td>${u.email}</td>
-                <td>${u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '2026'}</td>
-                <td><span class="status-pill" style="font-size: 10px; font-weight: 700;">${(u.role || 'user').toUpperCase()}</span></td>
-                <td><span class="status-pill" style="font-size: 10px; font-weight: 700; color: ${u.accountStatus === 'banned' ? '#f87171' : u.accountStatus === 'warned' ? '#fef08a' : '#4ade80'};">${(u.accountStatus || 'active').toUpperCase()}</span></td>
-                <td style="color: var(--orange); font-weight: 700;">$${parseFloat(u.balance || 0).toFixed(2)}</td>
+                <td><span class="badge badge-primary">${(u.role || 'user').toUpperCase()}</span></td>
+                <td><span class="badge ${u.accountStatus === 'banned' ? 'badge-danger' : u.accountStatus === 'warned' ? 'badge-warning' : 'badge-success'}">${(u.accountStatus || 'active').toUpperCase()}</span></td>
+                <td style="color: var(--primary); font-weight: 700;">$${parseFloat(u.balance || 0).toFixed(2)}</td>
                 <td>
-                    <button class="button danger sm" onclick="handleAdminDeleteUser('${u.email}')" title="Delete User">
-                        <i class="fas fa-trash-alt"></i> Delete
+                    <button class="btn danger sm" onclick="handleAdminDeleteUser('${u.username}')" title="Delete User">
+                        <i class="fas fa-trash-alt"></i>
                     </button>
                 </td>
             </tr>
         `).join('');
     }
 
-    // Populate User Dropdowns using email as unique identifier
-    const optionsHTML = users.map(u => `<option value="${u.email}">${u.username} (${u.email})</option>`).join('');
+    const optionsHTML = users.map(u => `<option value="${u.username}">${u.username} (${u.email})</option>`).join('');
 
     const selMod = document.getElementById("adminStatusUserSelect");
     const selTop = document.getElementById("adminTopupUserSelect");
@@ -808,7 +740,6 @@ function renderAdminTablesAndSelects(users) {
         selMsg.innerHTML = `<option value="all">📢 Broadcast to ALL Users</option>` + optionsHTML;
     }
 
-    // Financial & Payments Section Stats & Table
     const totalUsersEl = document.getElementById("statTotalUsers");
     const totalFundsEl = document.getElementById("statTotalFunds");
     const totalAdminsEl = document.getElementById("statTotalAdmins");
@@ -825,9 +756,9 @@ function renderAdminTablesAndSelects(users) {
         tbodyPayments.innerHTML = users.map(u => `
             <tr>
                 <td><strong>${u.username}</strong></td>
-                <td><span class="status-badge-live"><span class="status-dot"></span> Verified Paid Account</span></td>
-                <td style="color: var(--orange); font-weight: 700;">$${parseFloat(u.balance || 0).toFixed(2)}</td>
-                <td><span style="font-size: 12px; color: ${u.accountStatus === 'banned' ? '#f87171' : '#4ade80'};">${u.accountStatus || 'active'}</span></td>
+                <td><span class="badge badge-success">Verified Paid</span></td>
+                <td style="color: var(--primary); font-weight: 700;">$${parseFloat(u.balance || 0).toFixed(2)}</td>
+                <td><span style="font-size: 12px; color: ${u.accountStatus === 'banned' ? 'var(--danger)' : '#059669'};">${u.accountStatus || 'active'}</span></td>
             </tr>
         `).join('');
     }
@@ -952,7 +883,7 @@ async function handleAdminRoleChange(e) {
 }
 
 /* ==========================================================================
-   SUDO USERS, SESSIONS & ENGINE RESTART LOGIC
+   SUDO USERS & SESSIONS
    ========================================================================== */
 async function loadSudoAndSessions() {
     try {
@@ -965,14 +896,14 @@ async function loadSudoAndSessions() {
         if (sudoListEl) {
             const sudoArr = data.sudo || [];
             if (sudoArr.length === 0) {
-                sudoListEl.innerHTML = `<span style="color: var(--muted-2); font-size: 13px;">No sudo users configured yet.</span>`;
+                sudoListEl.innerHTML = `<span style="color: var(--muted); font-size: 13px;">No sudo users configured yet.</span>`;
             } else {
                 sudoListEl.innerHTML = sudoArr.map(s => {
                     const cleanPhone = s.split('@')[0];
                     return `
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--surface-2); border-radius: var(--radius); font-size: 13px;">
-                            <span><i class="fas fa-user-shield" style="color: var(--orange); margin-right: 8px;"></i> ${cleanPhone}</span>
-                            <button type="button" class="button danger sm" onclick="removeSudo('${cleanPhone}')"><i class="fas fa-trash-alt"></i></button>
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px;">
+                            <span><i class="fas fa-user-shield" style="color: var(--primary); margin-right: 8px;"></i> ${cleanPhone}</span>
+                            <button type="button" class="btn danger sm" onclick="removeSudo('${cleanPhone}')"><i class="fas fa-trash-alt"></i></button>
                         </div>
                     `;
                 }).join('');
@@ -987,15 +918,15 @@ async function loadSudoAndSessions() {
         const activeSessionsListEl = document.getElementById("activeSessionsList");
         if (activeSessionsListEl) {
             if (sessionsArr.length === 0) {
-                activeSessionsListEl.innerHTML = `<span style="color: var(--muted-2); font-size: 13px;">No secondary sessions active.</span>`;
+                activeSessionsListEl.innerHTML = `<span style="color: var(--muted); font-size: 13px;">No active connected sessions.</span>`;
             } else {
                 activeSessionsListEl.innerHTML = sessionsArr.map(sess => `
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--surface-2); border-radius: var(--radius); font-size: 13px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px;">
                         <div>
-                            <div style="font-weight: 600; color: var(--text);"><i class="fab fa-whatsapp" style="color: #22c55e; margin-right: 6px;"></i> ${sess.phone}</div>
+                            <strong style="color: var(--text);"><i class="fab fa-whatsapp" style="color: #10b981; margin-right: 6px;"></i> +${sess.phone}</strong>
                             <div style="font-size: 11px; color: var(--muted);">Status: ${sess.status}</div>
                         </div>
-                        <span class="status-badge-live"><span class="status-dot"></span> Active</span>
+                        <span class="badge badge-success"><span class="badge-dot"></span> Active</span>
                     </div>
                 `).join('');
             }
@@ -1067,7 +998,7 @@ async function handleRestartEngine() {
 }
 
 /* ==========================================================================
-   INTERACTIVE PROFILE PICTURE CROPPER STUDIO (/profile/image)
+   CROPPER STUDIO FOR PROFILE PICTURE
    ========================================================================== */
 let cropperImg = null;
 let cropperZoom = 1;
@@ -1132,7 +1063,6 @@ function initCropperEvents() {
         isDraggingCropper = false;
     });
 
-    // Mouse wheel zoom
     canvas.addEventListener("wheel", (e) => {
         if (!cropperImg) return;
         e.preventDefault();
@@ -1145,15 +1075,8 @@ function handleCropperFileSelect(e) {
     const file = e.target.files[0];
     if (!file) return;
 
-    if (!file.type.startsWith('image/')) {
-        alert('Please select a valid image file.');
-        return;
-    }
-
-    if (file.size > 8 * 1024 * 1024) {
-        alert('Image file size must be smaller than 8MB.');
-        return;
-    }
+    if (!file.type.startsWith('image/')) return alert('Please select a valid image file.');
+    if (file.size > 8 * 1024 * 1024) return alert('Image file size must be smaller than 8MB.');
 
     const reader = new FileReader();
     reader.onload = () => {
@@ -1214,10 +1137,8 @@ function drawCropperCanvas() {
     const width = canvas.width;
     const height = canvas.height;
 
-    // Clear canvas
     ctx.clearRect(0, 0, width, height);
 
-    // Calculate image render dimensions
     const aspect = cropperImg.width / cropperImg.height;
     let baseW = width;
     let baseH = height;
@@ -1232,38 +1153,19 @@ function drawCropperCanvas() {
     const drawX = (width - drawW) / 2 + cropperPanX;
     const drawY = (height - drawH) / 2 + cropperPanY;
 
-    // Draw transformed image
     ctx.drawImage(cropperImg, drawX, drawY, drawW, drawH);
 
-    // Dark overlay with circular viewport cut-out
-    ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
+    ctx.fillStyle = "rgba(15, 23, 42, 0.5)";
     ctx.beginPath();
     ctx.rect(0, 0, width, height);
     ctx.arc(width / 2, height / 2, width / 2 - 10, 0, Math.PI * 2, true);
     ctx.fill();
 
-    // Border ring for target circle
-    ctx.strokeStyle = "var(--orange, #f97316)";
+    ctx.strokeStyle = "var(--primary, #2563eb)";
     ctx.lineWidth = 3;
     ctx.beginPath();
     ctx.arc(width / 2, height / 2, width / 2 - 10, 0, Math.PI * 2);
     ctx.stroke();
-
-    // Update live previews
-    updateCropperPreviews();
-}
-
-function updateCropperPreviews() {
-    if (!cropperImg) return;
-    const exportDataURL = generateCroppedBase64(160, 160);
-    if (!exportDataURL) return;
-
-    const bigEl = document.getElementById("cropperPreviewBig");
-    const smallEl = document.getElementById("cropperPreviewSmall");
-
-    const imgTag = `<img src="${exportDataURL}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
-    if (bigEl) bigEl.innerHTML = imgTag;
-    if (smallEl) smallEl.innerHTML = imgTag;
 }
 
 function generateCroppedBase64(outW = 400, outH = 400) {
@@ -1273,8 +1175,8 @@ function generateCroppedBase64(outW = 400, outH = 400) {
     canvas.height = outH;
     const ctx = canvas.getContext("2d");
 
-    const width = 360;
-    const height = 360;
+    const width = 340;
+    const height = 340;
     const aspect = cropperImg.width / cropperImg.height;
     let baseW = width;
     let baseH = height;
@@ -1289,7 +1191,6 @@ function generateCroppedBase64(outW = 400, outH = 400) {
     const drawX = (width - drawW) / 2 + cropperPanX;
     const drawY = (height - drawH) / 2 + cropperPanY;
 
-    // Scale to output resolution (400x400)
     const scale = outW / width;
     ctx.drawImage(cropperImg, drawX * scale, drawY * scale, drawW * scale, drawH * scale);
 
@@ -1304,7 +1205,7 @@ async function handleSaveCroppedAvatar() {
     const saveBtn = document.getElementById("saveCroppedAvatarBtn");
 
     try {
-        await runWithSpinner(saveBtn, "Saving profile picture...", async () => {
+        await runWithSpinner(saveBtn, "Saving picture...", async () => {
             const res = await fetch('/api/profile/avatar', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -1316,7 +1217,7 @@ async function handleSaveCroppedAvatar() {
             currentUser = data.user;
             updateProfileAvatarDisplay();
             alert('Profile picture updated successfully!');
-            navigateToPage('profile');
+            switchProfileSubpage('overview');
         });
     } catch (err) {
         alert('Avatar upload error: ' + err.message);
@@ -1349,7 +1250,7 @@ async function handleRemoveAvatar() {
 
         updateProfileAvatarDisplay();
         alert('Profile picture removed successfully.');
-        navigateToPage('profile');
+        switchProfileSubpage('overview');
     } catch (err) {
         alert('Error removing avatar: ' + err.message);
     }
@@ -1372,99 +1273,14 @@ async function handleProfileUpdate(e) {
             if (!res.ok) throw new Error(data.error || 'Failed to update profile');
 
             currentUser = data.user;
-            document.getElementById("profileEmailDisplay").textContent = currentUser.email;
+            const pEmail = document.getElementById("profileEmailDisplay");
+            if (pEmail) pEmail.textContent = currentUser.email;
             alert('Profile details updated successfully!');
+            switchProfileSubpage('overview');
         });
     } catch (err) {
         alert('Error updating profile: ' + err.message);
     }
-}
-
-/* ==========================================================================
-   SIDEBAR & DASHBOARD NAVIGATION
-   ========================================================================== */
-function toggleSidebar() {
-    document.getElementById("sidebarOverlay").classList.toggle("open");
-    document.getElementById("sidebarDrawer").classList.toggle("open");
-}
-
-function closeSidebar() {
-    document.getElementById("sidebarOverlay").classList.remove("open");
-    document.getElementById("sidebarDrawer").classList.remove("open");
-}
-
-function navigateToPage(pageId, updateHistory = true) {
-    currentActivePage = pageId;
-    localStorage.setItem('tv_active_page', pageId);
-    closeSidebar();
-
-    const ADMIN_EMAILS = ['delostvoyage@gmail.com', 'voyagedelost@gmail.com'];
-    const isAdmin = currentUser && (currentUser.role === 'admin' || (currentUser.email && ADMIN_EMAILS.includes(currentUser.email.trim().toLowerCase())));
-    if (pageId === 'admin' && !isAdmin) {
-        pageId = 'topup';
-        currentActivePage = 'topup';
-    }
-
-    if ((pageId === 'blog-create' || pageId === 'profile-image') && !currentUser) {
-        openAuthModal('login');
-        return;
-    }
-
-    const routeMap = {
-        'topup': '/topup',
-        'connect': '/connect',
-        'settings': '/settings',
-        'profile': '/profile',
-        'profile-image': '/profile/image',
-        'blog': '/blog',
-        'blog-create': '/blog/create',
-        'history': '/history',
-        'admin': '/admin'
-    };
-
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-    const dashContent = document.querySelector('.dash-content');
-    if (dashContent) dashContent.scrollTop = 0;
-
-    if (updateHistory && window.history && routeMap[pageId]) {
-        const targetPath = routeMap[pageId];
-        if (window.location.pathname !== targetPath) {
-            window.history.pushState({ page: pageId }, '', targetPath);
-        }
-    }
-
-    showSkeletonLoading();
-
-    const pages = document.querySelectorAll(".dash-page");
-    pages.forEach(p => p.classList.remove("active"));
-
-    const navLinks = document.querySelectorAll(".sidebar-link");
-    navLinks.forEach(link => link.classList.remove("active"));
-
-    setTimeout(() => {
-        hideSkeletonLoading();
-
-        const targetPageId = pageId === 'profile-image' ? 'pageProfileImage' :
-                           pageId === 'blog-create' ? 'pageBlogCreate' :
-                           `page${capitalize(pageId)}`;
-
-        const targetPage = document.getElementById(targetPageId);
-        if (targetPage) targetPage.classList.add("active");
-
-        const targetNavLinkId = pageId === 'profile-image' ? 'navLinkProfile' :
-                              pageId === 'blog-create' ? 'navLinkBlog' :
-                              `navLink${capitalize(pageId)}`;
-
-        const targetNavLink = document.getElementById(targetNavLinkId);
-        if (targetNavLink) targetNavLink.classList.add("active");
-
-        if (pageId === 'blog') loadBlogPosts();
-        if (pageId === 'history') loadHistoryLogs();
-        if (pageId === 'admin' && isAdmin) loadAdminDashboardData();
-        if (pageId === 'connect') startBotStatusPolling();
-
-        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-    }, 150);
 }
 
 function renderDirectMessagesAndWarnings() {
@@ -1473,35 +1289,29 @@ function renderDirectMessagesAndWarnings() {
 
     let bannerHTML = "";
 
-    // Check account status warning
     if (currentUser.accountStatus === 'warned' || currentUser.warningMessage) {
         bannerHTML += `
-            <div style="padding: 14px 18px; background: rgba(234, 179, 8, 0.15); border: 1px solid rgba(234, 179, 8, 0.4); border-radius: var(--radius); color: #fef08a; margin-bottom: 12px; font-size: 14px; display: flex; align-items: center; gap: 12px;">
-                <i class="fas fa-exclamation-triangle" style="font-size: 20px; color: #eab308;"></i>
-                <div>
-                    <strong>Account Warning:</strong> ${currentUser.warningMessage || 'Your account has an active warning flag.'}
-                </div>
+            <div style="padding: 14px 18px; background: var(--warning-light); border: 1px solid var(--warning-border); border-radius: var(--radius); color: #d97706; font-size: 14px; display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                <i class="fas fa-exclamation-triangle" style="font-size: 18px;"></i>
+                <div><strong>Account Warning:</strong> ${currentUser.warningMessage || 'Your account has an active warning flag.'}</div>
             </div>
         `;
     } else if (currentUser.accountStatus === 'restricted' || currentUser.accountStatus === 'banned') {
         bannerHTML += `
-            <div style="padding: 14px 18px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: var(--radius); color: #fca5a5; margin-bottom: 12px; font-size: 14px; display: flex; align-items: center; gap: 12px;">
-                <i class="fas fa-ban" style="font-size: 20px; color: #ef4444;"></i>
-                <div>
-                    <strong>Account Notice (${currentUser.accountStatus.toUpperCase()}):</strong> ${currentUser.warningMessage || 'Account access is currently restricted by Administrator.'}
-                </div>
+            <div style="padding: 14px 18px; background: var(--danger-light); border: 1px solid var(--danger-border); border-radius: var(--radius); color: var(--danger); font-size: 14px; display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                <i class="fas fa-ban" style="font-size: 18px;"></i>
+                <div><strong>Account Notice (${currentUser.accountStatus.toUpperCase()}):</strong> ${currentUser.warningMessage || 'Account access is restricted.'}</div>
             </div>
         `;
     }
 
-    // Check direct messages from admins
     const msgs = currentUser.adminMessages || [];
     if (msgs.length > 0) {
         msgs.forEach(m => {
             bannerHTML += `
-                <div style="padding: 14px 18px; background: var(--orange-soft); border: 1px solid var(--orange-border); border-radius: var(--radius); color: var(--text); margin-bottom: 12px; font-size: 14px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                        <span style="font-weight: 700; color: var(--orange);"><i class="fas fa-envelope-open-text"></i> Message from ${m.sender || 'Admin'}</span>
+                <div style="padding: 14px 18px; background: var(--primary-light); border: 1px solid var(--primary-border); border-radius: var(--radius); color: var(--text); font-size: 14px; margin-bottom: 12px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                        <strong style="color: var(--primary);"><i class="fas fa-envelope"></i> Message from ${m.sender || 'Admin'}</strong>
                         <span style="font-size: 11px; color: var(--muted);">${new Date(m.createdAt).toLocaleString()}</span>
                     </div>
                     <div>${m.text}</div>
@@ -1518,18 +1328,6 @@ function renderDirectMessagesAndWarnings() {
     }
 }
 
-function capitalize(s) {
-    return s.charAt(0).toUpperCase() + s.slice(1);
-}
-
-function showSkeletonLoading() {
-    document.getElementById("dashSkeletonLoading").style.display = "block";
-}
-
-function hideSkeletonLoading() {
-    document.getElementById("dashSkeletonLoading").style.display = "none";
-}
-
 /* ==========================================================================
    TOP UP & WALLET ACTIONS
    ========================================================================== */
@@ -1542,6 +1340,7 @@ function closeTopUpModal() {
 }
 
 async function executeQuickTopUp(amount, buttonEl = null) {
+    if (!currentUser) return openAuthModal('login');
     const action = async () => {
         try {
             const res = await fetch('/api/wallet/topup', {
@@ -1574,7 +1373,7 @@ async function handleCustomTopUp(e) {
     if (isNaN(amount) || amount <= 0) return alert("Please enter a valid amount.");
     const submitBtn = e.target.querySelector('button[type="submit"]');
 
-    await runWithSpinner(submitBtn, "Processing Top Up...", async () => {
+    await runWithSpinner(submitBtn, "Processing...", async () => {
         await executeQuickTopUp(amount);
         closeTopUpModal();
         document.getElementById("topUpAmountInput").value = "";
@@ -1582,7 +1381,7 @@ async function handleCustomTopUp(e) {
 }
 
 /* ==========================================================================
-   CONNECT WHATSAPP PAIRING
+   CONNECT / PAIR WHATSAPP
    ========================================================================== */
 let botStatusPollTimer = null;
 
@@ -1620,29 +1419,19 @@ function updateBotStatusUI(data) {
     if (!badgeEl || !textEl) return;
 
     if (status === 'connected') {
-        badgeEl.style.background = "rgba(34, 197, 94, 0.15)";
-        badgeEl.style.color = "#4ade80";
-        badgeEl.style.border = "1px solid rgba(34, 197, 94, 0.4)";
+        badgeEl.className = "badge badge-success";
         textEl.textContent = "CONNECTED";
     } else if (status === 'connecting') {
-        badgeEl.style.background = "rgba(234, 179, 8, 0.15)";
-        badgeEl.style.color = "#fef08a";
-        badgeEl.style.border = "1px solid rgba(234, 179, 8, 0.4)";
+        badgeEl.className = "badge badge-warning";
         textEl.textContent = "CONNECTING...";
     } else if (status === 'reconnecting') {
-        badgeEl.style.background = "rgba(249, 115, 22, 0.15)";
-        badgeEl.style.color = "#fdba74";
-        badgeEl.style.border = "1px solid rgba(249, 115, 22, 0.4)";
+        badgeEl.className = "badge badge-warning";
         textEl.textContent = "RECONNECTING...";
     } else if (status === 'error') {
-        badgeEl.style.background = "rgba(239, 68, 68, 0.15)";
-        badgeEl.style.color = "#fca5a5";
-        badgeEl.style.border = "1px solid rgba(239, 68, 68, 0.4)";
+        badgeEl.className = "badge badge-danger";
         textEl.textContent = "ERROR";
     } else {
-        badgeEl.style.background = "rgba(100, 116, 139, 0.15)";
-        badgeEl.style.color = "#cbd5e1";
-        badgeEl.style.border = "1px solid rgba(100, 116, 139, 0.4)";
+        badgeEl.className = "badge badge-neutral";
         textEl.textContent = "DISCONNECTED";
     }
 }
@@ -1695,7 +1484,7 @@ async function handlePairRequest(e) {
 }
 
 /* ==========================================================================
-   BOT SETTINGS LOGIC
+   BOT SETTINGS
    ========================================================================== */
 async function loadBotSettings() {
     try {
