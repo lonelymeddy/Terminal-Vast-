@@ -6,5 +6,27 @@
     "ownername": "Lonely Meddy",
     "ownernumber": "256702662846",
     "sudo": []
+  },
+  "256702662846@s.whatsapp.net@s.whatsapp.net": {
+    "sudo": [],
+    "prefix": ".",
+    "autorecording": false,
+    "autoread": false,
+    "autoTyping": false,
+    "autoreact": false,
+    "AI_CHAT": false,
+    "AI_CHAT_MODE": "text",
+    "AI_CHAT_SCOPE": "all",
+    "alwaysonline": false,
+    "antidelete": "off",
+    "antiedit": "off",
+    "botname": "Terminal Vast",
+    "ownernumber": "256702662846",
+    "ownername": "Owner",
+    "antigroupmention": false,
+    "antibug": true
+  },
+  "undefined": {
+    "antitagadmin": false
   }
 }
