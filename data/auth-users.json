@@ -1,1 +1,14 @@
-[]
+[
+  {
+    "id": "user_1790888149334_tiov9",
+    "username": "admin",
+    "email": "admin@terminalvast.bot",
+    "passwordHash": "$2b$10$DTeqt1ipwA5IPZk0DIPdLuNUl95I.YQrPhZ2nPa/5z48woRoerM42",
+    "role": "user",
+    "balance": 0,
+    "accountStatus": "active",
+    "warningMessage": "",
+    "adminMessages": [],
+    "createdAt": "2026-10-01T20:55:49.334Z"
+  }
+]
