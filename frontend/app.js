@@ -1,6 +1,7 @@
 let currentUser = null;
 let currentTab = getTabFromPath() || localStorage.getItem('tv_active_tab') || 'dashboard';
 let currentProfileSubpage = 'overview';
+let isGuest = false;
 
 function getTabFromPath() {
     const rawPath = window.location.pathname.replace(/^\/+|\/+$/g, '').toLowerCase();
@@ -16,8 +17,113 @@ document.addEventListener("DOMContentLoaded", () => {
     disablePageZoomGestures();
     initClock();
     initCropperEvents();
-    checkSession();
+    startStartupSequence();
 });
+
+/* ==========================================================================
+   STARTUP SEQUENCE (SPLASH -> INTRO -> AUTH/GUEST -> DASHBOARD)
+   ========================================================================== */
+function startStartupSequence() {
+    const splashScreen = document.getElementById("splashScreen");
+    const introScreen = document.getElementById("introScreen");
+    const authScreen = document.getElementById("authScreen");
+    const appShell = document.getElementById("appShell");
+
+    // Check if session check should be performed in background
+    let sessionResultPromise = checkSessionInternal();
+
+    // 1. SPLASH SCREEN (6 SECONDS)
+    setTimeout(() => {
+        if (splashScreen) {
+            splashScreen.style.opacity = "0";
+            setTimeout(() => {
+                splashScreen.style.display = "none";
+                runAnimatedIntro(sessionResultPromise);
+            }, 500);
+        } else {
+            runAnimatedIntro(sessionResultPromise);
+        }
+    }, 6000);
+}
+
+function runAnimatedIntro(sessionResultPromise) {
+    const introScreen = document.getElementById("introScreen");
+    const introText1 = document.getElementById("introText1");
+    const introText2 = document.getElementById("introText2");
+
+    if (!introScreen || !introText1 || !introText2) {
+        finishStartupFlow(sessionResultPromise);
+        return;
+    }
+
+    introScreen.style.display = "flex";
+
+    // Text 1: "Wanna automate your WhatsApp?"
+    setTimeout(() => {
+        introText1.classList.add("visible");
+    }, 100);
+
+    // Fade out Text 1 & prepare Text 2
+    setTimeout(() => {
+        introText1.classList.remove("visible");
+        setTimeout(() => {
+            introText1.style.display = "none";
+            introText2.style.display = "block";
+            setTimeout(() => {
+                introText2.classList.add("visible");
+            }, 50);
+        }, 600);
+    }, 2200);
+
+    // Transition to Auth / App
+    setTimeout(() => {
+        introText2.classList.remove("visible");
+        setTimeout(() => {
+            introScreen.style.display = "none";
+            finishStartupFlow(sessionResultPromise);
+        }, 600);
+    }, 4500);
+}
+
+async function finishStartupFlow(sessionResultPromise) {
+    const authData = await sessionResultPromise;
+
+    if (authData && authData.authenticated && authData.user) {
+        currentUser = authData.user;
+        isGuest = false;
+        showAppDashboard();
+    } else {
+        // Show Auth Screen
+        showAuthScreen();
+    }
+}
+
+function showAuthScreen() {
+    const authScreen = document.getElementById("authScreen");
+    const appShell = document.getElementById("appShell");
+    if (appShell) appShell.style.display = "none";
+    if (authScreen) authScreen.style.display = "flex";
+}
+
+function showAppDashboard() {
+    const authScreen = document.getElementById("authScreen");
+    const appShell = document.getElementById("appShell");
+    if (authScreen) authScreen.style.display = "none";
+    if (appShell) appShell.style.display = "flex";
+    renderAuthenticatedUI();
+}
+
+function handleContinueAsGuest() {
+    isGuest = true;
+    currentUser = {
+        username: 'Guest User',
+        email: 'guest@terminalvast.local',
+        role: 'user',
+        balance: 0,
+        guest: true
+    };
+    showAppDashboard();
+}
 
 function disablePageZoomGestures() {
     document.addEventListener('gesturestart', (e) => {
@@ -97,21 +203,14 @@ function initClock() {
 /* ==========================================================================
    SESSION CHECK & AUTHENTICATION
    ========================================================================== */
-async function checkSession() {
+async function checkSessionInternal() {
     try {
         const res = await fetch('/api/auth/me');
         const data = await res.json();
-        if (data.authenticated && data.user) {
-            currentUser = data.user;
-            renderAuthenticatedUI();
-        } else {
-            currentUser = null;
-            openAuthModal('login');
-            renderAuthenticatedUI(); // Render base UI anyway
-        }
+        return data;
     } catch (err) {
         console.error("Session check error:", err);
-        renderAuthenticatedUI();
+        return { authenticated: false, user: null };
     }
 }
 
@@ -129,7 +228,7 @@ function renderAuthenticatedUI() {
         if (eDisp) eDisp.textContent = currentUser.email || 'N/A';
 
         const rBadge = document.getElementById("profileRoleBadge");
-        if (rBadge) rBadge.textContent = currentUser.role || 'user';
+        if (rBadge) rBadge.textContent = isGuest ? 'GUEST' : (currentUser.role || 'user');
 
         const editEmail = document.getElementById("editProfileEmail");
         if (editEmail) editEmail.value = currentUser.email || '';
@@ -150,7 +249,7 @@ function renderAuthenticatedUI() {
 
         // Check Admin
         const ADMIN_EMAILS = ['delostvoyage@gmail.com', 'voyagedelost@gmail.com'];
-        const isAdmin = currentUser.role === 'admin' || (currentUser.email && ADMIN_EMAILS.includes(currentUser.email.trim().toLowerCase()));
+        const isAdmin = !isGuest && (currentUser.role === 'admin' || (currentUser.email && ADMIN_EMAILS.includes(currentUser.email.trim().toLowerCase())));
 
         const pSubNavAdmin = document.getElementById("pSubNavAdmin");
         if (pSubNavAdmin) pSubNavAdmin.style.display = isAdmin ? "flex" : "none";
@@ -179,7 +278,7 @@ function updateProfileAvatarDisplay() {
         if (topbarAvatarEl) topbarAvatarEl.innerHTML = imgHTML;
         if (profileBigAvatarEl) profileBigAvatarEl.innerHTML = imgHTML;
     } else {
-        const avatarLetter = (currentUser.username || 'U').charAt(0).toUpperCase();
+        const avatarLetter = (currentUser.username || 'G').charAt(0).toUpperCase();
         if (topbarAvatarEl) topbarAvatarEl.innerHTML = `<span style="font-weight:700;">${avatarLetter}</span>`;
         if (profileBigAvatarEl) profileBigAvatarEl.innerHTML = `<span style="font-weight:800; font-size:32px;">${avatarLetter}</span>`;
     }
@@ -196,32 +295,21 @@ function updateWalletDisplay(balance) {
     if (profileWallet) profileWallet.textContent = formatted;
 }
 
-/* Modal Helpers */
-function openAuthModal(mode = 'login') {
-    toggleAuthMode(mode);
-    document.getElementById("authModal").classList.add("open");
-    hideAuthAlert();
-}
-
-function closeAuthModal() {
-    document.getElementById("authModal").classList.remove("open");
-}
-
 function toggleAuthMode(mode) {
     const loginForm = document.getElementById("loginForm");
     const regForm = document.getElementById("registerForm");
-    const modalSubtitle = document.getElementById("authModalSubtitle");
+    const subtitle = document.getElementById("authScreenSubtitle");
 
     hideAuthAlert();
 
     if (mode === 'register') {
         loginForm.style.display = "none";
         regForm.style.display = "block";
-        if (modalSubtitle) modalSubtitle.textContent = "Create a new Terminal Vast account";
+        if (subtitle) subtitle.textContent = "Create a new Terminal Vast account";
     } else {
         loginForm.style.display = "block";
         regForm.style.display = "none";
-        if (modalSubtitle) modalSubtitle.textContent = "Sign in to your account";
+        if (subtitle) subtitle.textContent = "Sign in to your account";
     }
 }
 
@@ -264,8 +352,8 @@ async function handleLogin(e) {
             if (!res.ok) throw new Error(data.error || 'Login failed');
 
             currentUser = data.user;
-            closeAuthModal();
-            renderAuthenticatedUI();
+            isGuest = false;
+            showAppDashboard();
         });
     } catch (err) {
         showAuthAlert(err.message, 'error');
@@ -290,8 +378,8 @@ async function handleRegister(e) {
             if (!res.ok) throw new Error(data.error || 'Registration failed');
 
             currentUser = data.user;
-            closeAuthModal();
-            renderAuthenticatedUI();
+            isGuest = false;
+            showAppDashboard();
         });
     } catch (err) {
         showAuthAlert(err.message, 'error');
@@ -303,12 +391,14 @@ async function handleLogout() {
         await fetch('/api/auth/logout', { method: 'POST' });
     } catch (_) {}
     currentUser = null;
+    isGuest = false;
     localStorage.removeItem('tv_active_tab');
-    openAuthModal('login');
+    showAuthScreen();
 }
 
 async function handlePasswordChange(e) {
     e.preventDefault();
+    if (isGuest) return alert("Please log in to change account password.");
     const oldPassword = document.getElementById("oldPasswordInput").value;
     const newPassword = document.getElementById("newPasswordInput").value;
     const submitBtn = e.target.querySelector('button[type="submit"]');
@@ -455,7 +545,7 @@ async function loadBlogPosts() {
             return;
         }
 
-        const isAdmin = currentUser && currentUser.role === 'admin';
+        const isAdmin = !isGuest && currentUser && currentUser.role === 'admin';
 
         container.innerHTML = posts.map(post => {
             const likesCount = (post.likes || []).length;
@@ -526,7 +616,7 @@ async function loadBlogPosts() {
 }
 
 async function toggleBlogReaction(postId, type) {
-    if (!currentUser) return openAuthModal('login');
+    if (isGuest) return showAuthScreen();
     try {
         const res = await fetch('/api/blog/react', {
             method: 'POST',
@@ -541,7 +631,7 @@ async function toggleBlogReaction(postId, type) {
 
 async function handleAddBlogComment(e, postId) {
     e.preventDefault();
-    if (!currentUser) return openAuthModal('login');
+    if (isGuest) return showAuthScreen();
     const inputEl = e.target.querySelector('input');
     const text = inputEl.value.trim();
     if (!text) return;
@@ -582,7 +672,7 @@ function handleStandaloneBlogImageFileSelect(e) {
 
 async function handleCreateBlogPostStandalone(e) {
     e.preventDefault();
-    if (!currentUser) return openAuthModal('login');
+    if (isGuest) return showAuthScreen();
 
     const title = document.getElementById("standaloneBlogTitleInput").value.trim();
     const urlImage = document.getElementById("standaloneBlogImageUrlInput").value.trim();
@@ -617,6 +707,7 @@ async function handleCreateBlogPostStandalone(e) {
 }
 
 async function deleteBlogPost(postId) {
+    if (isGuest) return showAuthScreen();
     if (!confirm("Are you sure you want to delete this blog article?")) return;
     try {
         const res = await fetch('/api/blog/delete', {
@@ -640,6 +731,11 @@ async function deleteBlogPost(postId) {
 async function loadHistoryLogs() {
     const container = document.getElementById("historyLogsList");
     if (!container) return;
+
+    if (isGuest) {
+        container.innerHTML = `<span style="color: var(--muted); font-size: 13px;">Guest users do not have persistent history logs.</span>`;
+        return;
+    }
 
     try {
         const res = await fetch('/api/history');
@@ -694,6 +790,7 @@ function switchAdminSection(sectionId) {
 }
 
 async function loadAdminDashboardData() {
+    if (isGuest) return;
     try {
         const res = await fetch('/api/admin/users');
         const data = await res.json();
@@ -766,6 +863,7 @@ function renderAdminTablesAndSelects(users) {
 
 async function handleAdminStatusChange(e) {
     e.preventDefault();
+    if (isGuest) return showAuthScreen();
     const username = document.getElementById("adminStatusUserSelect").value;
     const status = document.getElementById("adminAccountStatusSelect").value;
     const warningMessage = document.getElementById("adminWarningInput").value;
@@ -790,6 +888,7 @@ async function handleAdminStatusChange(e) {
 }
 
 async function handleAdminDeleteUser(username) {
+    if (isGuest) return showAuthScreen();
     if (!username) return;
     if (!confirm(`Are you sure you want to permanently delete account for user "${username}"?`)) return;
 
@@ -811,6 +910,7 @@ async function handleAdminDeleteUser(username) {
 
 async function handleAdminTopUp(e) {
     e.preventDefault();
+    if (isGuest) return showAuthScreen();
     const username = document.getElementById("adminTopupUserSelect").value;
     const amount = document.getElementById("adminTopupAmount").value;
     const submitBtn = e.target.querySelector('button[type="submit"]');
@@ -836,6 +936,7 @@ async function handleAdminTopUp(e) {
 
 async function handleAdminSendMessage(e) {
     e.preventDefault();
+    if (isGuest) return showAuthScreen();
     const targetUsername = document.getElementById("adminMsgTargetSelect").value;
     const message = document.getElementById("adminMsgText").value;
     const submitBtn = e.target.querySelector('button[type="submit"]');
@@ -860,6 +961,7 @@ async function handleAdminSendMessage(e) {
 
 async function handleAdminRoleChange(e) {
     e.preventDefault();
+    if (isGuest) return showAuthScreen();
     const username = document.getElementById("adminRoleUserSelect").value;
     const role = document.getElementById("adminRoleSelect").value;
     const submitBtn = e.target.querySelector('button[type="submit"]');
@@ -938,6 +1040,7 @@ async function loadSudoAndSessions() {
 
 async function handleAddSudo(e) {
     e.preventDefault();
+    if (isGuest) return alert("Guest users cannot configure sudo settings. Please log in.");
     const phone = document.getElementById("sudoPhoneInput").value.trim();
     if (!phone) return;
     const submitBtn = document.getElementById("addSudoBtn");
@@ -962,6 +1065,7 @@ async function handleAddSudo(e) {
 }
 
 async function removeSudo(phone) {
+    if (isGuest) return alert("Guest users cannot configure sudo settings. Please log in.");
     if (!confirm(`Are you sure you want to remove ${phone} from sudo users?`)) return;
 
     try {
@@ -981,6 +1085,7 @@ async function removeSudo(phone) {
 }
 
 async function handleRestartEngine() {
+    if (isGuest) return alert("Guest users cannot restart engine. Please log in.");
     if (!confirm("Are you sure you want to restart the WhatsApp Bot Engine?")) return;
     const restartBtn = document.getElementById("restartEngineBtn");
 
@@ -1155,13 +1260,13 @@ function drawCropperCanvas() {
 
     ctx.drawImage(cropperImg, drawX, drawY, drawW, drawH);
 
-    ctx.fillStyle = "rgba(15, 23, 42, 0.5)";
+    ctx.fillStyle = "rgba(17, 17, 17, 0.5)";
     ctx.beginPath();
     ctx.rect(0, 0, width, height);
     ctx.arc(width / 2, height / 2, width / 2 - 10, 0, Math.PI * 2, true);
     ctx.fill();
 
-    ctx.strokeStyle = "var(--primary, #2563eb)";
+    ctx.strokeStyle = "var(--primary, #FF6A00)";
     ctx.lineWidth = 3;
     ctx.beginPath();
     ctx.arc(width / 2, height / 2, width / 2 - 10, 0, Math.PI * 2);
@@ -1198,6 +1303,7 @@ function generateCroppedBase64(outW = 400, outH = 400) {
 }
 
 async function handleSaveCroppedAvatar() {
+    if (isGuest) return alert("Guest users cannot update profile avatars.");
     if (!cropperImg) return;
     const base64Avatar = generateCroppedBase64(400, 400);
     if (!base64Avatar) return;
@@ -1225,6 +1331,7 @@ async function handleSaveCroppedAvatar() {
 }
 
 async function handleRemoveAvatar() {
+    if (isGuest) return alert("Guest users cannot remove avatar.");
     if (!confirm("Are you sure you want to remove your profile picture?")) return;
 
     try {
@@ -1258,6 +1365,7 @@ async function handleRemoveAvatar() {
 
 async function handleProfileUpdate(e) {
     e.preventDefault();
+    if (isGuest) return alert("Guest users cannot update profile details.");
     const email = document.getElementById("editProfileEmail").value.trim();
     const bio = document.getElementById("editProfileBio").value.trim();
     const submitBtn = document.getElementById("saveProfileBtn");
@@ -1285,7 +1393,10 @@ async function handleProfileUpdate(e) {
 
 function renderDirectMessagesAndWarnings() {
     const bannerContainer = document.getElementById("adminDirectMessagesBanner");
-    if (!bannerContainer || !currentUser) return;
+    if (!bannerContainer || !currentUser || isGuest) {
+        if (bannerContainer) bannerContainer.style.display = "none";
+        return;
+    }
 
     let bannerHTML = "";
 
@@ -1340,7 +1451,10 @@ function closeTopUpModal() {
 }
 
 async function executeQuickTopUp(amount, buttonEl = null) {
-    if (!currentUser) return openAuthModal('login');
+    if (isGuest) {
+        alert("Please log in or register an account to add wallet credits.");
+        return showAuthScreen();
+    }
     const action = async () => {
         try {
             const res = await fetch('/api/wallet/topup', {
@@ -1368,6 +1482,11 @@ async function executeQuickTopUp(amount, buttonEl = null) {
 
 async function handleCustomTopUp(e) {
     e.preventDefault();
+    if (isGuest) {
+        alert("Please log in or register an account to add wallet credits.");
+        closeTopUpModal();
+        return showAuthScreen();
+    }
     const amtInput = document.getElementById("topUpAmountInput").value;
     const amount = parseFloat(amtInput);
     if (isNaN(amount) || amount <= 0) return alert("Please enter a valid amount.");
@@ -1492,11 +1611,11 @@ async function loadBotSettings() {
         if (!res.ok) return;
         const data = await res.json();
 
-        if (data.botname) document.getElementById("settingBotName").value = data.botname;
-        if (data.ownername) document.getElementById("settingOwnerName").value = data.ownername;
-        if (data.ownernumber) document.getElementById("settingOwnerNumber").value = data.ownernumber;
-        if (data.prefix) document.getElementById("settingPrefix").value = data.prefix;
-        if (data.mode) document.getElementById("settingMode").value = data.mode;
+        if (data.botname && document.getElementById("settingBotName")) document.getElementById("settingBotName").value = data.botname;
+        if (data.ownername && document.getElementById("settingOwnerName")) document.getElementById("settingOwnerName").value = data.ownername;
+        if (data.ownernumber && document.getElementById("settingOwnerNumber")) document.getElementById("settingOwnerNumber").value = data.ownernumber;
+        if (data.prefix && document.getElementById("settingPrefix")) document.getElementById("settingPrefix").value = data.prefix;
+        if (data.mode && document.getElementById("settingMode")) document.getElementById("settingMode").value = data.mode;
     } catch (err) {
         console.error("Failed to load bot settings:", err);
     }
@@ -1504,6 +1623,10 @@ async function loadBotSettings() {
 
 async function saveBotSettings(e) {
     e.preventDefault();
+    if (isGuest) {
+        alert("Please log in to update bot settings.");
+        return showAuthScreen();
+    }
     const botname = document.getElementById("settingBotName").value;
     const ownername = document.getElementById("settingOwnerName").value;
     const ownernumber = document.getElementById("settingOwnerNumber").value;

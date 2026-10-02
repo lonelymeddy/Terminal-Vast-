@@ -1,27 +1,27 @@
 /* ==========================================================================
-   TERMINAL VAST - APP-STYLE DESIGN SYSTEM (CLEAN WHITE THEME)
+   TERMINAL VAST - APP-STYLE DESIGN SYSTEM (ORANGE THEME)
    ========================================================================== */
 
 :root {
-  /* Main Colors - White/Light App Theme */
-  --bg: #f8fafc;
+  /* Main Colors - Pure White / Orange App Theme */
+  --bg: #ffffff;
   --surface: #ffffff;
-  --surface-2: #f1f5f9;
-  --surface-3: #e2e8f0;
+  --surface-2: #f8f9fa;
+  --surface-3: #e9ecef;
 
-  --text: #0f172a;
-  --text-secondary: #475569;
-  --muted: #64748b;
-  --muted-light: #94a3b8;
+  --text: #111111;
+  --text-secondary: #666666;
+  --muted: #666666;
+  --muted-light: #999999;
 
-  --border: #e2e8f0;
-  --border-strong: #cbd5e1;
+  --border: #e5e5e5;
+  --border-strong: #d0d0d0;
 
-  /* Accent Colors */
-  --primary: #2563eb;
-  --primary-hover: #1d4ed8;
-  --primary-light: #eff6ff;
-  --primary-border: #bfdbfe;
+  /* Accent Colors - Primary & Secondary Orange */
+  --primary: #FF6A00;
+  --primary-hover: #FF8A1F;
+  --primary-light: #fff5ee;
+  --primary-border: #ffd3b6;
 
   --success: #10b981;
   --success-light: #ecfdf5;
@@ -114,6 +114,89 @@ img {
 }
 
 /* ==========================================================================
+   STARTUP FLOW: SPLASH SCREEN & ANIMATED INTRO & AUTH
+   ========================================================================== */
+
+#splashScreen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  transition: opacity 0.5s ease;
+}
+
+.splash-image-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.splash-logo-img {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+
+#introScreen {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  background: #ffffff;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+}
+
+.intro-text {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111111;
+  line-height: 1.5;
+  max-width: 320px;
+  text-align: center;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.intro-text.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+#authScreen {
+  position: fixed;
+  inset: 0;
+  z-index: 9997;
+  background: #ffffff;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.auth-card {
+  width: min(100%, 400px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 32px 24px;
+  box-shadow: var(--shadow-md);
+  text-align: center;
+}
+
+/* ==========================================================================
    APP SHELL LAYOUT
    ========================================================================== */
 
@@ -171,7 +254,7 @@ img {
   justify-content: center;
   font-weight: 800;
   font-size: 16px;
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+  box-shadow: 0 2px 8px rgba(255, 106, 0, 0.3);
 }
 
 .app-brand span {
@@ -442,7 +525,19 @@ img {
 .btn.primary:hover {
   background: var(--primary-hover);
   border-color: var(--primary-hover);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+  box-shadow: 0 4px 12px rgba(255, 106, 0, 0.25);
+}
+
+.btn.secondary-outline {
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+}
+
+.btn.secondary-outline:hover {
+  background: var(--surface-2);
+  border-color: var(--primary);
+  color: var(--primary);
 }
 
 .btn.success {
@@ -499,6 +594,7 @@ img {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  text-align: left;
 }
 
 .form-label {
@@ -686,14 +782,14 @@ select.form-control {
 }
 
 /* ==========================================================================
-   AUTHENTICATION MODAL
+   MODALS
    ========================================================================== */
 
 .modal-overlay {
   position: fixed;
   inset: 0;
   z-index: 2000;
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(17, 17, 17, 0.6);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
