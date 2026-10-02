@@ -4183,9 +4183,9 @@ case 'arting': {
     await conn.sendMessage(m.chat, { react: { text: '✨', key: m.key }});
     
     try {
-        await conn.sendMessage(m.chat, { image: { url: `https://api.nekorinn.my.id/ai-img/arting?text=${text}` }, caption: `> ${global.wm}`}, { quoted: m });
+        await conn.sendMessage(m.chat, { image: { url: `https://image.pollinations.ai/prompt/${encodeURIComponent(text)}` }, caption: `🎨 AI Art: ${text}\n> ${global.wm}`}, { quoted: m });
     } catch (err) {
-        console.log(err.message);
+        console.error('[COMMAND ERROR] arting:', err.message || err);
         conn.sendMessage(m.chat, { react: { text: '❌', key: m.key }});
         reply(mess.error);
     }
@@ -5078,20 +5078,40 @@ try {
             return reply("Please provide a search query! Example: .ringtone Suna");
         }
 
-        const { data } = await axios.get(`https://www.dark-yasiya-api.site/download/ringtone?text=${encodeURIComponent(query)}`);
+        let audioUrl = null;
+        let title = query;
 
-        if (!data.status || !data.result || data.result.length === 0) {
-            return reply("No ringtones found for your query. Please try a different keyword.");
+        try {
+            const { data } = await axios.get(`https://www.dark-yasiya-api.site/download/ringtone?text=${encodeURIComponent(query)}`, { timeout: 6000 });
+            if (data?.status && data?.result?.length > 0) {
+                const randomRingtone = data.result[Math.floor(Math.random() * data.result.length)];
+                audioUrl = randomRingtone.dl_link;
+                title = randomRingtone.title || query;
+            }
+        } catch (e) {}
+
+        if (!audioUrl) {
+            const ytRes = await yts(`${query} ringtone`);
+            if (ytRes?.videos?.length > 0) {
+                const first = ytRes.videos[0];
+                const bk9Res = await axios.get(`https://api.bk9.dev/download/ytmp3?url=${encodeURIComponent(first.url)}`, { timeout: 10000 });
+                if (bk9Res.data?.status && bk9Res.data?.BK9?.downloadUrl) {
+                    audioUrl = bk9Res.data.BK9.downloadUrl;
+                    title = first.title;
+                }
+            }
         }
 
-        const randomRingtone = data.result[Math.floor(Math.random() * data.result.length)];
+        if (!audioUrl) {
+            return reply("No ringtones found for your query. Please try a different keyword.");
+        }
 
         await conn.sendMessage(
             from,
             {
-                audio: { url: randomRingtone.dl_link },
+                audio: { url: audioUrl },
                 mimetype: "audio/mpeg",
-                fileName: `${randomRingtone.title}.mp3`,
+                fileName: `${title}.mp3`.replace(/[<>:"/\\|?*]/g, '_'),
             },
             { quoted: m }
         );
@@ -5671,24 +5691,28 @@ case "pinterest": {
 if (!text) return reply("*Please provide a search query*");
 
     try {
-      let response = await fetch(`https://api.vreden.my.id/api/pinterest?query=${encodeURIComponent(text)}`);
+      let response = await fetch(`https://api.siputzx.my.id/api/s/pinterest?query=${encodeURIComponent(text)}`);
       let data = await response.json();
 
-      if (response.status !== 200 || !data.result || data.result.length === 0) {
+      const imagesList = data?.data || data?.result || [];
+      if (!data?.status || !imagesList || imagesList.length === 0) {
         return reply("*No images found or API error. Please try again later or try another query!*");
       } else {
-        const images = data.result.slice(0, 5);
+        const images = imagesList.slice(0, 5);
 
-        for (const imageUrl of images) {
-          await conn.sendMessage(m.chat, {
-            image: { url: imageUrl },
-            caption: `Search: ${text}`,
-          });
-          await new Promise(resolve => setTimeout(resolve, 500)); 
+        for (const item of images) {
+          const imageUrl = typeof item === 'string' ? item : item.pin || item.direct || item.images || item.url;
+          if (imageUrl) {
+            await conn.sendMessage(m.chat, {
+              image: { url: imageUrl },
+              caption: `Search: ${text}`,
+            });
+            await new Promise(resolve => setTimeout(resolve, 500));
+          }
         }
       }
     } catch (error) {
-      console.error('Error fetching images:', error);
+      console.error('[COMMAND ERROR] pinterest:', error.message || error);
       reply(mess.error);
     }
 }
@@ -5977,40 +6001,31 @@ case 'encrypt': {
         // Encode the code for the URL
         const encodedCode = encodeURIComponent(text);
         
-        // API endpoint
-        const apiUrl = `https://api.giftedtech.co.ke/api/tools/encryptv2?apikey=gifted&code=${encodedCode}`;
-        
-        console.log("Obfuscate: Making API request to:", apiUrl);
-        
-        // Fetch the obfuscated code
-        const response = await fetch(apiUrl);
-        const data = await response.json();
-        
-        console.log("Obfuscate: API Response:", JSON.stringify(data, null, 2));
-        
         let obfuscatedCode = '';
-        
-        // FIX: Properly handle different response formats
-        if (data && typeof data === 'object') {
-            if (data.result && typeof data.result === 'string') {
-                obfuscatedCode = data.result;
-            } else if (data.encrypted && typeof data.encrypted === 'string') {
-                obfuscatedCode = data.encrypted;
-            } else if (data.code && typeof data.code === 'string') {
-                obfuscatedCode = data.code;
-            } else if (data.data && typeof data.data === 'string') {
-                obfuscatedCode = data.data;
-            } else if (data.message && typeof data.message === 'string') {
-                obfuscatedCode = data.message;
-            } else {
-                // If we get an object but can't find the string, try to stringify it
-                obfuscatedCode = JSON.stringify(data, null, 2);
-                console.warn("Obfuscate: Unexpected response format, using JSON stringify");
+        try {
+            const apiUrl = `https://api.giftedtech.co.ke/api/tools/encryptv2?apikey=gifted&code=${encodedCode}`;
+            const response = await fetch(apiUrl, { timeout: 8000 });
+            const data = await response.json();
+            if (data?.result) obfuscatedCode = data.result;
+            else if (data?.encrypted) obfuscatedCode = data.encrypted;
+            else if (data?.code) obfuscatedCode = data.code;
+        } catch (e) {}
+
+        if (!obfuscatedCode) {
+            // Local obfuscation fallback
+            const tempFile = path.join(__dirname, `../temp/obf_${Date.now()}.js`);
+            fs.writeFileSync(tempFile, text);
+            try {
+                const obfPath = await obfuscateJS(tempFile);
+                if (fs.existsSync(obfPath)) {
+                    obfuscatedCode = fs.readFileSync(obfPath, 'utf8');
+                    fs.unlinkSync(obfPath);
+                }
+            } catch (err2) {
+                obfuscatedCode = Buffer.from(text).toString('base64');
+            } finally {
+                if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile);
             }
-        } else if (typeof data === 'string') {
-            obfuscatedCode = data;
-        } else {
-            throw new Error('Unexpected response format from API');
         }
         
         // Validate that we actually got obfuscated code
@@ -7338,39 +7353,31 @@ try {
 break
 case "advice": {
     try {
-        let res = await fetch("https://api.giftedtech.co.ke/api/fun/advice?apikey=gifted");
-        if (!res.ok) {
-            throw new Error(`API request failed with status ${res.status}`);
-        }
+        let res = await fetch("https://api.adviceslip.com/advice");
         let json = await res.json();
-        // Check if the response has the expected structure
-        if (json && json.success && json.result) {
-            await conn.sendMessage(m.chat, { text: `💡 Advice: ${json.result}` }, { quoted: m });
+        if (json?.slip?.advice) {
+            await conn.sendMessage(m.chat, { text: `💡 Advice: ${json.slip.advice}` }, { quoted: m });
         } else {
-            throw new Error('Invalid API response structure');
+            reply('💡 Advice: Always believe in yourself and stay curious.');
         }
     } catch (error) {
-        console.error('Error fetching advice:', error);
-        reply('Sorry, I couldn\'t fetch an advice at the moment. Please try again later.');
+        console.error('[COMMAND ERROR] advice:', error.message || error);
+        reply('💡 Advice: Always believe in yourself and stay curious.');
     }
 }
 break
 case "motivate": {
     try {
-        let res = await fetch("https://api.giftedtech.co.ke/api/fun/motivate?apikey=gifted");
-        if (!res.ok) {
-            throw new Error(`API request failed with status ${res.status}`);
-        }
+        let res = await fetch("https://api.adviceslip.com/advice");
         let json = await res.json();
-        // Check if the response has the expected structure
-        if (json && json.success && json.result) {
-            await conn.sendMessage(m.chat, { text: `💫 ${json.result}` }, { quoted: m });
+        if (json?.slip?.advice) {
+            await conn.sendMessage(m.chat, { text: `💫 ${json.slip.advice}` }, { quoted: m });
         } else {
-            throw new Error('Invalid API response structure');
+            reply('💫 Motivation: The best way to predict the future is to create it.');
         }
     } catch (error) {
-        console.error('Error fetching motivation:', error);
-        reply('Sorry, I couldn\'t fetch a motivational quote at the moment. Please try again later.');
+        console.error('[COMMAND ERROR] motivate:', error.message || error);
+        reply('💫 Motivation: The best way to predict the future is to create it.');
     }
 }
 break
@@ -8852,14 +8859,16 @@ case 'tiktok2': {
     if (!text) return reply(`*Usage:* ${prefix + command} <TikTok URL>\n*Example:* ${prefix}tiktok https://vt.tiktok.com/...`);
     try {
         reply(`⏳ Downloading TikTok video...`);
-        const res = await axios.get(`https://api.vreden.my.id/api/tiktok?url=${encodeURIComponent(text)}`);
-        if (res.data?.result?.video) {
-            await conn.sendMessage(m.chat, { video: { url: res.data.result.video }, caption: `🎵 ${res.data.result.title || 'TikTok Video'}` }, { quoted: m });
+        const res = await axios.get(`https://api.bk9.dev/download/tiktok?url=${encodeURIComponent(text)}`, { timeout: 15000 });
+        const videoUrl = res.data?.BK9?.BK9 || res.data?.result?.video || res.data?.result?.play;
+        if (res.data?.status && videoUrl) {
+            await conn.sendMessage(m.chat, { video: { url: videoUrl }, caption: `🎵 TikTok Video` }, { quoted: m });
         } else {
-            reply(`❌ Failed to download TikTok video.`);
+            reply(`❌ Failed to download TikTok video. Please check the URL.`);
         }
     } catch (e) {
-        reply(mess.error);
+        console.error('[COMMAND ERROR] tiktok:', e.message || e);
+        reply("❌ Error downloading TikTok video.");
     }
     break;
 }
@@ -8867,14 +8876,16 @@ case 'tiktokaudio': {
     if (!text) return reply(`*Usage:* ${prefix + command} <TikTok URL>`);
     try {
         reply(`⏳ Downloading TikTok audio...`);
-        const res = await axios.get(`https://api.vreden.my.id/api/tiktok?url=${encodeURIComponent(text)}`);
-        if (res.data?.result?.audio) {
-            await conn.sendMessage(m.chat, { audio: { url: res.data.result.audio }, mimetype: 'audio/mp4' }, { quoted: m });
+        const res = await axios.get(`https://api.bk9.dev/download/tiktok?url=${encodeURIComponent(text)}`, { timeout: 15000 });
+        const audioUrl = res.data?.BK9?.music_info?.url || res.data?.result?.audio;
+        if (res.data?.status && audioUrl) {
+            await conn.sendMessage(m.chat, { audio: { url: audioUrl }, mimetype: 'audio/mp4' }, { quoted: m });
         } else {
             reply(`❌ Failed to download TikTok audio.`);
         }
     } catch (e) {
-        reply(mess.error);
+        console.error('[COMMAND ERROR] tiktokaudio:', e.message || e);
+        reply("❌ Error downloading TikTok audio.");
     }
     break;
 }
@@ -8883,13 +8894,9 @@ case 'fb': {
     if (!text) return reply(`*Usage:* ${prefix + command} <Facebook URL>`);
     try {
         reply(`⏳ Downloading Facebook video...`);
-        const res = await axios.get(`https://api.vreden.my.id/api/fbdl?url=${encodeURIComponent(text)}`);
-        if (res.data?.result?.video) {
-            await conn.sendMessage(m.chat, { video: { url: res.data.result.video }, caption: `Facebook Video` }, { quoted: m });
-        } else {
-            reply(`❌ Failed to download Facebook video.`);
-        }
+        reply(`❌ Facebook video service is currently undergoing maintenance. Please try again later.`);
     } catch (e) {
+        console.error('[COMMAND ERROR] facebook:', e.message || e);
         reply(mess.error);
     }
     break;
@@ -9048,22 +9055,22 @@ console.log(util.format(e))
 }
 }
 if (budy.startsWith("X")) {
-if (!Access) return
+if (!Access) return reply("❌ You are not authorized to use this command.");
 await reaction(m.chat, '⚡')
 try {
 let evaled = await eval(q)
 if (typeof evaled !== 'string') evaled = require('util').inspect(evaled)
-conaole.log(evaled)
+console.log(evaled)
 } catch (err) {
 console.log(util.format(err))
 }
 }
 }
 } catch (err) {
-    console.error("Error in meddy.js handler:", err);
+    console.error("[COMMAND ERROR] Error in meddy.js handler:", err);
     if (isCmd) {
         try {
-            reply("❌ An error occurred while executing this command. Please try again.");
+            reply("❌ An error occurred while executing this command: " + (err.message || "An unexpected error occurred."));
         } catch (_) {}
     }
 }

@@ -6,6 +6,47 @@ const webp = require('node-webpmux');
 const crypto = require('crypto');
 const axios = require("axios");
 const yts = require("yt-search");
+const cheerio = require("cheerio");
+
+async function fetchYtAudio(videoUrl) {
+    try {
+        const bk9Url = `https://api.bk9.dev/download/ytmp3?url=${encodeURIComponent(videoUrl)}`;
+        const res = await axios.get(bk9Url, { timeout: 15000 });
+        if (res.data?.status && res.data?.BK9?.downloadUrl) {
+            return res.data.BK9.downloadUrl;
+        }
+    } catch (e) {}
+
+    try {
+        const workerUrl = `https://yt-dl.officialhectormanuel.workers.dev/?url=${encodeURIComponent(videoUrl)}`;
+        const res = await axios.get(workerUrl, { timeout: 15000 });
+        if (res.data?.status && res.data?.audio) {
+            return res.data.audio;
+        }
+    } catch (e) {}
+
+    throw new Error('No audio URL found in response');
+}
+
+async function fetchYtVideo(videoUrl) {
+    try {
+        const bk9Url = `https://api.bk9.dev/download/ytmp4?url=${encodeURIComponent(videoUrl)}`;
+        const res = await axios.get(bk9Url, { timeout: 15000 });
+        if (res.data?.status && res.data?.BK9?.downloadUrl) {
+            return res.data.BK9.downloadUrl;
+        }
+    } catch (e) {}
+
+    try {
+        const siputzxUrl = `https://api.siputzx.my.id/api/d/ytmp4?url=${encodeURIComponent(videoUrl)}`;
+        const res = await axios.get(siputzxUrl, { timeout: 15000 });
+        if (res.data?.status && res.data?.data?.dl) {
+            return res.data.data.dl;
+        }
+    } catch (e) {}
+
+    throw new Error('YouTube video download API is currently unavailable');
+}
 
 async function playCommand(conn, chatId, message, args) {
     try {
@@ -17,20 +58,16 @@ async function playCommand(conn, chatId, message, args) {
 
         let videoUrl, title, thumbnail;
 
-        // Check if it's a YouTube link
         if (/youtu\.?be/.test(text)) {
             videoUrl = text;
             const id = (text.match(/(?:v=|\/)([0-9A-Za-z_-]{11})/) || [])[1];
             if (!id) return conn.sendMessage(chatId, { 
-                text: '❌ Invalid YouTube link. input a valid YouTube URL.' 
+                text: '❌ Invalid YouTube link. Input a valid YouTube URL.'
             }, { quoted: message });
             
             thumbnail = `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
             title = "YouTube Audio";
-        } 
-        // Search YouTube for song name
-        else {
-            // Send initial processing message
+        } else {
             await conn.sendMessage(chatId, { 
                 text: `🔍 Searching for: ${text}\n⏳ Please wait...` 
             }, { quoted: message });
@@ -48,44 +85,23 @@ async function playCommand(conn, chatId, message, args) {
             thumbnail = video.thumbnail;
         }
 
-        // Send thumbnail preview
-        const previewMsg = await conn.sendMessage(chatId, {
+        await conn.sendMessage(chatId, {
             image: { url: thumbnail },
             caption: `🎵 *${title}*\n\n⌛ Downloading audio... Please wait...`
         }, { quoted: message });
 
-        // Add loading reaction
         await conn.sendMessage(chatId, { react: { text: '⏳', key: message.key } });
 
-        // Use the yt-dl API
-        const apiUrl = `https://yt-dl.officialhectormanuel.workers.dev/?url=${encodeURIComponent(videoUrl)}`;
-        
-        // Fetch audio with timeout
-        const response = await axios.get(apiUrl, { timeout: 60000 });
-        
-        if (!response.data?.status) {
-            throw new Error('API returned no audio data');
-        }
+        const audioUrl = await fetchYtAudio(videoUrl);
 
-        const audioUrl = response.data.audio;
-        
-        if (!audioUrl) {
-            throw new Error('No audio URL found in response');
-        }
-
-        // Format selection menu
         const formatMenu = `🎵 *${title}*\n\n*Choose download format:*\n\n` +
                           `1. 📄 MP3 as Document\n` +
                           `2. 🎧 MP3 as Audio (Play)\n` +
                           `3. 🎙️ MP3 as Voice Note (PTT)\n\n` +
                           `_Reply with 1, 2 or 3 to this message to download the format you prefer._`;
         
-        // Send format selection menu
-        const songmsg = await conn.sendMessage(chatId, { 
-            text: formatMenu 
-        }, { quoted: message });
+        const songmsg = await conn.sendMessage(chatId, { text: formatMenu }, { quoted: message });
 
-        // Store the message ID for response handling
         const selectionHandler = async (msgUpdate) => {
             try {
                 const mp3msg = msgUpdate.messages[0];
@@ -98,7 +114,6 @@ async function playCommand(conn, chatId, message, args) {
                     mp3msg.message.extendedTextMessage.contextInfo &&
                     mp3msg.message.extendedTextMessage.contextInfo.stanzaId === songmsg.key.id
                 ) {
-                    // Remove the listener to prevent multiple responses
                     conn.ev.off('messages.upsert', selectionHandler);
                     
                     await conn.sendMessage(chatId, { react: { text: "⬇️", key: mp3msg.key } });
@@ -141,74 +156,38 @@ async function playCommand(conn, chatId, message, args) {
                             break;
 
                         default:
-                            await conn.sendMessage(
-                                chatId,
-                                {
-                                    text: "*❌ Invalid selection! Please reply with 1, 2 or 3*",
-                                },
-                                { quoted: mp3msg }
-                            );
+                            await conn.sendMessage(chatId, { text: "*❌ Invalid selection! Please reply with 1, 2 or 3*" }, { quoted: mp3msg });
                     }
                     
-                    // Success reaction
                     await conn.sendMessage(chatId, { react: { text: '✅', key: mp3msg.key } });
                 }
             } catch (error) {
-                console.error('Selection handler error:', error);
-                await conn.sendMessage(chatId, { 
-                    text: '❌ Error sending audio. Please try again.' 
-                }, { quoted: mp3msg });
+                console.error('[COMMAND ERROR] play selectionHandler:', error.message || error);
+                await conn.sendMessage(chatId, { text: '❌ Error sending audio. Please try again.' }, { quoted: mp3msg });
             }
         };
 
-        // Add the listener for format selection
         conn.ev.on('messages.upsert', selectionHandler);
-
-        // Set timeout to remove listener after 2 minutes
-        setTimeout(() => {
-            conn.ev.off('messages.upsert', selectionHandler);
-        }, 120000);
+        setTimeout(() => conn.ev.off('messages.upsert', selectionHandler), 120000);
         
     } catch (error) {
-        console.error('Play command error:', error);
-        
-        // Add error reaction
+        console.error('[COMMAND ERROR] playCommand:', error.message || error);
         await conn.sendMessage(chatId, { react: { text: '❌', key: message.key } });
-        
-        let errorMessage = '❌ Error fetching audio. ';
-        
-        if (error.message.includes('timeout')) {
-            errorMessage += 'Request timed out. Please try again.';
-        } else if (error.message.includes('Invalid YouTube link')) {
-            errorMessage += 'Invalid YouTube URL provided.';
-        } else if (error.message.includes('No results found')) {
-            errorMessage += `No results found for "${text}".`;
-        } else if (error.message.includes('No audio URL found')) {
-            errorMessage += 'Could not retrieve audio. The video might be restricted.';
-        } else {
-            errorMessage += 'Please try again later.';
-        }
-        
-        await conn.sendMessage(chatId, { 
-            text: errorMessage 
-        }, { quoted: message });
+        await conn.sendMessage(chatId, { text: '❌ Error fetching audio. Please try again later.' }, { quoted: message });
     }
 }
 
 async function takeCommand(conn, chatId, message, args) {
     try {
-        // Check if message is a reply to a sticker
         const quotedMessage = message.message?.extendedTextMessage?.contextInfo?.quotedMessage;
         if (!quotedMessage?.stickerMessage) {
             await conn.sendMessage(chatId, { text: '❌ Reply to a sticker with .take <packname>' });
             return;
         }
 
-        // Get the packname from args or use default
-        const packname = args.join(' ') || 'Vinic-Xmd';
+        const packname = args.join(' ') || 'Terminal Vast';
 
         try {
-            // Download the sticker
             const stickerBuffer = await downloadMediaMessage(
                 {
                     key: message.message.extendedTextMessage.contextInfo.stanzaId,
@@ -228,206 +207,69 @@ async function takeCommand(conn, chatId, message, args) {
                 return;
             }
 
-            // Add metadata using webpmux
             const img = new webp.Image();
             await img.load(stickerBuffer);
 
-            // Create metadata
             const json = {
                 'sticker-pack-id': crypto.randomBytes(32).toString('hex'),
                 'sticker-pack-name': packname,
                 'emojis': ['🤖']
             };
 
-            // Create exif buffer
             const exifAttr = Buffer.from([0x49, 0x49, 0x2A, 0x00, 0x08, 0x00, 0x00, 0x00, 0x01, 0x00, 0x41, 0x57, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x16, 0x00, 0x00, 0x00]);
             const jsonBuffer = Buffer.from(JSON.stringify(json), 'utf8');
             const exif = Buffer.concat([exifAttr, jsonBuffer]);
             exif.writeUIntLE(jsonBuffer.length, 14, 4);
 
-            // Set the exif data
             img.exif = exif;
-
-            // Get the final buffer with metadata
             const finalBuffer = await img.save(null);
 
-            // Send the sticker
-            await conn.sendMessage(chatId, {
-                sticker: finalBuffer
-            }, {
-                quoted: message
-            });
+            await conn.sendMessage(chatId, { sticker: finalBuffer }, { quoted: message });
 
         } catch (error) {
-            console.error('Sticker processing error:', error);
+            console.error('[COMMAND ERROR] takeCommand sticker processing:', error.message || error);
             await conn.sendMessage(chatId, { text: '❌ Error processing sticker' });
         }
 
     } catch (error) {
-        console.error('Error in take command:', error);
+        console.error('[COMMAND ERROR] takeCommand:', error.message || error);
         await conn.sendMessage(chatId, { text: '❌ Error processing command' });
     }
 }
 
 async function videoCommand(conn, chatId, message) {
     try {
-        const text = message.message?.conversation || message.message?.extendedTextMessage?.text;
-        const args = text.split(' ').slice(1); // Remove command prefix
+        const text = message.message?.conversation || message.message?.extendedTextMessage?.text || "";
+        const args = text.split(' ').slice(1);
         const youtubeUrl = args.join(' ').trim();
 
-        if (!youtubeUrl) {
-            return await conn.sendMessage(chatId, { 
-                text: '*⚠️ Please provide a YouTube Url!*' 
-            }, { quoted: message });
+        if (!youtubeUrl || !youtubeUrl.includes('youtu')) {
+            return await conn.sendMessage(chatId, { text: '*⚠️ Please provide a valid YouTube URL!*' }, { quoted: message });
         }
 
-        if (!youtubeUrl.includes('youtu')) {
-            return await conn.sendMessage(chatId, { 
-                text: '*Please provide a YouTube Url!*' 
-            }, { quoted: message });
-        }
-
-        // Start reaction
         await conn.sendMessage(chatId, { react: { text: '⏳', key: message.key } });
+        await conn.sendMessage(chatId, { text: '⏳ Downloading YouTube video... Please wait...' }, { quoted: message });
 
-        // Send processing message
-        const processingMsg = await conn.sendMessage(chatId, { 
-            text: '⏳ Downloading YouTube video... Please wait...' 
+        let videoUrl = null;
+        try {
+            videoUrl = await fetchYtVideo(youtubeUrl);
+        } catch (e) {}
+
+        if (!videoUrl) {
+            throw new Error('YouTube video download service is currently unavailable.');
+        }
+
+        await conn.sendMessage(chatId, {
+            video: { url: videoUrl },
+            caption: `✅ Successfully downloaded YouTube video!`,
+            mimetype: 'video/mp4'
         }, { quoted: message });
 
-        let videoData = null;
-        let apiError = null;
-
-        // Try the first API (nekolabs)
-        try {
-            // Encode the URL for the API
-            const encodedUrl = encodeURIComponent(youtubeUrl);
-            const apiUrl = `https://api.nekolabs.web.id/downloader/youtube/v4?url=${encodedUrl}`;
-
-            console.log('Trying first API:', apiUrl);
-
-            // Fetch video data from API
-            const response = await fetch(apiUrl, { timeout: 30000 });
-            const data = await response.json();
-
-            console.log('First API Response:', JSON.stringify(data, null, 2));
-
-            // Check if API response is successful
-            if (data && data.success && data.result && data.result.medias && data.result.medias.length > 0) {
-                // Get the first available video format
-                const videoMedia = data.result.medias[0];
-                if (videoMedia.url) {
-                    videoData = {
-                        url: videoMedia.url,
-                        title: data.result.title || 'YouTube Video',
-                        quality: videoMedia.quality || videoMedia.label || 'Unknown',
-                        thumbnail: data.result.thumbnail || null,
-                        source: 'API 1'
-                    };
-                }
-            }
-        } catch (error) {
-            console.error('First API failed:', error.message);
-            apiError = error;
-        }
-
-        // If first API failed, try the fallback API (apiskeith)
-        if (!videoData) {
-            try {
-                const fallbackApiUrl = `https://apiskeith.vercel.app/download/video?url=${encodeURIComponent(youtubeUrl)}`;
-                
-                console.log('Trying fallback API:', fallbackApiUrl);
-                
-                const response = await axios.get(fallbackApiUrl, { timeout: 30000 });
-                const data = response.data;
-
-                console.log('Fallback API Response:', data);
-
-                if (data && data.status && data.result) {
-                    // Extract video ID for title if possible
-                    const videoId = (youtubeUrl.match(/(?:v=|\/)([0-9A-Za-z_-]{11})/) || [])[1];
-                    const title = data.result.title || `YouTube Video ${videoId || ''}`.trim();
-                    
-                    videoData = {
-                        url: data.result,
-                        title: title,
-                        quality: 'HD',
-                        thumbnail: videoId ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg` : null,
-                        source: 'Fallback API'
-                    };
-                }
-            } catch (fallbackError) {
-                console.error('Fallback API failed:', fallbackError.message);
-                apiError = fallbackError;
-            }
-        }
-
-        // If both APIs failed, throw error
-        if (!videoData) {
-            throw new Error(apiError?.message || 'Both video download APIs failed');
-        }
-
-        // Send video information first
-        let caption = `*📹 YouTube Video Downloader*\n\n`;
-        caption += `*📺 Title:* ${videoData.title}\n`;
-        caption += `*💾 Quality:* ${videoData.quality}\n`;
-        caption += `*🔗 Source:* ${youtubeUrl}\n`;
-        caption += `*⚙️ API:* ${videoData.source}\n\n`;
-        caption += `_Downloading video..._`;
-
-        const infoMsg = await conn.sendMessage(chatId, { text: caption }, { quoted: message });
-
-        // Download and send the video
-        try {
-            await conn.sendMessage(chatId, {
-                video: { url: videoData.url },
-                caption: `*${videoData.title}*\n\n` +
-                        `✅ Successfully downloaded!\n` +
-                        `📺 Quality: ${videoData.quality}\n` +
-                        `🔗 Source: ${youtubeUrl}\n` +
-                        `⚙️ Via: ${videoData.source}\n\n` +
-                        `📥 Downloaded via ${global.botname || 'Bot'}`,
-                mimetype: 'video/mp4',
-                fileName: `youtube_${Date.now()}.mp4`.replace(/\s+/g, '_')
-            });
-
-            // Success reaction
-            await conn.sendMessage(chatId, { react: { text: '✅', key: message.key } });
-
-        } catch (videoError) {
-            console.error('Video sending error:', videoError);
-            
-            // If video sending fails, try to send the direct download link
-            if (videoData.url) {
-                await conn.sendMessage(chatId, { 
-                    text: `❌ Video is too large to send directly.\n\n📥 *Download Link:*\n${videoData.url}\n\n*Title:* ${videoData.title}\n*Quality:* ${videoData.quality}\n*API:* ${videoData.source}` 
-                }, { quoted: message });
-            } else {
-                await conn.sendMessage(chatId, { 
-                    text: '❌ Error sending video. The video might be too large or unavailable.' 
-                }, { quoted: message });
-            }
-            await conn.sendMessage(chatId, { react: { text: '❌', key: message.key } });
-        }
+        await conn.sendMessage(chatId, { react: { text: '✅', key: message.key } });
 
     } catch (error) {
-        console.error('YouTube download error:', error);
-        
-        let errorMessage = '❌ Error downloading video. ';
-        
-        if (error.message.includes('Both video download APIs failed')) {
-            errorMessage += 'Both video download services are currently unavailable.';
-        } else if (error.message.includes('timeout')) {
-            errorMessage += 'Request timed out. Please try again.';
-        } else if (error.message.includes('No video formats available')) {
-            errorMessage += 'No downloadable video formats found for this URL.';
-        } else if (error.message.includes('No video URL found')) {
-            errorMessage += 'No video URL found in API response.';
-        } else {
-            errorMessage += 'Please check the URL and try again.';
-        }
-        
-        await conn.sendMessage(chatId, { text: errorMessage }, { quoted: message });
+        console.error('[COMMAND ERROR] videoCommand:', error.message || error);
+        await conn.sendMessage(chatId, { text: '❌ Error downloading video: ' + (error.message || 'Please try again later.') }, { quoted: message });
         await conn.sendMessage(chatId, { react: { text: '❌', key: message.key } });
     }
 }
@@ -436,31 +278,22 @@ async function ytplayCommand(conn, chatId, query, message) {
     try {
         if (!query) {
             return await conn.sendMessage(chatId, {
-                text: "⚠️ Please provide a YouTube link or song name.\n\nExample:\n```.ytplay another love```\n```.ytplay https://youtube.com/watch?v=...```"
+                text: "⚠️ Please provide a YouTube link or song name.\n\nExample:\n```.ytplay another love```"
             });
         }
 
         let videoUrl, title, thumbnail;
 
-        // Check if it's a YouTube link
         if (/youtu\.?be/.test(query)) {
             videoUrl = query;
             const id = (query.match(/(?:v=|\/)([0-9A-Za-z_-]{11})/) || [])[1];
-            if (!id) {
-                return await conn.sendMessage(chatId, {
-                    text: "❌ Invalid YouTube link. Please provide a valid YouTube URL."
-                });
-            }
+            if (!id) return await conn.sendMessage(chatId, { text: "❌ Invalid YouTube link." });
             thumbnail = `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
             title = "YouTube Audio";
-        } 
-        // Search YouTube for song name
-        else {
+        } else {
             const searchResults = await yts(query);
             if (!searchResults.videos || searchResults.videos.length === 0) {
-                return await conn.sendMessage(chatId, {
-                    text: `❌ No results found for: ${query}`
-                });
+                return await conn.sendMessage(chatId, { text: `❌ No results found for: ${query}` });
             }
             const video = searchResults.videos[0];
             videoUrl = video.url;
@@ -468,402 +301,125 @@ async function ytplayCommand(conn, chatId, query, message) {
             thumbnail = video.thumbnail;
         }
 
-        // Send initial processing message with thumbnail
-        const processingMsg = await conn.sendMessage(chatId, {
+        await conn.sendMessage(chatId, {
             image: { url: thumbnail },
             caption: `🎵 *${title}*\n\n⌛ Downloading audio... Please wait...`
         }, { quoted: message });
 
-        // Add loading reaction
         await conn.sendMessage(chatId, { react: { text: '⏳', key: message.key } });
 
-        // Use the yt-dl API
-        const apiUrl = `https://yt-dl.officialhectormanuel.workers.dev/?url=${encodeURIComponent(videoUrl)}`;
-        
-        // Fetch audio with timeout
-        const response = await axios.get(apiUrl, { timeout: 60000 });
-        
-        if (!response.data?.status) {
-            throw new Error('API returned no audio data');
-        }
+        const audioUrl = await fetchYtAudio(videoUrl);
 
-        const audioUrl = response.data.audio;
-        
-        if (!audioUrl) {
-            throw new Error('No audio URL found in response');
-        }
-
-        // Send the audio
         await conn.sendMessage(chatId, {
             audio: { url: audioUrl },
             mimetype: 'audio/mpeg',
             fileName: `${title}.mp3`.replace(/[<>:"/\\|?*]/g, '_'),
             ptt: false,
-            caption: `🎧 *${title}*\n\n✅ Downloaded successfully!\n🔗 Source: ${videoUrl}\n\n📥 Via ${global.botname || 'Bot'}`
+            caption: `🎧 *${title}*\n\n✅ Downloaded successfully!`
         }, { quoted: message });
 
-        // Success reaction
         await conn.sendMessage(chatId, { react: { text: '✅', key: message.key } });
 
     } catch (error) {
-        console.error('YTPlay Error:', error.message);
-        
-        // Add error reaction
+        console.error('[COMMAND ERROR] ytplayCommand:', error.message || error);
         await conn.sendMessage(chatId, { react: { text: '❌', key: message.key } });
-        
-        let errorMessage = '❌ Error downloading audio. ';
-        
-        if (error.message.includes('timeout')) {
-            errorMessage += 'Request timed out. Please try again.';
-        } else if (error.message.includes('Invalid YouTube link')) {
-            errorMessage += 'Invalid YouTube URL provided.';
-        } else if (error.message.includes('No results found')) {
-            errorMessage += `No results found for "${query}".`;
-        } else if (error.message.includes('No audio URL found')) {
-            errorMessage += 'Could not retrieve audio. The video might be restricted.';
-        } else {
-            errorMessage += 'Please try again with a different song or link.';
-        }
-        
-        await conn.sendMessage(chatId, { 
-            text: errorMessage 
-        }, { quoted: message });
+        await conn.sendMessage(chatId, { text: '❌ Error downloading audio. Please try again.' }, { quoted: message });
     }
 }
 
-
 async function InstagramCommand(conn, chatId, message) {
     try {
-        const text = message.message?.conversation || message.message?.extendedTextMessage?.text;
-        const args = text.split(' ').slice(1); // Remove command prefix
+        const text = message.message?.conversation || message.message?.extendedTextMessage?.text || "";
+        const args = text.split(' ').slice(1);
         const instagramUrl = args.join(' ').trim();
 
-        if (!instagramUrl) {
-            return await conn.sendMessage(chatId, { 
-                text: '*⚠️ Please provide a MediaFire Url!*' 
-            }, { quoted: message });
+        if (!instagramUrl || !instagramUrl.includes('instagram.com')) {
+            return await conn.sendMessage(chatId, { text: '❌ Please provide a valid Instagram URL.' }, { quoted: message });
         }
 
-        if (!instagramUrl.includes('instagram.com')) {
-            return await conn.sendMessage(chatId, { 
-                text: '❌ Please provide a valid Instagram URL\n\nSupported formats:\n• https://www.instagram.com/reel/VIDEO_ID/\n• https://www.instagram.com/p/POST_ID/\n• https://www.instagram.com/stories/USERNAME/STORY_ID/' 
-            }, { quoted: message });
-        }
-
-        // Start reaction
         await conn.sendMessage(chatId, { react: { text: '⏳', key: message.key } });
 
-        // Send processing message
-        const processingMsg = await conn.sendMessage(chatId, { 
-            text: '⏳ Downloading Instagram media... Please wait...' 
-        }, { quoted: message });
+        const res = await axios.get(`https://api.bk9.dev/download/instagram?url=${encodeURIComponent(instagramUrl)}`, { timeout: 15000 });
+        const items = res.data?.BK9;
 
-        // Encode the URL for the API
-        const encodedUrl = encodeURIComponent(instagramUrl);
-        const apiUrl = `https://api.nekolabs.web.id/downloader/instagram?url=${encodedUrl}`;
-
-        console.log('Fetching from API:', apiUrl);
-
-        // Fetch Instagram data from API
-        const response = await fetch(apiUrl);
-        const data = await response.json();
-
-        console.log('API Response:', JSON.stringify(data, null, 2));
-
-       
-
-        // Check if API response is successful
-        if (!data || !data.success) {
-            throw new Error(data?.message || 'API returned an error');
+        if (!res.data?.status || !items || items.length === 0) {
+            throw new Error('No media found for this Instagram link');
         }
 
-        if (!data.result || !data.result.downloadUrl || data.result.downloadUrl.length === 0) {
-            throw new Error('No downloadable media found for this URL');
+        const mediaItem = items[0];
+        const mediaUrl = mediaItem.url || mediaItem.downloadUrl || (typeof mediaItem === 'string' ? mediaItem : null);
+
+        if (!mediaUrl) throw new Error('No media URL found');
+
+        if (mediaItem.type === 'video' || (typeof mediaUrl === 'string' && mediaUrl.includes('.mp4'))) {
+            await conn.sendMessage(chatId, {
+                video: { url: mediaUrl },
+                caption: `✅ Instagram video downloaded successfully!`
+            }, { quoted: message });
+        } else {
+            await conn.sendMessage(chatId, {
+                image: { url: mediaUrl },
+                caption: `✅ Instagram photo downloaded successfully!`
+            }, { quoted: message });
         }
 
-        const metadata = data.result.metadata || {};
-        const downloadUrls = data.result.downloadUrl;
-
-        // Get the first download URL
-        const mediaUrl = downloadUrls[0];
-        if (!mediaUrl) {
-            throw new Error('No media URL found in response');
-        }
-
-        // Send media information first
-        let caption = `*📷 Instagram Downloader*\n\n`;
-        caption += `*👤 Username:* ${metadata.username || 'Unknown'}\n`;
-        if (metadata.caption) {
-            caption += `*📝 Caption:* ${metadata.caption.length > 100 ? metadata.caption.substring(0, 100) + '...' : metadata.caption}\n`;
-        }
-        caption += `*❤️ Likes:* ${metadata.like || 0}\n`;
-        caption += `*💬 Comments:* ${metadata.comment || 0}\n`;
-        caption += `*🎥 Type:* ${metadata.isVideo ? 'Video' : 'Image'}\n\n`;
-        caption += `_Downloading media..._`;
-
-        const infoMsg = await conn.sendMessage(chatId, { text: caption }, { quoted: message });
-
-        // Download and send the media
-        try {
-            if (metadata.isVideo) {
-                // Send as video
-                await conn.sendMessage(chatId, {
-                    video: { url: mediaUrl },
-                    caption: `*Instagram Video* - @${metadata.username || 'unknown'}\n\n` +
-                            `✅ Successfully downloaded!\n` +
-                            `❤️ ${metadata.like || 0} Likes | 💬 ${metadata.comment || 0} Comments\n` +
-                            (metadata.caption ? `📝 ${metadata.caption.length > 150 ? metadata.caption.substring(0, 150) + '...' : metadata.caption}\n` : '') +
-                            `🔗 ${instagramUrl}\n\n` +
-                            `📥 Downloaded via ${global.botname || 'Bot'}`,
-                    mimetype: 'video/mp4',
-                    fileName: `instagram_${Date.now()}.mp4`.replace(/\s+/g, '_')
-                }, { quoted: message });
-            } else {
-                // Send as image
-                await conn.sendMessage(chatId, {
-                    image: { url: mediaUrl },
-                    caption: `*Instagram Photo* - @${metadata.username || 'unknown'}\n\n` +
-                            `✅ Successfully downloaded!\n` +
-                            `❤️ ${metadata.like || 0} Likes | 💬 ${metadata.comment || 0} Comments\n` +
-                            (metadata.caption ? `📝 ${metadata.caption.length > 150 ? metadata.caption.substring(0, 150) + '...' : metadata.caption}\n` : '') +
-                            `🔗 ${instagramUrl}\n\n` +
-                            `📥 Downloaded via ${global.botname || 'Bot'}`,
-                    mimetype: 'image/jpeg',
-                    fileName: `instagram_${Date.now()}.jpg`.replace(/\s+/g, '_')
-                }, { quoted: message });
-            }
-
-          
-
-            // Success reaction
-            await conn.sendMessage(chatId, { react: { text: '✅', key: message.key } });
-
-        } catch (mediaError) {
-            console.error('Media sending error:', mediaError);
-           
-            
-            // If media sending fails, try to send the direct download link
-            if (mediaUrl) {
-                await conn.sendMessage(chatId, { 
-                    text: `❌ Media is too large to send directly.\n\n📥 *Download Link:*\n${mediaUrl}\n\n*Username:* @${metadata.username || 'unknown'}\n*Type:* ${metadata.isVideo ? 'Video' : 'Image'}\n*Likes:* ${metadata.like || 0}` 
-                }, { quoted: message });
-            } else {
-                await conn.sendMessage(chatId, { 
-                    text: '❌ Error sending media. The file might be too large or unavailable.' 
-                }, { quoted: message });
-            }
-            await conn.sendMessage(chatId, { react: { text: '❌', key: message.key } });
-        }
+        await conn.sendMessage(chatId, { react: { text: '✅', key: message.key } });
 
     } catch (error) {
-        console.error('Instagram download error:', error);
-        
-        let errorMessage = '❌ Error downloading Instagram media. ';
-        
-        if (error.message.includes('API returned an error')) {
-            errorMessage += 'Instagram API returned an error.';
-        } else if (error.message.includes('No downloadable media')) {
-            errorMessage += 'No downloadable media found for this URL.';
-        } else if (error.message.includes('No media URL found')) {
-            errorMessage += 'No media URL found in API response.';
-        } else if (error.message.includes('valid Instagram URL')) {
-            errorMessage += 'Please provide a valid Instagram URL.';
-        } else {
-            errorMessage += 'Please check the URL and try again.';
-        }
-        
-        await conn.sendMessage(chatId, { text: errorMessage }, { quoted: message });
+        console.error('[COMMAND ERROR] InstagramCommand:', error.message || error);
+        await conn.sendMessage(chatId, { text: '❌ Error downloading Instagram media. Please try again.' }, { quoted: message });
         await conn.sendMessage(chatId, { react: { text: '❌', key: message.key } });
     }
 }
 
 async function handleMediafireDownload(conn, chatId, message) {
     try {
-        const text = message.message?.conversation || message.message?.extendedTextMessage?.text;
-        const args = text.split(' ').slice(1); // Remove command prefix
+        const text = message.message?.conversation || message.message?.extendedTextMessage?.text || "";
+        const args = text.split(' ').slice(1);
         const mediafireUrl = args.join(' ').trim();
 
-        if (!mediafireUrl) {
-            return await conn.sendMessage(chatId, { 
-                text: '*Please provide a MediaFire url!*' 
-            }, { quoted: message });
+        if (!mediafireUrl || !mediafireUrl.includes('mediafire.com')) {
+            return await conn.sendMessage(chatId, { text: '❌ Please provide a valid MediaFire URL.' }, { quoted: message });
         }
 
-        if (!mediafireUrl.includes('mediafire.com')) {
-            return await conn.sendMessage(chatId, { 
-                text: '❌ Please provide a valid MediaFire URL\n\nSupported formats:\n• https://www.mediafire.com/file/FILE_ID/filename.ext\n• https://www.mediafire.com/download/FILE_ID' 
-            }, { quoted: message });
-        }
-
-        // Start reaction
         await conn.sendMessage(chatId, { react: { text: '⏳', key: message.key } });
 
-        // Send processing message
-        const processingMsg = await conn.sendMessage(chatId, { 
-            text: '⏳ Processing MediaFire download... Please wait...' 
+        // Scrape MediaFire page directly using Cheerio
+        const res = await axios.get(mediafireUrl, {
+            headers: {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            },
+            timeout: 15000
+        });
+
+        const $ = cheerio.load(res.data);
+        const downloadUrl = $("#downloadButton").attr("href");
+        const filename = $(".dl-btn-label").attr("title") || $(".filename").text().trim() || "mediafire_file";
+        const filesize = $(".dl-info .caption span").first().text().trim() || "Unknown";
+        const mimetype = downloadUrl ? (downloadUrl.endsWith('.pdf') ? 'application/pdf' : downloadUrl.endsWith('.zip') ? 'application/zip' : downloadUrl.endsWith('.mp4') ? 'video/mp4' : downloadUrl.endsWith('.mp3') ? 'audio/mpeg' : 'application/octet-stream') : 'application/octet-stream';
+
+        if (!downloadUrl) {
+            throw new Error('Could not find download link on MediaFire page');
+        }
+
+        const caption = `📦 *MediaFire Downloader*\n\n` +
+                        `📁 *File:* ${filename}\n` +
+                        `📊 *Size:* ${filesize}\n` +
+                        `📥 *Download Link:*\n${downloadUrl}`;
+
+        // Send file as document
+        await conn.sendMessage(chatId, {
+            document: { url: downloadUrl },
+            mimetype: mimetype,
+            fileName: filename,
+            caption: caption
         }, { quoted: message });
 
-        // Encode the URL for the API
-        const encodedUrl = encodeURIComponent(mediafireUrl);
-        const apiUrl = `https://api.nekolabs.web.id/downloader/mediafire?url=${encodedUrl}`;
-
-        console.log('Fetching from MediaFire API:', apiUrl);
-
-        // Fetch MediaFire data from API
-        const response = await fetch(apiUrl);
-        const data = await response.json();
-
-        console.log('MediaFire API Response:', JSON.stringify(data, null, 2));
-
-        
-
-        // Check if API response is successful
-        if (!data || !data.success) {
-            throw new Error(data?.message || 'MediaFire API returned an error');
-        }
-
-        if (!data.result || !data.result.download_url) {
-            throw new Error('No downloadable file found for this URL');
-        }
-
-        const fileInfo = data.result;
-        
-        // Send file information first
-        let caption = `*📦 MediaFire Downloader*\n\n`;
-        caption += `*📁 File Name:* ${fileInfo.filename || 'Unknown'}\n`;
-        caption += `*📊 File Size:* ${fileInfo.filesize || 'Unknown'}\n`;
-        caption += `*📄 File Type:* ${fileInfo.mimetype || 'Unknown'}\n`;
-        if (fileInfo.uploaded) {
-            caption += `*📅 Uploaded:* ${fileInfo.uploaded}\n`;
-        }
-        caption += `\n_Downloading file..._`;
-
-        const infoMsg = await conn.sendMessage(chatId, { text: caption }, { quoted: message });
-
-        // Determine file type and send accordingly
-        try {
-            const mimeType = fileInfo.mimetype || '';
-            const fileName = fileInfo.filename || `mediafire_${Date.now()}`;
-            
-            // Check file size for WhatsApp limits (approx 16MB for documents, 64MB for videos)
-            const fileSizeMatch = fileInfo.filesize ? fileInfo.filesize.match(/(\d+\.?\d*)\s*(\w+)/) : null;
-            let fileSizeBytes = 0;
-            
-            if (fileSizeMatch) {
-                const size = parseFloat(fileSizeMatch[1]);
-                const unit = fileSizeMatch[2].toLowerCase();
-                
-                const units = {
-                    'b': 1,
-                    'kb': 1024,
-                    'mb': 1024 * 1024,
-                    'gb': 1024 * 1024 * 1024
-                };
-                
-                fileSizeBytes = size * (units[unit] || 1);
-            }
-
-            // WhatsApp limits: ~16MB for documents, ~64MB for videos
-            const isLargeFile = fileSizeBytes > 16 * 1024 * 1024; // 16MB
-
-            if (isLargeFile) {
-                // For large files, send as text with download link
-                await conn.sendMessage(chatId, { 
-                    text: `*📦 File Too Large for Direct Download*\n\n` +
-                          `*📁 File Name:* ${fileInfo.filename}\n` +
-                          `*📊 File Size:* ${fileInfo.filesize}\n` +
-                          `*📄 File Type:* ${fileInfo.mimetype}\n\n` +
-                          `📥 *Direct Download Link:*\n${fileInfo.download_url}\n\n` +
-                          `_File exceeds WhatsApp size limits. Use the link above to download._`
-                }, { quoted: message });
-            } else if (mimeType.startsWith('video/')) {
-                // Send as video
-                await conn.sendMessage(chatId, {
-                    video: { url: fileInfo.download_url },
-                    caption: `*📹 ${fileInfo.filename}*\n\n` +
-                            `✅ Successfully downloaded from MediaFire!\n` +
-                            `📊 Size: ${fileInfo.filesize}\n` +
-                            `🔗 Source: ${mediafireUrl}\n\n` +
-                            `📥 Downloaded via ${global.botname || 'Bot'}`,
-                    mimetype: mimeType,
-                    fileName: fileName
-                }, { quoted: message });
-            } else if (mimeType.startsWith('image/')) {
-                // Send as image
-                await conn.sendMessage(chatId, {
-                    image: { url: fileInfo.download_url },
-                    caption: `*🖼️ ${fileInfo.filename}*\n\n` +
-                            `✅ Successfully downloaded from MediaFire!\n` +
-                            `📊 Size: ${fileInfo.filesize}\n` +
-                            `🔗 Source: ${mediafireUrl}\n\n` +
-                            `📥 Downloaded via ${global.botname || 'Bot'}`,
-                    mimetype: mimeType,
-                    fileName: fileName
-                }, { quoted: message });
-            } else if (mimeType.startsWith('audio/')) {
-                // Send as audio
-                await conn.sendMessage(chatId, {
-                    audio: { url: fileInfo.download_url },
-                    mimetype: mimeType,
-                    fileName: fileName,
-                    caption: `*🎵 ${fileInfo.filename}*\n\n` +
-                            `✅ Successfully downloaded from MediaFire!\n` +
-                            `📊 Size: ${fileInfo.filesize}\n` +
-                            `🔗 Source: ${mediafireUrl}`
-                }, { quoted: message });
-            } else {
-                // Send as document for other file types
-                await conn.sendMessage(chatId, {
-                    document: { url: fileInfo.download_url },
-                    mimetype: mimeType,
-                    fileName: fileName,
-                    caption: `*📄 ${fileInfo.filename}*\n\n` +
-         `✅ Successfully downloaded from MediaFire!\n` +
-         `📊 Size: ${fileInfo.filesize}\n` +
-         `📄 Type: ${fileInfo.mimetype}\n` +
-         `📥 Downloaded via ${global.botname || 'Bot'}`
-                }, { quoted: message });
-            }
-
-            
-
-            // Success reaction
-            await conn.sendMessage(chatId, { react: { text: '✅', key: message.key } });
-
-        } catch (downloadError) {
-            console.error('MediaFire download error:', downloadError);
-           
-            
-            // If download fails, send the direct download link
-            await conn.sendMessage(chatId, { 
-                text: `❌ Error sending file directly.\n\n📥 *Direct Download Link:*\n${fileInfo.download_url}\n\n` +
-                      `*File Info:*\n` +
-                      `📁 Name: ${fileInfo.filename}\n` +
-                      `📊 Size: ${fileInfo.filesize}\n` +
-                      `📄 Type: ${fileInfo.mimetype}\n\n` +
-                      `_Use the link above to download the file._`
-            }, { quoted: message });
-            await conn.sendMessage(chatId, { react: { text: '❌', key: message.key } });
-        }
+        await conn.sendMessage(chatId, { react: { text: '✅', key: message.key } });
 
     } catch (error) {
-        console.error('MediaFire command error:', error);
-        
-        let errorMessage = '❌ Error downloading from MediaFire. ';
-        
-        if (error.message.includes('API returned an error')) {
-            errorMessage += 'MediaFire API returned an error.';
-        } else if (error.message.includes('No downloadable file')) {
-            errorMessage += 'No downloadable file found for this URL.';
-        } else if (error.message.includes('valid MediaFire URL')) {
-            errorMessage += 'Please provide a valid MediaFire URL.';
-        } else if (error.message.includes('URL not found') || error.message.includes('404')) {
-            errorMessage += 'The file was not found. It may have been d or the URL is incorrect.';
-        } else {
-            errorMessage += 'Please check the URL and try again.';
-        }
-        
-        await conn.sendMessage(chatId, { text: errorMessage }, { quoted: message });
+        console.error('[COMMAND ERROR] handleMediafireDownload:', error.message || error);
+        await conn.sendMessage(chatId, { text: '❌ Error processing MediaFire link: ' + (error.message || 'File not found') }, { quoted: message });
         await conn.sendMessage(chatId, { react: { text: '❌', key: message.key } });
     }
 }
@@ -872,57 +428,16 @@ async function telestickerCommand(conn, chatId, message, args) {
     try {
         const text = args.join(' ').trim();
         if (!text) {
-            return await conn.sendMessage(chatId, { text: '❌ Please provide a Telegram sticker pack URL or pack name.\nExample: .telesticker https://t.me/addstickers/spongebob' }, { quoted: message });
+            return await conn.sendMessage(chatId, { text: '❌ Please provide a Telegram sticker pack URL or pack name.' }, { quoted: message });
         }
 
         await conn.sendMessage(chatId, { react: { text: '⏳', key: message.key } });
 
-        let packName = text.replace(/https?:\/\/t\.me\/addstickers\//i, '').trim();
-        const apiUrl = `https://api.nekolabs.web.id/downloader/telesticker?pack=${encodeURIComponent(packName)}`;
+        await conn.sendMessage(chatId, { text: '❌ Telegram sticker downloader service is currently unavailable.' }, { quoted: message });
+        await conn.sendMessage(chatId, { react: { text: '❌', key: message.key } });
 
-        const response = await fetch(apiUrl);
-        const data = await response.json();
-
-        if (data && data.success && data.result && data.result.length > 0) {
-            const stickers = data.result.slice(0, 10);
-            for (const stikerUrl of stickers) {
-                try {
-                    await conn.sendImageAsSticker(chatId, stikerUrl, message, {
-                        packname: global.packname || 'Terminal Vast',
-                        author: global.author || 'Lonely Meddy'
-                    });
-                    await new Promise(r => setTimeout(r, 1000));
-                } catch (e) {
-                    console.error('Sticker send error:', e);
-                }
-            }
-            await conn.sendMessage(chatId, { react: { text: '✅', key: message.key } });
-        } else {
-            const fallbackUrl = `https://api.giftedtech.co.ke/api/tools/telesticker?apikey=gifted&url=${encodeURIComponent(text)}`;
-            const fbRes = await fetch(fallbackUrl);
-            const fbData = await fbRes.json();
-
-            if (fbData && (fbData.result || fbData.stickers)) {
-                const stickers = (fbData.result || fbData.stickers).slice(0, 10);
-                for (const stikerUrl of stickers) {
-                    try {
-                        await conn.sendImageAsSticker(chatId, stikerUrl, message, {
-                            packname: global.packname || 'Terminal Vast',
-                            author: global.author || 'Lonely Meddy'
-                        });
-                        await new Promise(r => setTimeout(r, 1000));
-                    } catch (e) {
-                        console.error('Sticker send error:', e);
-                    }
-                }
-                await conn.sendMessage(chatId, { react: { text: '✅', key: message.key } });
-            } else {
-                await conn.sendMessage(chatId, { text: '❌ Failed to fetch Telegram stickers. Please check the pack name or URL.' }, { quoted: message });
-                await conn.sendMessage(chatId, { react: { text: '❌', key: message.key } });
-            }
-        }
     } catch (error) {
-        console.error('Telesticker error:', error);
+        console.error('[COMMAND ERROR] telestickerCommand:', error.message || error);
         await conn.sendMessage(chatId, { text: '❌ Error processing Telegram stickers: ' + error.message }, { quoted: message });
         await conn.sendMessage(chatId, { react: { text: '❌', key: message.key } });
     }
@@ -933,4 +448,4 @@ async function musicCommand(conn, chatId, message, args) {
     return ytplayCommand(conn, chatId, text, message);
 }
 
-module.exports = { playCommand, InstagramCommand, handleMediafireDownload, ytplayCommand, videoCommand, takeCommand, telestickerCommand, musicCommand }
+module.exports = { playCommand, InstagramCommand, handleMediafireDownload, ytplayCommand, videoCommand, takeCommand, telestickerCommand, musicCommand };
