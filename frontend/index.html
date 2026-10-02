@@ -15,8 +15,87 @@
 </head>
 <body>
 
+  <!-- ==================== 1. SPLASH SCREEN ==================== -->
+  <div id="splashScreen">
+    <div class="splash-image-container">
+      <img src="/splash.png" alt="Terminal Vast" class="splash-logo-img">
+    </div>
+  </div>
+
+  <!-- ==================== 2. ANIMATED INTRO SCREEN ==================== -->
+  <div id="introScreen">
+    <div id="introText1" class="intro-text">Wanna automate your WhatsApp?</div>
+    <div id="introText2" class="intro-text" style="display: none;">Terminal Vast is here to help.</div>
+  </div>
+
+  <!-- ==================== 3. AUTHENTICATION SCREEN ==================== -->
+  <div id="authScreen">
+    <div class="auth-card">
+      <div style="text-align: center; margin-bottom: 24px;">
+        <h2 class="modal-title" style="font-size: 24px; font-weight: 800;">TERMINAL <span style="color: var(--primary);">VAST</span></h2>
+        <p class="modal-subtitle" id="authScreenSubtitle" style="margin-bottom: 0;">Sign in to your account</p>
+      </div>
+
+      <div id="authAlert" style="display:none; padding: 10px 14px; border-radius: var(--radius-sm); margin-bottom: 16px; font-size: 13px; font-weight: 500;"></div>
+
+      <!-- Login Form -->
+      <form id="loginForm" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label class="form-label" for="loginIdentifier"><i class="fas fa-user"></i> Username or Email</label>
+          <input type="text" id="loginIdentifier" class="form-control" placeholder="e.g. admin or user@terminalvast.bot" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="loginPassword"><i class="fas fa-lock"></i> Password</label>
+          <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" required>
+        </div>
+
+        <button type="submit" class="btn primary full-width lg" style="margin-top: 10px;">
+          <i class="fas fa-sign-in-alt"></i> Login
+        </button>
+
+        <div style="text-align: center; margin-top: 16px; font-size: 13px; color: var(--muted);">
+          Don't have an account? <a href="#" onclick="toggleAuthMode('register'); return false;" style="color: var(--primary); font-weight: 600;">Register here</a>
+        </div>
+      </form>
+
+      <!-- Register Form -->
+      <form id="registerForm" onsubmit="handleRegister(event)" style="display:none;">
+        <div class="form-group">
+          <label class="form-label" for="regUsername"><i class="fas fa-user"></i> Username</label>
+          <input type="text" id="regUsername" class="form-control" placeholder="e.g. meddy" required minlength="3">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="regEmail"><i class="fas fa-envelope"></i> Email Address</label>
+          <input type="email" id="regEmail" class="form-control" placeholder="e.g. user@terminalvast.bot" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="regPassword"><i class="fas fa-lock"></i> Password (min 6 chars)</label>
+          <input type="password" id="regPassword" class="form-control" placeholder="••••••••" required minlength="6">
+        </div>
+
+        <button type="submit" class="btn primary full-width lg" style="margin-top: 10px;">
+          <i class="fas fa-user-plus"></i> Create Account
+        </button>
+
+        <div style="text-align: center; margin-top: 16px; font-size: 13px; color: var(--muted);">
+          Already have an account? <a href="#" onclick="toggleAuthMode('login'); return false;" style="color: var(--primary); font-weight: 600;">Sign in</a>
+        </div>
+      </form>
+
+      <!-- Continue as Guest Option -->
+      <div style="margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--border);">
+        <button type="button" class="btn secondary-outline full-width" onclick="handleContinueAsGuest()">
+          <i class="fas fa-user-clock"></i> Continue as Guest
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- ==================== APPLICATION SHELL ==================== -->
-  <div id="appShell">
+  <div id="appShell" style="display: none;">
 
     <!-- APP HEADER -->
     <header class="app-header">
@@ -88,7 +167,7 @@
         </div>
 
         <!-- Quick Bot Status Summary Banner -->
-        <div class="app-card" style="background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%); border-left: 4px solid var(--primary);">
+        <div class="app-card" style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); border-left: 4px solid var(--primary);">
           <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
             <div>
               <span style="font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 4px;">WHATSAPP ENGINE STATUS</span>
@@ -281,7 +360,7 @@
         </div>
 
         <!-- Main Balance Card -->
-        <div class="app-card" style="text-align: center; padding: 36px 24px; background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);">
+        <div class="app-card" style="text-align: center; padding: 36px 24px; background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);">
           <span class="badge badge-primary" style="margin-bottom: 12px;">Available Wallet Balance</span>
           <div id="dashWalletBalanceDisplay_topupPage" style="font-size: 44px; font-weight: 800; color: var(--text); margin: 8px 0;">$0.00</div>
           <p style="color: var(--muted); font-size: 13.5px; margin-bottom: 24px;">Credit is consumed for automated services and features.</p>
@@ -435,7 +514,7 @@
 
             <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border);">
               <button type="button" class="btn danger full-width sm" onclick="handleLogout()">
-                <i class="fas fa-sign-out-alt"></i> Logout
+                <i class="fas fa-sign-out-alt"></i> Logout / Exit
               </button>
             </div>
           </aside>
@@ -828,67 +907,6 @@
       </a>
     </nav>
 
-  </div>
-
-  <!-- ==================== AUTHENTICATION MODAL ==================== -->
-  <div class="modal-overlay" id="authModal">
-    <div class="modal-card">
-      <button class="modal-close" onclick="closeAuthModal()"><i class="fas fa-times"></i></button>
-
-      <div style="text-align: center; margin-bottom: 20px;">
-        <h2 class="modal-title">TERMINAL <span>VAST</span></h2>
-        <p class="modal-subtitle" id="authModalSubtitle">Sign in to your account</p>
-      </div>
-
-      <div id="authAlert" style="display:none; padding: 10px 14px; border-radius: var(--radius-sm); margin-bottom: 16px; font-size: 13px; font-weight: 500;"></div>
-
-      <!-- Login Form -->
-      <form id="loginForm" onsubmit="handleLogin(event)">
-        <div class="form-group">
-          <label class="form-label" for="loginIdentifier"><i class="fas fa-user"></i> Username or Email</label>
-          <input type="text" id="loginIdentifier" class="form-control" placeholder="e.g. admin or user@terminalvast.bot" required>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="loginPassword"><i class="fas fa-lock"></i> Password</label>
-          <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" required>
-        </div>
-
-        <button type="submit" class="btn primary full-width lg" style="margin-top: 10px;">
-          <i class="fas fa-sign-in-alt"></i> Login
-        </button>
-
-        <div style="text-align: center; margin-top: 16px; font-size: 13px; color: var(--muted);">
-          Don't have an account? <a href="#" onclick="toggleAuthMode('register'); return false;" style="color: var(--primary); font-weight: 600;">Register here</a>
-        </div>
-      </form>
-
-      <!-- Register Form -->
-      <form id="registerForm" onsubmit="handleRegister(event)" style="display:none;">
-        <div class="form-group">
-          <label class="form-label" for="regUsername"><i class="fas fa-user"></i> Username</label>
-          <input type="text" id="regUsername" class="form-control" placeholder="e.g. meddy" required minlength="3">
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="regEmail"><i class="fas fa-envelope"></i> Email Address</label>
-          <input type="email" id="regEmail" class="form-control" placeholder="e.g. user@terminalvast.bot" required>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="regPassword"><i class="fas fa-lock"></i> Password (min 6 chars)</label>
-          <input type="password" id="regPassword" class="form-control" placeholder="••••••••" required minlength="6">
-        </div>
-
-        <button type="submit" class="btn primary full-width lg" style="margin-top: 10px;">
-          <i class="fas fa-user-plus"></i> Create Account
-        </button>
-
-        <div style="text-align: center; margin-top: 16px; font-size: 13px; color: var(--muted);">
-          Already have an account? <a href="#" onclick="toggleAuthMode('login'); return false;" style="color: var(--primary); font-weight: 600;">Sign in</a>
-        </div>
-      </form>
-    </div>
   </div>
 
   <!-- TOP UP CUSTOM MODAL -->
