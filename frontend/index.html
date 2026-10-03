@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#ffffff">
-  <meta name="description" content="Terminal Vast — Clean, modern WhatsApp automation platform.">
+  <meta name="description" content="Terminal Vast — Android WhatsApp Automation Engine.">
   <title>Terminal Vast</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -32,11 +32,11 @@
   <div id="authScreen">
     <div class="auth-card">
       <div style="text-align: center; margin-bottom: 24px;">
-        <h2 class="modal-title" style="font-size: 24px; font-weight: 800;">TERMINAL <span style="color: var(--primary);">VAST</span></h2>
-        <p class="modal-subtitle" id="authScreenSubtitle" style="margin-bottom: 0;">Sign in to your account</p>
+        <h2 class="auth-title">Terminal Vast</h2>
+        <p class="auth-subtitle" id="authScreenSubtitle">Sign in to your account</p>
       </div>
 
-      <div id="authAlert" style="display:none; padding: 10px 14px; border-radius: var(--radius-sm); margin-bottom: 16px; font-size: 13px; font-weight: 500;"></div>
+      <div id="authAlert" style="display:none;" class="auth-alert-box"></div>
 
       <!-- Login Form -->
       <form id="loginForm" onsubmit="handleLogin(event)">
@@ -54,8 +54,8 @@
           <i class="fas fa-sign-in-alt"></i> Login
         </button>
 
-        <div style="text-align: center; margin-top: 16px; font-size: 13px; color: var(--muted);">
-          Don't have an account? <a href="#" onclick="toggleAuthMode('register'); return false;" style="color: var(--primary); font-weight: 600;">Register here</a>
+        <div class="auth-switch-text">
+          Don't have an account? <a href="#" onclick="toggleAuthMode('register'); return false;">Register here</a>
         </div>
       </form>
 
@@ -80,8 +80,8 @@
           <i class="fas fa-user-plus"></i> Create Account
         </button>
 
-        <div style="text-align: center; margin-top: 16px; font-size: 13px; color: var(--muted);">
-          Already have an account? <a href="#" onclick="toggleAuthMode('login'); return false;" style="color: var(--primary); font-weight: 600;">Sign in</a>
+        <div class="auth-switch-text">
+          Already have an account? <a href="#" onclick="toggleAuthMode('login'); return false;">Sign in</a>
         </div>
       </form>
 
@@ -97,835 +97,874 @@
   <!-- ==================== APPLICATION SHELL ==================== -->
   <div id="appShell" style="display: none;">
 
-    <!-- APP HEADER -->
+    <!-- APP NAVBAR HEADER (Terminal Vast + Notification Icon) -->
     <header class="app-header">
       <div class="app-header-inner">
-        <!-- Brand / Logo -->
-        <a href="#" onclick="switchTab('dashboard'); return false;" class="app-brand">
-          <div class="app-brand-logo"><i class="fas fa-bolt"></i></div>
-          <span>TERMINAL VAST</span>
+        <!-- Brand Name ONLY (No logo image, no profile avatar, no hamburger icon) -->
+        <a href="#" onclick="switchTab('dashboard'); return false;" class="app-brand-title">
+          Terminal Vast
         </a>
 
-        <!-- Desktop Primary Navigation (5 Tabs) -->
-        <nav class="desktop-nav" aria-label="Desktop primary navigation">
-          <a href="#" class="nav-tab active" id="deskTabDashboard" onclick="switchTab('dashboard'); return false;">
-            <i class="fas fa-home"></i> Dashboard
-          </a>
-          <a href="#" class="nav-tab" id="deskTabPair" onclick="switchTab('pair'); return false;">
-            <i class="fas fa-link"></i> Pair
-          </a>
-          <a href="#" class="nav-tab" id="deskTabTopup" onclick="switchTab('topup'); return false;">
-            <i class="fas fa-wallet"></i> Top Up
-          </a>
-          <a href="#" class="nav-tab" id="deskTabSettings" onclick="switchTab('settings'); return false;">
-            <i class="fas fa-cog"></i> Settings
-          </a>
-          <a href="#" class="nav-tab" id="deskTabProfile" onclick="switchTab('profile'); return false;">
-            <i class="fas fa-user-circle"></i> Profile
-          </a>
-        </nav>
-
-        <!-- Right Header Controls -->
-        <div class="header-controls">
-          <div class="header-clock" id="liveClockDisplay">
-            <i class="fas fa-clock"></i> <span id="clockValue">00:00:00</span>
-          </div>
-
-          <button type="button" class="header-user-btn" id="topbarProfileAvatar" onclick="switchTab('profile')" title="User Profile">
-            <i class="fas fa-user"></i>
-          </button>
-        </div>
+        <!-- Right Notification Icon -->
+        <button type="button" class="header-icon-btn" onclick="openNotificationsModal()" title="Notifications">
+          <i class="fas fa-bell"></i>
+          <span class="notification-dot" id="headerNotifDot" style="display: none;"></span>
+        </button>
       </div>
     </header>
 
-    <!-- MAIN APP CONTENT AREA -->
+    <!-- MAIN APP CONTENT CONTAINER -->
     <main class="app-main">
 
       <!-- Admin Direct Messages & Warning Banners -->
-      <div id="adminDirectMessagesBanner" style="display: none; margin-bottom: 20px;"></div>
+      <div id="adminDirectMessagesBanner" style="display: none; margin-bottom: 16px;"></div>
 
       <!-- Skeleton Loading State -->
       <div id="dashSkeletonLoading" style="display: none;">
-        <div class="skeleton-box" style="height: 120px; margin-bottom: 20px;"></div>
+        <div class="skeleton-box" style="height: 140px; margin-bottom: 16px;"></div>
         <div class="grid-2">
-          <div class="skeleton-box" style="height: 180px;"></div>
-          <div class="skeleton-box" style="height: 180px;"></div>
+          <div class="skeleton-box" style="height: 100px;"></div>
+          <div class="skeleton-box" style="height: 100px;"></div>
         </div>
       </div>
 
-      <!-- ==================== 1. DASHBOARD PAGE (HOME) ==================== -->
+      <!-- ==================== 1. DASHBOARD PAGE ==================== -->
       <section class="app-page active" id="pageDashboard">
-        <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-          <div>
-            <h1 class="page-title">Home Dashboard</h1>
-            <p class="page-subtitle">Central hub for your WhatsApp automation engine and wallet balance.</p>
+
+        <!-- Greeting Section -->
+        <div class="dash-greeting-block">
+          <h1 class="greeting-title" id="dashGreetingText">Good morning, User</h1>
+          <p class="greeting-subtitle">Your WhatsApp automation is ready.</p>
+        </div>
+
+        <!-- WhatsApp Status Block (Prominent Dark Card) -->
+        <div class="whatsapp-status-card">
+          <div class="wa-status-header">
+            <span class="wa-status-label">WHATSAPP STATUS</span>
+            <span id="botStatusBadge" class="badge badge-neutral">● Disconnected</span>
           </div>
-          <div style="display: flex; gap: 10px;">
-            <button class="btn sm" onclick="loadBotStatus()"><i class="fas fa-sync-alt"></i> Refresh</button>
-            <button class="btn primary sm" onclick="switchTab('pair')"><i class="fas fa-bolt"></i> Pair Device</button>
+
+          <div class="wa-status-body">
+            <div class="wa-phone-number" id="botConnectedPhonesText">+256 XXX XXX XXX</div>
+            <div class="wa-bot-state" id="botUptimeText">Bot is running</div>
+          </div>
+
+          <div class="wa-status-footer">
+            <a href="https://web.whatsapp.com" target="_blank" rel="noopener" class="btn btn-dark-action">
+              <i class="fab fa-whatsapp"></i> Open WhatsApp
+            </a>
           </div>
         </div>
 
-        <!-- Quick Bot Status Summary Banner -->
-        <div class="app-card" style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); border-left: 4px solid var(--primary);">
-          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
-            <div>
-              <span style="font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 4px;">WHATSAPP ENGINE STATUS</span>
-              <div style="display: flex; align-items: center; gap: 12px;">
-                <h2 style="font-size: 20px; font-weight: 800; color: var(--text);">Connection Status:</h2>
-                <span id="botStatusBadge" class="badge badge-neutral" style="font-size: 13px; padding: 6px 14px;">
-                  <span class="badge-dot"></span> <span id="botStatusText">Checking...</span>
-                </span>
-              </div>
-            </div>
-
-            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-              <button class="btn primary" onclick="switchTab('pair')"><i class="fas fa-plus"></i> Connect Number</button>
-              <button class="btn" onclick="switchTab('topup')"><i class="fas fa-wallet"></i> Top Up Balance</button>
-            </div>
-          </div>
-
-          <div style="margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; font-size: 13.5px;">
-            <div>
-              <span style="color: var(--muted); display: block; font-size: 12px;">Connected Phone(s):</span>
-              <strong id="botConnectedPhonesText" style="color: var(--text);">None</strong>
-            </div>
-            <div>
-              <span style="color: var(--muted); display: block; font-size: 12px;">Engine Uptime:</span>
-              <strong id="botUptimeText" style="color: var(--text);">--</strong>
-            </div>
-            <div>
-              <span style="color: var(--muted); display: block; font-size: 12px;">Active Sessions:</span>
-              <strong id="botSessionsCountText" style="color: var(--primary);">0</strong>
-            </div>
-          </div>
-        </div>
-
-        <!-- Dashboard Cards Grid -->
+        <!-- Statistics Blocks (Automation + Messages) -->
         <div class="grid-2">
-          <!-- Card 1: Wallet Balance & Quick Actions -->
-          <div class="app-card">
-            <div class="app-card-header">
-              <div>
-                <h3 class="app-card-title"><i class="fas fa-wallet"></i> Account Wallet</h3>
-                <div class="app-card-subtitle">Your credit balance for automation services</div>
-              </div>
-              <button class="btn sm primary" onclick="switchTab('topup')"><i class="fas fa-plus-circle"></i> Add Funds</button>
+          <div class="stat-card">
+            <div class="stat-icon-wrap">
+              <i class="fas fa-bolt"></i>
             </div>
-
-            <div style="padding: 16px; background: var(--surface-2); border-radius: var(--radius-sm); text-align: center; margin-bottom: 16px;">
-              <span style="font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase;">Available Balance</span>
-              <div id="dashWalletBalanceDisplay" style="font-size: 32px; font-weight: 800; color: var(--text); margin: 4px 0;">$0.00</div>
-              <span style="font-size: 12px; color: var(--success); font-weight: 600;"><i class="fas fa-check-circle"></i> Account Active</span>
-            </div>
-
-            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-              <button class="btn sm" onclick="executeQuickTopUp(10, this)">+$10</button>
-              <button class="btn sm" onclick="executeQuickTopUp(25, this)">+$25</button>
-              <button class="btn sm" onclick="executeQuickTopUp(50, this)">+$50</button>
-              <button class="btn sm primary" onclick="openTopUpModal()">Custom Top Up</button>
+            <div class="stat-content">
+              <div class="stat-value" id="statActiveAutomations">0</div>
+              <div class="stat-label">Active Automations</div>
+              <span class="stat-badge success"><i class="fas fa-check-circle"></i> Running</span>
             </div>
           </div>
 
-          <!-- Card 2: Quick Features & Navigation -->
-          <div class="app-card">
-            <div class="app-card-header">
-              <div>
-                <h3 class="app-card-title"><i class="fas fa-rocket"></i> Quick Actions</h3>
-                <div class="app-card-subtitle">Jump straight to key application tools</div>
-              </div>
+          <div class="stat-card">
+            <div class="stat-icon-wrap">
+              <i class="fas fa-paper-plane"></i>
             </div>
-
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
-              <a href="#" onclick="switchTab('pair'); return false;" class="btn" style="flex-direction: column; height: 80px; text-align: center; justify-content: center; gap: 6px;">
-                <i class="fas fa-link" style="font-size: 20px; color: var(--primary);"></i>
-                <span>Pair WhatsApp</span>
-              </a>
-
-              <a href="#" onclick="switchTab('topup'); return false;" class="btn" style="flex-direction: column; height: 80px; text-align: center; justify-content: center; gap: 6px;">
-                <i class="fas fa-wallet" style="font-size: 20px; color: var(--primary);"></i>
-                <span>Top Up Wallet</span>
-              </a>
-
-              <a href="#" onclick="switchTab('settings'); return false;" class="btn" style="flex-direction: column; height: 80px; text-align: center; justify-content: center; gap: 6px;">
-                <i class="fas fa-cog" style="font-size: 20px; color: var(--primary);"></i>
-                <span>Bot Settings</span>
-              </a>
-
-              <a href="#" onclick="switchTab('profile'); return false;" class="btn" style="flex-direction: column; height: 80px; text-align: center; justify-content: center; gap: 6px;">
-                <i class="fas fa-user-circle" style="font-size: 20px; color: var(--primary);"></i>
-                <span>Profile &amp; Account</span>
-              </a>
+            <div class="stat-content">
+              <div class="stat-value" id="statProcessedMessages">0</div>
+              <div class="stat-label">Processed Messages</div>
+              <span class="stat-badge neutral"><i class="fas fa-sync"></i> Realtime</span>
             </div>
           </div>
         </div>
+
+        <!-- Wallet Balance Block -->
+        <div class="app-card wallet-summary-card">
+          <div class="wallet-summary-header">
+            <div>
+              <div class="card-eyebrow">WALLET BALANCE</div>
+              <div class="wallet-balance-amount" id="dashWalletBalanceDisplay">$0.00</div>
+            </div>
+            <button class="btn primary sm" onclick="switchTab('topup')">
+              <i class="fas fa-plus-circle"></i> Top Up
+            </button>
+          </div>
+        </div>
+
+        <!-- Recent Activity Feed -->
+        <div class="app-card">
+          <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-history"></i> Recent Activity</h3>
+          </div>
+          <div id="dashRecentActivityList" class="activity-feed-list">
+            <div class="empty-feed-text">No recent bot activity recorded yet.</div>
+          </div>
+        </div>
+
+        <!-- Quick Actions Grid -->
+        <div class="app-card">
+          <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-th-large"></i> Quick Actions</h3>
+          </div>
+          <div class="quick-actions-grid">
+            <button class="quick-action-btn" onclick="switchTab('pair')">
+              <i class="fas fa-link"></i>
+              <span>Pair WhatsApp</span>
+            </button>
+            <button class="quick-action-btn" onclick="switchTab('automations')">
+              <i class="fas fa-robot"></i>
+              <span>Manage Bot</span>
+            </button>
+            <button class="quick-action-btn" onclick="openCommandsModal()">
+              <i class="fas fa-terminal"></i>
+              <span>Commands</span>
+            </button>
+            <button class="quick-action-btn" onclick="openSettingsModal()">
+              <i class="fas fa-cog"></i>
+              <span>Settings</span>
+            </button>
+          </div>
+        </div>
+
       </section>
 
       <!-- ==================== 2. PAIR PAGE ==================== -->
       <section class="app-page" id="pagePair">
-        <div class="home-back-bar">
-          <button class="btn sm" onclick="switchTab('dashboard')"><i class="fas fa-arrow-left"></i> Home</button>
-          <span style="font-size: 13px; color: var(--muted); font-weight: 600;">Pairing Module</span>
+        <div class="page-header-simple">
+          <h1 class="page-title">Pair WhatsApp</h1>
+          <p class="page-subtitle">Connect your WhatsApp phone number using secure 8-digit pairing code.</p>
         </div>
 
-        <div class="page-header">
-          <h1 class="page-title">Connect WhatsApp Number</h1>
-          <p class="page-subtitle">Generate an 8-digit pair code to securely link your WhatsApp account.</p>
-        </div>
-
-        <div class="grid-2">
-          <!-- Card 1: Pair Code Linker Form -->
-          <div class="app-card">
-            <h3 class="app-card-title"><i class="fas fa-key"></i> Request Pair Code</h3>
-            <p style="color: var(--muted); font-size: 13.5px; margin-bottom: 18px;">Enter your WhatsApp number including country code (without + or spaces).</p>
-
-            <form onsubmit="handlePairRequest(event)">
-              <div class="form-group">
-                <label class="form-label" for="dashPhoneInput"><i class="fas fa-phone-alt"></i> WhatsApp Phone Number</label>
-                <input type="tel" id="dashPhoneInput" class="form-control" placeholder="e.g. 256702662846" required>
-              </div>
-
-              <button type="submit" id="dashPairSubmitBtn" class="btn primary full-width lg">
-                <i class="fas fa-bolt"></i> Generate Pairing Code
-              </button>
-            </form>
-
-            <div id="dashPairResultBox" style="display: none; margin-top: 20px; padding: 20px; background: var(--primary-light); border: 1px solid var(--primary-border); border-radius: var(--radius); text-align: center;">
-              <span style="font-size: 12px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 6px;">YOUR PAIR CODE</span>
-              <div id="dashPairCodeDisplay" style="font-family: monospace; font-size: 32px; font-weight: 800; color: var(--text); letter-spacing: 6px; margin-bottom: 10px;">--------</div>
-              <p style="font-size: 12.5px; color: var(--muted);">Open WhatsApp on your phone &gt; Linked Devices &gt; Link with phone number instead</p>
+        <!-- Connection Status Summary -->
+        <div class="app-card">
+          <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-signal"></i> Connection Status</h3>
+            <span id="pairStatusBadge" class="badge badge-neutral">DISCONNECTED</span>
+          </div>
+          <div class="pair-info-grid">
+            <div>
+              <span class="info-label">Linked Number:</span>
+              <strong id="pairLinkedPhoneDisplay" class="info-val">None</strong>
+            </div>
+            <div>
+              <span class="info-label">Active Sessions:</span>
+              <strong id="connectSessionsCount" class="info-val text-primary">0</strong>
             </div>
           </div>
+        </div>
 
-          <!-- Card 2: Engine & Session Controls -->
-          <div class="app-card">
-            <h3 class="app-card-title"><i class="fas fa-microchip"></i> Engine &amp; Sessions Control</h3>
-            <p style="color: var(--muted); font-size: 13.5px; margin-bottom: 18px;">Manage active WhatsApp engine instances and connected numbers.</p>
+        <!-- Pair Code Generator Block -->
+        <div class="app-card">
+          <h3 class="card-title" style="margin-bottom: 6px;"><i class="fas fa-key"></i> Connect / Pair Account</h3>
+          <p style="color: var(--muted); font-size: 13px; margin-bottom: 16px;">Enter phone number with country code (e.g. 256702662846)</p>
 
-            <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
-              <div style="display: flex; justify-content: space-between; font-size: 13.5px;">
-                <span style="color: var(--muted);">System Platform:</span>
-                <strong id="connectPlatform">Ubuntu / Node.js</strong>
-              </div>
-              <div style="display: flex; justify-content: space-between; font-size: 13.5px;">
-                <span style="color: var(--muted);">Active Connected Sessions:</span>
-                <strong id="connectSessionsCount" style="color: var(--primary);">0</strong>
-              </div>
+          <form onsubmit="handlePairRequest(event)">
+            <div class="form-group">
+              <label class="form-label" for="dashPhoneInput"><i class="fas fa-phone-alt"></i> Phone Number</label>
+              <input type="tel" id="dashPhoneInput" class="form-control" placeholder="256702662846" required>
             </div>
 
-            <div id="activeSessionsList" style="margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px;">
-              <!-- Dynamically populated session items -->
+            <div style="display: flex; gap: 10px;">
+              <button type="submit" id="dashPairSubmitBtn" class="btn primary full-width lg">
+                <i class="fas fa-bolt"></i> Generate Pair Code
+              </button>
             </div>
+          </form>
 
-            <button type="button" id="restartEngineBtn" class="btn danger full-width" onclick="handleRestartEngine()">
-              <i class="fas fa-redo-alt"></i> Restart WhatsApp Bot Engine
+          <div id="dashPairResultBox" class="pair-result-container" style="display: none;">
+            <span class="pair-code-label">YOUR PAIRING CODE</span>
+            <div id="dashPairCodeDisplay" class="pair-code-text">--------</div>
+            <p class="pair-code-instructions">Open WhatsApp &gt; Linked Devices &gt; Link with Phone Number Instead</p>
+          </div>
+        </div>
+
+        <!-- Active Sessions & Control -->
+        <div class="app-card">
+          <h3 class="card-title" style="margin-bottom: 14px;"><i class="fas fa-microchip"></i> Active Sessions</h3>
+          <div id="activeSessionsList" class="stack-list">
+            <span style="color: var(--muted); font-size: 13px;">No connected sessions.</span>
+          </div>
+
+          <div style="margin-top: 18px; display: flex; gap: 10px;">
+            <button type="button" id="restartEngineBtn" class="btn danger full-width sm" onclick="handleRestartEngine()">
+              <i class="fas fa-redo-alt"></i> Reconnect / Restart Bot
             </button>
           </div>
+        </div>
 
-          <!-- Card 3: Sudo Users Management -->
-          <div class="app-card" style="grid-column: 1 / -1;">
-            <h3 class="app-card-title"><i class="fas fa-user-shield"></i> Sudo Users Permissions</h3>
-            <p style="color: var(--muted); font-size: 13.5px; margin-bottom: 18px;">Grant administrative control to secondary WhatsApp numbers.</p>
+        <!-- Sudo Permissions Block -->
+        <div class="app-card">
+          <h3 class="card-title" style="margin-bottom: 6px;"><i class="fas fa-user-shield"></i> Sudo Users Permissions</h3>
+          <p style="color: var(--muted); font-size: 13px; margin-bottom: 14px;">Grant admin bot control to secondary numbers.</p>
 
-            <form onsubmit="handleAddSudo(event)" style="margin-bottom: 20px;">
-              <div class="form-group">
-                <label class="form-label" for="sudoPhoneInput"><i class="fas fa-plus-circle"></i> Add Sudo Phone Number</label>
-                <div style="display: flex; gap: 10px;">
-                  <input type="tel" id="sudoPhoneInput" class="form-control" placeholder="256702662846" required>
-                  <button type="submit" id="addSudoBtn" class="btn primary" style="white-space: nowrap;">
-                    <i class="fas fa-plus"></i> Add Sudo
-                  </button>
-                </div>
+          <form onsubmit="handleAddSudo(event)" style="margin-bottom: 14px;">
+            <div class="form-group">
+              <div style="display: flex; gap: 8px;">
+                <input type="tel" id="sudoPhoneInput" class="form-control" placeholder="256702662846" required>
+                <button type="submit" id="addSudoBtn" class="btn primary sm" style="white-space: nowrap;">Add Sudo</button>
               </div>
-            </form>
-
-            <div style="font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">Configured Sudo Users:</div>
-            <div id="sudoUsersList" style="display: flex; flex-direction: column; gap: 8px;">
-              <span style="color: var(--muted); font-size: 13px; italic;">Loading sudo users...</span>
             </div>
+          </form>
+
+          <div id="sudoUsersList" class="stack-list">
+            <span style="color: var(--muted); font-size: 13px;">Loading sudo users...</span>
           </div>
         </div>
+
       </section>
 
       <!-- ==================== 3. TOP UP PAGE ==================== -->
       <section class="app-page" id="pageTopup">
-        <div class="home-back-bar">
-          <button class="btn sm" onclick="switchTab('dashboard')"><i class="fas fa-arrow-left"></i> Home</button>
-          <span style="font-size: 13px; color: var(--muted); font-weight: 600;">Wallet Top Up</span>
-        </div>
-
-        <div class="page-header">
+        <div class="page-header-simple">
           <h1 class="page-title">Top Up Wallet</h1>
-          <p class="page-subtitle">Add funds to your Terminal Vast account balance instantly.</p>
+          <p class="page-subtitle">Instant credit addition to your Terminal Vast balance.</p>
         </div>
 
         <!-- Main Balance Card -->
-        <div class="app-card" style="text-align: center; padding: 36px 24px; background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);">
-          <span class="badge badge-primary" style="margin-bottom: 12px;">Available Wallet Balance</span>
-          <div id="dashWalletBalanceDisplay_topupPage" style="font-size: 44px; font-weight: 800; color: var(--text); margin: 8px 0;">$0.00</div>
-          <p style="color: var(--muted); font-size: 13.5px; margin-bottom: 24px;">Credit is consumed for automated services and features.</p>
-
-          <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
-            <button class="btn lg primary" onclick="openTopUpModal()"><i class="fas fa-plus-circle"></i> Add Custom Amount</button>
-          </div>
+        <div class="app-card topup-balance-card">
+          <span class="card-eyebrow">CURRENT WALLET BALANCE</span>
+          <div id="dashWalletBalanceDisplay_topupPage" class="topup-amount-big">$0.00</div>
+          <p style="color: var(--muted); font-size: 13px;">Credits enable automated features &amp; message processing.</p>
         </div>
 
-        <!-- Quick Top Up Presets -->
+        <!-- Quick Preset Amounts Block ($5, $10, $20, $50) -->
         <div class="app-card">
-          <h3 class="app-card-title"><i class="fas fa-bolt"></i> Quick Preset Top Up</h3>
-          <p style="color: var(--muted); font-size: 13.5px; margin-bottom: 18px;">Choose a preset credit amount to add immediately to your wallet.</p>
+          <h3 class="card-title" style="margin-bottom: 14px;"><i class="fas fa-bolt"></i> Quick Preset Top Up</h3>
 
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px;">
-            <div style="padding: 20px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius); text-align: center;">
-              <div style="font-size: 24px; font-weight: 800; color: var(--text);">$10.00</div>
-              <div style="font-size: 12px; color: var(--muted); margin: 6px 0 14px;">Starter Pack</div>
-              <button class="btn primary full-width sm" onclick="executeQuickTopUp(10, this)">Top Up $10</button>
+          <div class="topup-presets-grid">
+            <div class="preset-block" onclick="executeQuickTopUp(5, this)">
+              <div class="preset-amount">$5</div>
+              <div class="preset-tag">Basic</div>
+            </div>
+            <div class="preset-block" onclick="executeQuickTopUp(10, this)">
+              <div class="preset-amount">$10</div>
+              <div class="preset-tag">Standard</div>
+            </div>
+            <div class="preset-block" onclick="executeQuickTopUp(20, this)">
+              <div class="preset-amount">$20</div>
+              <div class="preset-tag">Pro</div>
+            </div>
+            <div class="preset-block" onclick="executeQuickTopUp(50, this)">
+              <div class="preset-amount">$50</div>
+              <div class="preset-tag">Enterprise</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Custom Amount Section -->
+        <div class="app-card">
+          <h3 class="card-title" style="margin-bottom: 14px;"><i class="fas fa-edit"></i> Custom Amount</h3>
+
+          <form onsubmit="handleCustomTopUp(event)">
+            <div class="form-group">
+              <label class="form-label" for="topUpAmountInput"><i class="fas fa-dollar-sign"></i> Amount ($)</label>
+              <input type="number" id="topUpAmountInput" class="form-control" min="1" step="0.01" placeholder="25.00" required>
             </div>
 
-            <div style="padding: 20px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius); text-align: center;">
-              <div style="font-size: 24px; font-weight: 800; color: var(--text);">$25.00</div>
-              <div style="font-size: 12px; color: var(--muted); margin: 6px 0 14px;">Pro Value Pack</div>
-              <button class="btn primary full-width sm" onclick="executeQuickTopUp(25, this)">Top Up $25</button>
-            </div>
+            <button type="submit" class="btn primary full-width lg">
+              <i class="fas fa-credit-card"></i> Pay &amp; Top Up Now
+            </button>
+          </form>
+        </div>
 
-            <div style="padding: 20px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius); text-align: center;">
-              <div style="font-size: 24px; font-weight: 800; color: var(--text);">$50.00</div>
-              <div style="font-size: 12px; color: var(--muted); margin: 6px 0 14px;">Enterprise Pack</div>
-              <button class="btn primary full-width sm" onclick="executeQuickTopUp(50, this)">Top Up $50</button>
-            </div>
+        <!-- Transaction History -->
+        <div class="app-card">
+          <h3 class="card-title" style="margin-bottom: 14px;"><i class="fas fa-history"></i> Top Up History</h3>
+          <div id="topupHistoryList" class="stack-list">
+            <span style="color: var(--muted); font-size: 13px;">No top up transactions recorded yet.</span>
           </div>
         </div>
       </section>
 
-      <!-- ==================== 4. SETTINGS PAGE ==================== -->
-      <section class="app-page" id="pageSettings">
-        <div class="home-back-bar">
-          <button class="btn sm" onclick="switchTab('dashboard')"><i class="fas fa-arrow-left"></i> Home</button>
-          <span style="font-size: 13px; color: var(--muted); font-weight: 600;">Application Settings</span>
+      <!-- ==================== 4. AUTOMATIONS PAGE ==================== -->
+      <section class="app-page" id="pageAutomations">
+        <div class="page-header-simple">
+          <h1 class="page-title">Automations</h1>
+          <p class="page-subtitle">Enable and configure real WhatsApp bot automation modules.</p>
         </div>
 
-        <div class="page-header">
-          <h1 class="page-title">Bot Settings</h1>
-          <p class="page-subtitle">Configure bot identity, prefix, command parameters and owner credentials.</p>
-        </div>
+        <div class="automations-list" id="automationsListContainer">
 
-        <form id="botSettingsForm" onsubmit="saveBotSettings(event)">
-          <div class="grid-2">
-
-            <!-- Card 1: General Identity Settings -->
-            <div class="app-card">
-              <h3 class="app-card-title"><i class="fas fa-robot"></i> General Identity</h3>
-              <p style="color: var(--muted); font-size: 13.5px; margin-bottom: 18px;">Customize display name, trigger prefix and operational visibility.</p>
-
-              <div class="form-group">
-                <label class="form-label" for="settingBotName"><i class="fas fa-signature"></i> Bot Display Name</label>
-                <input type="text" id="settingBotName" class="form-control" placeholder="Terminal Vast" required>
+          <!-- Auto Reply (AI Chat) -->
+          <div class="app-card automation-card">
+            <div class="automation-header">
+              <div class="automation-icon-box"><i class="fas fa-robot"></i></div>
+              <div class="automation-info">
+                <h3 class="automation-title">Auto Reply / AI Chat</h3>
+                <p class="automation-desc">Automated intelligent AI responses to incoming messages.</p>
               </div>
-
-              <div class="form-group">
-                <label class="form-label" for="settingPrefix"><i class="fas fa-terminal"></i> Command Prefix</label>
-                <input type="text" id="settingPrefix" class="form-control" placeholder="." required>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label" for="settingMode"><i class="fas fa-eye"></i> Bot Visibility Mode</label>
-                <select id="settingMode" class="form-control">
-                  <option value="public">Public (Responds to all users)</option>
-                  <option value="private">Private (Responds to owner only)</option>
-                </select>
-              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="autoToggleAiChat" onchange="toggleAutomation('aiChat', this.checked)">
+                <span class="toggle-slider"></span>
+              </label>
             </div>
-
-            <!-- Card 2: Owner Contact Details -->
-            <div class="app-card">
-              <h3 class="app-card-title"><i class="fas fa-user-shield"></i> Owner Credentials</h3>
-              <p style="color: var(--muted); font-size: 13.5px; margin-bottom: 18px;">Configure primary administrator contact details.</p>
-
-              <div class="form-group">
-                <label class="form-label" for="settingOwnerName"><i class="fas fa-id-badge"></i> Owner Display Name</label>
-                <input type="text" id="settingOwnerName" class="form-control" placeholder="Meddy" required>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label" for="settingOwnerNumber"><i class="fas fa-phone"></i> Primary Owner Number</label>
-                <input type="tel" id="settingOwnerNumber" class="form-control" placeholder="256702662846" required>
-              </div>
-
-              <div style="margin-top: 24px;">
-                <button type="submit" id="saveBotSettingsBtn" class="btn primary lg full-width">
-                  <i class="fas fa-save"></i> Save Settings
-                </button>
-              </div>
-            </div>
-
           </div>
-        </form>
+
+          <!-- Welcome Messages -->
+          <div class="app-card automation-card">
+            <div class="automation-header">
+              <div class="automation-icon-box"><i class="fas fa-door-open"></i></div>
+              <div class="automation-info">
+                <h3 class="automation-title">Welcome Messages</h3>
+                <p class="automation-desc">Greeting card and welcome text when new participants join groups.</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="autoToggleWelcome" onchange="toggleAutomation('welcome', this.checked)">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Auto Read -->
+          <div class="app-card automation-card">
+            <div class="automation-header">
+              <div class="automation-icon-box"><i class="fas fa-check-double"></i></div>
+              <div class="automation-info">
+                <h3 class="automation-title">Auto Read Messages</h3>
+                <p class="automation-desc">Automatically mark received messages as read in real time.</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="autoToggleAutoRead" onchange="toggleAutomation('autoRead', this.checked)">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Auto View Status -->
+          <div class="app-card automation-card">
+            <div class="automation-header">
+              <div class="automation-icon-box"><i class="fas fa-eye"></i></div>
+              <div class="automation-info">
+                <h3 class="automation-title">Status Automation</h3>
+                <p class="automation-desc">Automatically view contacts' WhatsApp status updates.</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="autoToggleAutoViewStatus" onchange="toggleAutomation('autoViewStatus', this.checked)">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Auto React -->
+          <div class="app-card automation-card">
+            <div class="automation-header">
+              <div class="automation-icon-box"><i class="fas fa-grin-beam"></i></div>
+              <div class="automation-info">
+                <h3 class="automation-title">Auto React</h3>
+                <p class="automation-desc">React with emojis automatically to incoming chats and status updates.</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="autoToggleAutoReact" onchange="toggleAutomation('autoReact', this.checked)">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Anti Call -->
+          <div class="app-card automation-card">
+            <div class="automation-header">
+              <div class="automation-icon-box"><i class="fas fa-phone-slash"></i></div>
+              <div class="automation-info">
+                <h3 class="automation-title">Anti Call Protection</h3>
+                <p class="automation-desc">Reject or block unexpected WhatsApp voice and video calls.</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="autoToggleAntiCall" onchange="toggleAutomation('antiCall', this.checked ? 'decline' : 'off')">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Anti Delete -->
+          <div class="app-card automation-card">
+            <div class="automation-header">
+              <div class="automation-icon-box"><i class="fas fa-trash-restore"></i></div>
+              <div class="automation-info">
+                <h3 class="automation-title">Anti Delete Recovery</h3>
+                <p class="automation-desc">Retain deleted messages and media sent by contacts.</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="autoToggleAntiDelete" onchange="toggleAutomation('antiDelete', this.checked)">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+        </div>
       </section>
 
-      <!-- ==================== 5. PROFILE PAGE (HAS DEDICATED SIDEBAR) ==================== -->
+      <!-- ==================== 5. PROFILE PAGE (CONTAINS HAMBURGER SIDEBAR DRAWER) ==================== -->
       <section class="app-page" id="pageProfile">
-        <div class="home-back-bar">
-          <button class="btn sm" onclick="switchTab('dashboard')"><i class="fas fa-arrow-left"></i> Home</button>
-          <span style="font-size: 13px; color: var(--muted); font-weight: 600;">Profile Section</span>
+
+        <!-- Profile Header with Hamburger Drawer Trigger -->
+        <div class="profile-header-bar">
+          <div class="page-header-simple" style="margin-bottom: 0;">
+            <h1 class="page-title">Profile</h1>
+            <p class="page-subtitle">Account credentials &amp; sidebar settings.</p>
+          </div>
+
+          <!-- Hamburger Button inside Profile Page ONLY -->
+          <button type="button" class="profile-drawer-toggle" onclick="toggleProfileDrawer()" title="Open Profile Sidebar">
+            <i class="fas fa-bars"></i>
+          </button>
         </div>
 
-        <div class="page-header">
-          <h1 class="page-title">User Profile &amp; Account</h1>
-          <p class="page-subtitle">Manage personal account details, credentials, picture studio, history, and admin settings.</p>
+        <!-- Profile Hero Card -->
+        <div class="app-card profile-hero-card">
+          <div class="profile-avatar-wrapper" id="profileBigAvatar">U</div>
+          <div class="profile-hero-details">
+            <h2 id="profileUsernameDisplay" class="profile-hero-name">User</h2>
+            <div class="profile-hero-meta">
+              <span id="profileRoleBadge" class="badge badge-primary">USER</span>
+              <span id="profileEmailDisplay" style="color: var(--muted); font-size: 13px;">user@terminalvast.bot</span>
+            </div>
+          </div>
         </div>
 
-        <!-- PROFILE DEDICATED SIDEBAR LAYOUT -->
-        <div class="profile-layout">
+        <!-- PROFILE DRAWER OVERLAY & SIDEBAR -->
+        <div class="profile-drawer-overlay" id="profileDrawerOverlay" onclick="closeProfileDrawer()"></div>
+        <aside class="profile-sidebar-drawer" id="profileSidebarDrawer">
+          <div class="drawer-header">
+            <h3>Menu &amp; Settings</h3>
+            <button class="drawer-close-btn" onclick="closeProfileDrawer()"><i class="fas fa-times"></i></button>
+          </div>
 
-          <!-- PROFILE SIDEBAR -->
-          <aside class="profile-sidebar" aria-label="Profile navigation">
-            <div class="profile-nav-header">Account Options</div>
-
-            <a href="#" class="profile-nav-link active" id="pSubNavOverview" onclick="switchProfileSubpage('overview'); return false;">
-              <i class="fas fa-user"></i> Account Overview
+          <nav class="drawer-nav">
+            <a href="#" class="drawer-link active" onclick="switchProfileSection('overview'); closeProfileDrawer(); return false;">
+              <i class="fas fa-user"></i> Overview
             </a>
-
-            <a href="#" class="profile-nav-link" id="pSubNavEdit" onclick="switchProfileSubpage('edit'); return false;">
-              <i class="fas fa-user-edit"></i> Edit Details
+            <a href="#" class="drawer-link" onclick="openSettingsModal(); closeProfileDrawer(); return false;">
+              <i class="fas fa-cog"></i> Settings
             </a>
-
-            <a href="#" class="profile-nav-link" id="pSubNavAvatar" onclick="switchProfileSubpage('avatar'); return false;">
-              <i class="fas fa-camera"></i> Profile Picture Studio
+            <a href="#" class="drawer-link" onclick="openCommandsModal(); closeProfileDrawer(); return false;">
+              <i class="fas fa-terminal"></i> Commands
             </a>
-
-            <a href="#" class="profile-nav-link" id="pSubNavSecurity" onclick="switchProfileSubpage('security'); return false;">
+            <a href="#" class="drawer-link" onclick="switchProfileSection('avatar'); closeProfileDrawer(); return false;">
+              <i class="fas fa-camera"></i> Profile Studio
+            </a>
+            <a href="#" class="drawer-link" onclick="switchProfileSection('security'); closeProfileDrawer(); return false;">
               <i class="fas fa-lock"></i> Security &amp; Password
             </a>
-
-            <div class="profile-nav-header">Activity &amp; Community</div>
-
-            <a href="#" class="profile-nav-link" id="pSubNavHistory" onclick="switchProfileSubpage('history'); return false;">
-              <i class="fas fa-history"></i> Account History
+            <a href="#" class="drawer-link" onclick="switchProfileSection('history'); closeProfileDrawer(); return false;">
+              <i class="fas fa-history"></i> Activity Logs
             </a>
-
-            <a href="#" class="profile-nav-link" id="pSubNavBlog" onclick="switchProfileSubpage('blog'); return false;">
+            <a href="#" class="drawer-link" onclick="switchProfileSection('blog'); closeProfileDrawer(); return false;">
               <i class="fas fa-newspaper"></i> Platform Blog
             </a>
-
-            <!-- Admin Section Link in Profile Sidebar -->
-            <a href="#" class="profile-nav-link" id="pSubNavAdmin" onclick="switchProfileSubpage('admin'); return false;" style="display: none; color: var(--primary); font-weight: 700;">
-              <i class="fas fa-user-shield"></i> Admin Control Center
+            <a href="#" class="drawer-link" id="pSubNavAdmin" onclick="switchProfileSection('admin'); closeProfileDrawer(); return false;" style="display: none; color: var(--primary);">
+              <i class="fas fa-user-shield"></i> Admin Panel
+            </a>
+            <a href="#" class="drawer-link" onclick="openNotificationsModal(); closeProfileDrawer(); return false;">
+              <i class="fas fa-bell"></i> Notifications
+            </a>
+            <a href="#" class="drawer-link" onclick="openHelpModal(); closeProfileDrawer(); return false;">
+              <i class="fas fa-question-circle"></i> Help &amp; Support
+            </a>
+            <a href="#" class="drawer-link" onclick="openAboutModal(); closeProfileDrawer(); return false;">
+              <i class="fas fa-info-circle"></i> About
             </a>
 
-            <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border);">
+            <div style="margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--border);">
               <button type="button" class="btn danger full-width sm" onclick="handleLogout()">
-                <i class="fas fa-sign-out-alt"></i> Logout / Exit
+                <i class="fas fa-sign-out-alt"></i> Logout
               </button>
             </div>
-          </aside>
+          </nav>
+        </aside>
 
-          <!-- PROFILE SUBPAGE CONTENT AREA -->
-          <div class="profile-content">
+        <!-- PROFILE DYNAMIC CONTENT SECTION -->
+        <div class="profile-content-body">
 
-            <!-- SUBPAGE 1: OVERVIEW -->
-            <div class="profile-subpage active" id="pSubPageOverview">
-              <div class="app-card" style="text-align: center;">
-                <div style="width: 84px; height: 84px; border-radius: 50%; background: var(--primary-light); color: var(--primary); border: 2px solid var(--primary-border); display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 800; margin: 0 auto 16px;" id="profileBigAvatar">
-                  U
-                </div>
+          <!-- SUBSECTION 1: OVERVIEW -->
+          <div class="profile-sub-view active" id="pSubViewOverview">
+            <div class="app-card">
+              <h3 class="card-title" style="margin-bottom: 14px;"><i class="fas fa-id-card"></i> Account Information</h3>
+              <div class="info-row">
+                <span class="info-label"><i class="fas fa-envelope"></i> Email:</span>
+                <strong id="profileOverviewEmail" class="info-val">user@terminalvast.bot</strong>
+              </div>
+              <div class="info-row">
+                <span class="info-label"><i class="fas fa-wallet"></i> Wallet Balance:</span>
+                <strong id="profileBalanceDisplay" class="info-val text-primary">$0.00</strong>
+              </div>
+              <div class="info-row">
+                <span class="info-label"><i class="fas fa-calendar-alt"></i> Member Since:</span>
+                <span id="profileJoinedDisplay" class="info-val">2026</span>
+              </div>
 
-                <h2 id="profileUsernameDisplay" style="font-size: 20px; font-weight: 800; color: var(--text);">User</h2>
-                <span id="profileRoleBadge" class="badge badge-primary" style="margin-top: 6px; text-transform: uppercase;">USER</span>
-
-                <div style="margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 12px; text-align: left; font-size: 14px;">
-                  <div style="display: flex; justify-content: space-between;">
-                    <span style="color: var(--muted);"><i class="fas fa-envelope"></i> Email:</span>
-                    <strong id="profileEmailDisplay" style="color: var(--text);">user@terminalvast.bot</strong>
-                  </div>
-
-                  <div style="display: flex; justify-content: space-between;">
-                    <span style="color: var(--muted);"><i class="fas fa-wallet"></i> Wallet Balance:</span>
-                    <strong id="profileBalanceDisplay" style="color: var(--primary);">$0.00</strong>
-                  </div>
-
-                  <div style="display: flex; justify-content: space-between;">
-                    <span style="color: var(--muted);"><i class="fas fa-calendar-alt"></i> Joined Date:</span>
-                    <span id="profileJoinedDisplay" style="color: var(--text);">2026</span>
-                  </div>
-                </div>
-
-                <div style="margin-top: 20px; display: flex; gap: 10px;">
-                  <button class="btn primary sm full-width" onclick="switchProfileSubpage('avatar')"><i class="fas fa-crop-alt"></i> Change Picture</button>
-                  <button class="btn sm full-width" onclick="switchProfileSubpage('edit')"><i class="fas fa-edit"></i> Edit Details</button>
-                </div>
+              <div style="margin-top: 16px; display: flex; gap: 10px;">
+                <button class="btn primary sm full-width" onclick="switchProfileSection('edit')"><i class="fas fa-edit"></i> Edit Details</button>
+                <button class="btn sm full-width" onclick="switchProfileSection('avatar')"><i class="fas fa-crop-alt"></i> Change Picture</button>
               </div>
             </div>
-
-            <!-- SUBPAGE 2: EDIT DETAILS -->
-            <div class="profile-subpage" id="pSubPageEdit">
-              <div class="app-card">
-                <h3 class="app-card-title"><i class="fas fa-user-edit"></i> Edit Account Info</h3>
-                <p style="color: var(--muted); font-size: 13.5px; margin-bottom: 18px;">Update email address and account bio status.</p>
-
-                <form id="profileDetailsForm" onsubmit="handleProfileUpdate(event)">
-                  <div class="form-group">
-                    <label class="form-label" for="editProfileEmail"><i class="fas fa-envelope"></i> Email Address</label>
-                    <input type="email" id="editProfileEmail" class="form-control" required>
-                  </div>
-
-                  <div class="form-group">
-                    <label class="form-label" for="editProfileBio"><i class="fas fa-quote-left"></i> Account Bio / Status</label>
-                    <textarea id="editProfileBio" class="form-control" rows="3" placeholder="Tell us something about your account..."></textarea>
-                  </div>
-
-                  <button type="submit" id="saveProfileBtn" class="btn primary full-width">
-                    <i class="fas fa-check-circle"></i> Save Profile Details
-                  </button>
-                </form>
-              </div>
-            </div>
-
-            <!-- SUBPAGE 3: PROFILE PICTURE STUDIO -->
-            <div class="profile-subpage" id="pSubPageAvatar">
-              <div class="app-card">
-                <h3 class="app-card-title"><i class="fas fa-crop-alt"></i> Profile Picture Studio</h3>
-                <p style="color: var(--muted); font-size: 13.5px; margin-bottom: 18px;">Upload, crop, zoom and reposition your avatar.</p>
-
-                <div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
-                  <label for="cropperFileInput" class="btn primary sm" style="cursor: pointer;">
-                    <i class="fas fa-upload"></i> Select Image
-                  </label>
-                  <input type="file" id="cropperFileInput" accept="image/*" style="display: none;" onchange="handleCropperFileSelect(event)">
-
-                  <button type="button" class="btn danger sm" onclick="handleRemoveAvatar()" id="removeAvatarBtn">
-                    <i class="fas fa-trash-alt"></i> Remove Picture
-                  </button>
-                </div>
-
-                <!-- Canvas Cropper -->
-                <div style="position: relative; width: 100%; max-width: 340px; height: 340px; margin: 0 auto 16px auto; background: var(--surface-2); border: 2px dashed var(--border-strong); border-radius: var(--radius); overflow: hidden; display: flex; align-items: center; justify-content: center; touch-action: none;" id="cropperContainer">
-                  <canvas id="cropperCanvas" width="340" height="340" style="width: 100%; height: 100%; cursor: grab; display: block;"></canvas>
-                  <div id="cropperPlaceholder" style="position: absolute; text-align: center; color: var(--muted); pointer-events: none;">
-                    <i class="fas fa-image" style="font-size: 36px; color: var(--muted-light); margin-bottom: 8px; display: block;"></i>
-                    <span style="font-size: 13px;">No image selected</span>
-                  </div>
-                </div>
-
-                <!-- Zoom Controls -->
-                <div id="cropperControls" style="display: none; flex-direction: column; gap: 12px; margin-bottom: 20px;">
-                  <div style="display: flex; align-items: center; gap: 12px;">
-                    <button type="button" class="btn sm" onclick="adjustCropperZoom(-0.1)"><i class="fas fa-search-minus"></i></button>
-                    <input type="range" id="cropperZoomSlider" min="0.2" max="3" step="0.05" value="1" style="flex: 1;" oninput="onCropperZoomSliderChange(event)">
-                    <button type="button" class="btn sm" onclick="adjustCropperZoom(0.1)"><i class="fas fa-search-plus"></i></button>
-                  </div>
-
-                  <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--muted);">
-                    <span><i class="fas fa-hand-paper"></i> Drag image to position</span>
-                    <button type="button" class="btn sm" onclick="resetCropperPosition()">Reset</button>
-                  </div>
-                </div>
-
-                <!-- Action Buttons -->
-                <div style="display: flex; gap: 12px;">
-                  <button type="button" id="saveCroppedAvatarBtn" class="btn primary full-width" onclick="handleSaveCroppedAvatar()" disabled>
-                    <i class="fas fa-check"></i> Save Profile Picture
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <!-- SUBPAGE 4: SECURITY -->
-            <div class="profile-subpage" id="pSubPageSecurity">
-              <div class="app-card">
-                <h3 class="app-card-title"><i class="fas fa-shield-alt"></i> Change Password</h3>
-                <p style="color: var(--muted); font-size: 13.5px; margin-bottom: 18px;">Update login credentials for your account.</p>
-
-                <form onsubmit="handlePasswordChange(event)">
-                  <div class="form-group">
-                    <label class="form-label" for="oldPasswordInput"><i class="fas fa-lock"></i> Current Password</label>
-                    <input type="password" id="oldPasswordInput" class="form-control" required>
-                  </div>
-
-                  <div class="form-group">
-                    <label class="form-label" for="newPasswordInput"><i class="fas fa-key"></i> New Password (min 6 characters)</label>
-                    <input type="password" id="newPasswordInput" class="form-control" required minlength="6">
-                  </div>
-
-                  <button type="submit" id="changePasswordBtn" class="btn primary full-width">
-                    <i class="fas fa-lock"></i> Update Password
-                  </button>
-                </form>
-              </div>
-            </div>
-
-            <!-- SUBPAGE 5: HISTORY LOG -->
-            <div class="profile-subpage" id="pSubPageHistory">
-              <div class="app-card">
-                <h3 class="app-card-title"><i class="fas fa-history"></i> Account Activity Log</h3>
-                <p style="color: var(--muted); font-size: 13.5px; margin-bottom: 18px;">Log of account joining, bot pairing, top-ups and system events.</p>
-
-                <div id="historyLogsList" style="display: flex; flex-direction: column; gap: 10px;">
-                  <!-- Dynamically populated history entries -->
-                </div>
-              </div>
-            </div>
-
-            <!-- SUBPAGE 6: BLOG -->
-            <div class="profile-subpage" id="pSubPageBlog">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                <h3 class="app-card-title"><i class="fas fa-newspaper"></i> Platform Articles &amp; Blog</h3>
-                <div id="blogActionContainer">
-                  <button class="btn primary sm" onclick="switchProfileSubpage('blog-create')"><i class="fas fa-pen-nib"></i> Create Post</button>
-                </div>
-              </div>
-
-              <div id="blogPostsContainer" style="display: flex; flex-direction: column; gap: 16px;">
-                <!-- Dynamically loaded blog articles -->
-              </div>
-            </div>
-
-            <!-- SUBPAGE 6B: BLOG CREATE (ADMIN) -->
-            <div class="profile-subpage" id="pSubPageBlogCreate">
-              <div class="app-card">
-                <h3 class="app-card-title"><i class="fas fa-pen-nib"></i> Publish Article</h3>
-                <p style="color: var(--muted); font-size: 13.5px; margin-bottom: 18px;">Publish an announcement or update to the platform blog.</p>
-
-                <form onsubmit="handleCreateBlogPostStandalone(event)">
-                  <div class="form-group">
-                    <label class="form-label" for="standaloneBlogTitleInput"><i class="fas fa-heading"></i> Article Title</label>
-                    <input type="text" id="standaloneBlogTitleInput" class="form-control" placeholder="e.g. Feature Update" required minlength="3">
-                  </div>
-
-                  <div class="form-group">
-                    <label class="form-label" for="standaloneBlogImageUrlInput"><i class="fas fa-image"></i> Cover Image (URL or File)</label>
-                    <input type="text" id="standaloneBlogImageUrlInput" class="form-control" placeholder="https://i.ibb.co/cover.jpg" style="margin-bottom: 8px;">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                      <label for="standaloneBlogImageFileInput" class="btn sm" style="cursor: pointer;">
-                        <i class="fas fa-upload"></i> Upload Image File
-                      </label>
-                      <input type="file" id="standaloneBlogImageFileInput" accept="image/*" style="display: none;" onchange="handleStandaloneBlogImageFileSelect(event)">
-                      <span id="standaloneBlogFileNameDisplay" style="font-size: 12px; color: var(--muted);">No file attached</span>
-                    </div>
-                  </div>
-
-                  <div class="form-group">
-                    <label class="form-label" for="standaloneBlogContentInput"><i class="fas fa-align-left"></i> Article Body</label>
-                    <textarea id="standaloneBlogContentInput" class="form-control" rows="8" placeholder="Write full article body..." required minlength="10"></textarea>
-                  </div>
-
-                  <div style="display: flex; gap: 12px;">
-                    <button type="submit" id="standaloneCreatePostSubmitBtn" class="btn primary full-width">
-                      <i class="fas fa-paper-plane"></i> Publish Article
-                    </button>
-                    <button type="button" class="btn" onclick="switchProfileSubpage('blog')">Cancel</button>
-                  </div>
-                </form>
-              </div>
-            </div>
-
-            <!-- SUBPAGE 7: ADMIN CONTROL CENTER -->
-            <div class="profile-subpage" id="pSubPageAdmin">
-              <div class="app-card">
-                <h3 class="app-card-title"><i class="fas fa-user-shield"></i> Admin Control Center</h3>
-                <p style="color: var(--muted); font-size: 13.5px; margin-bottom: 18px;">System administration, users directory, balances, bans &amp; notices.</p>
-
-                <div class="admin-tabs">
-                  <button class="admin-tab-btn active" id="tabBtnSecUsers" onclick="switchAdminSection('adminSecUsers')"><i class="fas fa-users"></i> Users</button>
-                  <button class="admin-tab-btn" id="tabBtnSecModeration" onclick="switchAdminSection('adminSecModeration')"><i class="fas fa-user-lock"></i> Moderation</button>
-                  <button class="admin-tab-btn" id="tabBtnSecTopup" onclick="switchAdminSection('adminSecTopup')"><i class="fas fa-hand-holding-usd"></i> Balance</button>
-                  <button class="admin-tab-btn" id="tabBtnSecMessages" onclick="switchAdminSection('adminSecMessages')"><i class="fas fa-comment-dots"></i> Notices</button>
-                  <button class="admin-tab-btn" id="tabBtnSecRoles" onclick="switchAdminSection('adminSecRoles')"><i class="fas fa-award"></i> Roles</button>
-                  <button class="admin-tab-btn" id="tabBtnSecPayments" onclick="switchAdminSection('adminSecPayments')"><i class="fas fa-file-invoice-dollar"></i> Financials</button>
-                </div>
-
-                <!-- Admin Section 1: Users -->
-                <div class="admin-sec active" id="adminSecUsers">
-                  <div class="admin-table-wrap">
-                    <table class="admin-table">
-                      <thead>
-                        <tr>
-                          <th>User</th>
-                          <th>Email</th>
-                          <th>Role</th>
-                          <th>Status</th>
-                          <th>Balance</th>
-                          <th>Action</th>
-                        </tr>
-                      </thead>
-                      <tbody id="adminUsersTableBody"></tbody>
-                    </table>
-                  </div>
-                </div>
-
-                <!-- Admin Section 2: Moderation -->
-                <div class="admin-sec" id="adminSecModeration">
-                  <form onsubmit="handleAdminStatusChange(event)" style="max-width: 480px;">
-                    <div class="form-group">
-                      <label class="form-label" for="adminStatusUserSelect">Select Target User</label>
-                      <select id="adminStatusUserSelect" class="form-control" required></select>
-                    </div>
-
-                    <div class="form-group">
-                      <label class="form-label" for="adminAccountStatusSelect">Account Status</label>
-                      <select id="adminAccountStatusSelect" class="form-control" required>
-                        <option value="active">Active (Normal)</option>
-                        <option value="warned">Warned (Shows Banner)</option>
-                        <option value="restricted">Restricted Access</option>
-                        <option value="banned">Banned (Suspended)</option>
-                      </select>
-                    </div>
-
-                    <div class="form-group">
-                      <label class="form-label" for="adminWarningInput">Warning Message (Optional)</label>
-                      <input type="text" id="adminWarningInput" class="form-control" placeholder="Reason or message text...">
-                    </div>
-
-                    <button type="submit" class="btn primary full-width">Apply Status Change</button>
-                  </form>
-                </div>
-
-                <!-- Admin Section 3: Top Up Balance -->
-                <div class="admin-sec" id="adminSecTopup">
-                  <form onsubmit="handleAdminTopUp(event)" style="max-width: 480px;">
-                    <div class="form-group">
-                      <label class="form-label" for="adminTopupUserSelect">Select Target Account</label>
-                      <select id="adminTopupUserSelect" class="form-control" required></select>
-                    </div>
-
-                    <div class="form-group">
-                      <label class="form-label" for="adminTopupAmount">Credit Amount ($)</label>
-                      <input type="number" id="adminTopupAmount" class="form-control" min="0.01" step="0.01" placeholder="50.00" required>
-                    </div>
-
-                    <button type="submit" class="btn primary full-width">Credit Wallet Balance</button>
-                  </form>
-                </div>
-
-                <!-- Admin Section 4: Messaging -->
-                <div class="admin-sec" id="adminSecMessages">
-                  <form onsubmit="handleAdminSendMessage(event)" style="max-width: 540px;">
-                    <div class="form-group">
-                      <label class="form-label" for="adminMsgTargetSelect">Recipient</label>
-                      <select id="adminMsgTargetSelect" class="form-control" required>
-                        <option value="all">📢 Broadcast to ALL Users</option>
-                      </select>
-                    </div>
-
-                    <div class="form-group">
-                      <label class="form-label" for="adminMsgText">Dashboard Notice Text</label>
-                      <textarea id="adminMsgText" class="form-control" rows="4" placeholder="Message text..." required></textarea>
-                    </div>
-
-                    <button type="submit" class="btn primary full-width">Send Dashboard Notice</button>
-                  </form>
-                </div>
-
-                <!-- Admin Section 5: Roles -->
-                <div class="admin-sec" id="adminSecRoles">
-                  <form onsubmit="handleAdminRoleChange(event)" style="max-width: 480px;">
-                    <div class="form-group">
-                      <label class="form-label" for="adminRoleUserSelect">Select User</label>
-                      <select id="adminRoleUserSelect" class="form-control" required></select>
-                    </div>
-
-                    <div class="form-group">
-                      <label class="form-label" for="adminRoleSelect">Assigned Role</label>
-                      <select id="adminRoleSelect" class="form-control" required>
-                        <option value="user">User (Standard Account)</option>
-                        <option value="admin">Admin (Full Control Privileges)</option>
-                      </select>
-                    </div>
-
-                    <button type="submit" class="btn primary full-width">Save Role Assignment</button>
-                  </form>
-                </div>
-
-                <!-- Admin Section 6: Payments & Financials -->
-                <div class="admin-sec" id="adminSecPayments">
-                  <div class="grid-3" style="margin-bottom: 20px;">
-                    <div style="background: var(--surface-2); padding: 16px; border-radius: var(--radius-sm); text-align: center;">
-                      <div style="font-size: 11px; color: var(--muted); font-weight: 700;">TOTAL USERS</div>
-                      <div id="statTotalUsers" style="font-size: 24px; font-weight: 800; color: var(--text);">0</div>
-                    </div>
-
-                    <div style="background: var(--surface-2); padding: 16px; border-radius: var(--radius-sm); text-align: center;">
-                      <div style="font-size: 11px; color: var(--muted); font-weight: 700;">TOTAL WALLET FUNDS</div>
-                      <div id="statTotalFunds" style="font-size: 24px; font-weight: 800; color: var(--primary);">$0.00</div>
-                    </div>
-
-                    <div style="background: var(--surface-2); padding: 16px; border-radius: var(--radius-sm); text-align: center;">
-                      <div style="font-size: 11px; color: var(--muted); font-weight: 700;">ACTIVE ADMINS</div>
-                      <div id="statTotalAdmins" style="font-size: 24px; font-weight: 800; color: var(--text);">0</div>
-                    </div>
-                  </div>
-
-                  <div class="admin-table-wrap">
-                    <table class="admin-table">
-                      <thead>
-                        <tr>
-                          <th>User</th>
-                          <th>Status</th>
-                          <th>Current Balance</th>
-                          <th>Health</th>
-                        </tr>
-                      </thead>
-                      <tbody id="adminPaymentsTableBody"></tbody>
-                    </table>
-                  </div>
-                </div>
-
-              </div>
-            </div>
-
           </div>
+
+          <!-- SUBSECTION 2: EDIT DETAILS -->
+          <div class="profile-sub-view" id="pSubViewEdit">
+            <div class="app-card">
+              <h3 class="card-title" style="margin-bottom: 14px;"><i class="fas fa-user-edit"></i> Edit Account Info</h3>
+              <form id="profileDetailsForm" onsubmit="handleProfileUpdate(event)">
+                <div class="form-group">
+                  <label class="form-label" for="editProfileEmail"><i class="fas fa-envelope"></i> Email Address</label>
+                  <input type="email" id="editProfileEmail" class="form-control" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="editProfileBio"><i class="fas fa-quote-left"></i> Account Bio / Status</label>
+                  <textarea id="editProfileBio" class="form-control" rows="3" placeholder="Tell us about your account..."></textarea>
+                </div>
+                <button type="submit" id="saveProfileBtn" class="btn primary full-width">Save Changes</button>
+              </form>
+            </div>
+          </div>
+
+          <!-- SUBSECTION 3: AVATAR CROPPER STUDIO -->
+          <div class="profile-sub-view" id="pSubViewAvatar">
+            <div class="app-card">
+              <h3 class="card-title" style="margin-bottom: 14px;"><i class="fas fa-camera"></i> Profile Picture Studio</h3>
+              <div style="display: flex; gap: 10px; margin-bottom: 14px;">
+                <label for="cropperFileInput" class="btn primary sm" style="cursor: pointer;">
+                  <i class="fas fa-upload"></i> Select Image
+                </label>
+                <input type="file" id="cropperFileInput" accept="image/*" style="display: none;" onchange="handleCropperFileSelect(event)">
+                <button type="button" class="btn danger sm" onclick="handleRemoveAvatar()">Remove Picture</button>
+              </div>
+
+              <div class="cropper-container-box" id="cropperContainer">
+                <canvas id="cropperCanvas" width="300" height="300"></canvas>
+                <div id="cropperPlaceholder" class="cropper-placeholder">
+                  <i class="fas fa-image"></i>
+                  <span>No image selected</span>
+                </div>
+              </div>
+
+              <div id="cropperControls" style="display: none; flex-direction: column; gap: 10px; margin-bottom: 16px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <button type="button" class="btn sm" onclick="adjustCropperZoom(-0.1)"><i class="fas fa-search-minus"></i></button>
+                  <input type="range" id="cropperZoomSlider" min="0.2" max="3" step="0.05" value="1" style="flex: 1;" oninput="onCropperZoomSliderChange(event)">
+                  <button type="button" class="btn sm" onclick="adjustCropperZoom(0.1)"><i class="fas fa-search-plus"></i></button>
+                </div>
+              </div>
+
+              <button type="button" id="saveCroppedAvatarBtn" class="btn primary full-width" onclick="handleSaveCroppedAvatar()" disabled>
+                Save Profile Picture
+              </button>
+            </div>
+          </div>
+
+          <!-- SUBSECTION 4: SECURITY -->
+          <div class="profile-sub-view" id="pSubViewSecurity">
+            <div class="app-card">
+              <h3 class="card-title" style="margin-bottom: 14px;"><i class="fas fa-lock"></i> Change Password</h3>
+              <form onsubmit="handlePasswordChange(event)">
+                <div class="form-group">
+                  <label class="form-label" for="oldPasswordInput">Current Password</label>
+                  <input type="password" id="oldPasswordInput" class="form-control" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="newPasswordInput">New Password (min 6 chars)</label>
+                  <input type="password" id="newPasswordInput" class="form-control" required minlength="6">
+                </div>
+                <button type="submit" id="changePasswordBtn" class="btn primary full-width">Update Password</button>
+              </form>
+            </div>
+          </div>
+
+          <!-- SUBSECTION 5: HISTORY LOGS -->
+          <div class="profile-sub-view" id="pSubViewHistory">
+            <div class="app-card">
+              <h3 class="card-title" style="margin-bottom: 14px;"><i class="fas fa-history"></i> Activity Logs</h3>
+              <div id="historyLogsList" class="stack-list"></div>
+            </div>
+          </div>
+
+          <!-- SUBSECTION 6: BLOG -->
+          <div class="profile-sub-view" id="pSubViewBlog">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+              <h3 class="card-title"><i class="fas fa-newspaper"></i> Platform Blog</h3>
+              <div id="blogActionContainer" style="display: none;">
+                <button class="btn primary sm" onclick="switchProfileSection('blog-create')"><i class="fas fa-pen"></i> Create Article</button>
+              </div>
+            </div>
+            <div id="blogPostsContainer" class="stack-list"></div>
+          </div>
+
+          <!-- SUBSECTION 6B: BLOG CREATE -->
+          <div class="profile-sub-view" id="pSubViewBlogCreate">
+            <div class="app-card">
+              <h3 class="card-title" style="margin-bottom: 14px;"><i class="fas fa-pen"></i> Publish Article</h3>
+              <form onsubmit="handleCreateBlogPostStandalone(event)">
+                <div class="form-group">
+                  <label class="form-label">Article Title</label>
+                  <input type="text" id="standaloneBlogTitleInput" class="form-control" required minlength="3">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Cover Image URL</label>
+                  <input type="text" id="standaloneBlogImageUrlInput" class="form-control" placeholder="https://...">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Body Content</label>
+                  <textarea id="standaloneBlogContentInput" class="form-control" rows="6" required></textarea>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                  <button type="submit" id="standaloneCreatePostSubmitBtn" class="btn primary full-width">Publish</button>
+                  <button type="button" class="btn sm" onclick="switchProfileSection('blog')">Cancel</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- SUBSECTION 7: ADMIN -->
+          <div class="profile-sub-view" id="pSubViewAdmin">
+            <div class="app-card">
+              <h3 class="card-title" style="margin-bottom: 14px;"><i class="fas fa-user-shield"></i> Admin Control Center</h3>
+              <div class="admin-tabs-wrap">
+                <button class="admin-tab-btn active" id="tabBtnSecUsers" onclick="switchAdminSection('adminSecUsers')">Users</button>
+                <button class="admin-tab-btn" id="tabBtnSecModeration" onclick="switchAdminSection('adminSecModeration')">Status</button>
+                <button class="admin-tab-btn" id="tabBtnSecTopup" onclick="switchAdminSection('adminSecTopup')">Wallet</button>
+                <button class="admin-tab-btn" id="tabBtnSecMessages" onclick="switchAdminSection('adminSecMessages')">Notices</button>
+              </div>
+
+              <div class="admin-sec active" id="adminSecUsers">
+                <div class="table-responsive">
+                  <table class="admin-table">
+                    <thead>
+                      <tr><th>User</th><th>Email</th><th>Role</th><th>Balance</th><th>Action</th></tr>
+                    </thead>
+                    <tbody id="adminUsersTableBody"></tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div class="admin-sec" id="adminSecModeration">
+                <form onsubmit="handleAdminStatusChange(event)">
+                  <div class="form-group">
+                    <label class="form-label">Select User</label>
+                    <select id="adminStatusUserSelect" class="form-control" required></select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <select id="adminAccountStatusSelect" class="form-control" required>
+                      <option value="active">Active</option>
+                      <option value="warned">Warned</option>
+                      <option value="restricted">Restricted</option>
+                      <option value="banned">Banned</option>
+                    </select>
+                  </div>
+                  <button type="submit" class="btn primary full-width">Apply Status</button>
+                </form>
+              </div>
+
+              <div class="admin-sec" id="adminSecTopup">
+                <form onsubmit="handleAdminTopUp(event)">
+                  <div class="form-group">
+                    <label class="form-label">Target Account</label>
+                    <select id="adminTopupUserSelect" class="form-control" required></select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Credit Amount ($)</label>
+                    <input type="number" id="adminTopupAmount" class="form-control" min="0.01" step="0.01" required>
+                  </div>
+                  <button type="submit" class="btn primary full-width">Credit Wallet</button>
+                </form>
+              </div>
+
+              <div class="admin-sec" id="adminSecMessages">
+                <form onsubmit="handleAdminSendMessage(event)">
+                  <div class="form-group">
+                    <label class="form-label">Recipient</label>
+                    <select id="adminMsgTargetSelect" class="form-control" required>
+                      <option value="all">📢 Broadcast to All</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Notice Message</label>
+                    <textarea id="adminMsgText" class="form-control" rows="3" required></textarea>
+                  </div>
+                  <button type="submit" class="btn primary full-width">Send Notice</button>
+                </form>
+              </div>
+
+            </div>
+          </div>
+
         </div>
+
       </section>
 
     </main>
 
-    <!-- MOBILE BOTTOM NAVIGATION (EXACTLY 5 TABS) -->
-    <!-- Dashboard | Pair | Top Up | Settings | Profile -->
-    <nav class="bottom-nav" aria-label="Mobile primary navigation">
-      <a href="#" class="bottom-tab active" id="mobTabDashboard" onclick="switchTab('dashboard'); return false;">
+    <!-- FIXED ANDROID BOTTOM NAVIGATION BAR (EXACTLY 5 TABS, ICON ONLY, ALL ORANGE) -->
+    <!-- 1: Dashboard (Home) | 2: Pair (Link) | 3: Top Up (Wallet) | 4: Automations (Lightning) | 5: Profile (User) -->
+    <nav class="bottom-nav-fixed" aria-label="Bottom Navigation Bar">
+      <a href="#" class="bottom-tab-icon active" id="mobTabDashboard" onclick="switchTab('dashboard'); return false;" title="Dashboard">
         <i class="fas fa-home"></i>
-        <span>Dashboard</span>
       </a>
 
-      <a href="#" class="bottom-tab" id="mobTabPair" onclick="switchTab('pair'); return false;">
+      <a href="#" class="bottom-tab-icon" id="mobTabPair" onclick="switchTab('pair'); return false;" title="Pair">
         <i class="fas fa-link"></i>
-        <span>Pair</span>
       </a>
 
-      <a href="#" class="bottom-tab" id="mobTabTopup" onclick="switchTab('topup'); return false;">
+      <a href="#" class="bottom-tab-icon" id="mobTabTopup" onclick="switchTab('topup'); return false;" title="Top Up">
         <i class="fas fa-wallet"></i>
-        <span>Top Up</span>
       </a>
 
-      <a href="#" class="bottom-tab" id="mobTabSettings" onclick="switchTab('settings'); return false;">
-        <i class="fas fa-cog"></i>
-        <span>Settings</span>
+      <a href="#" class="bottom-tab-icon" id="mobTabAutomations" onclick="switchTab('automations'); return false;" title="Automations">
+        <i class="fas fa-bolt"></i>
       </a>
 
-      <a href="#" class="bottom-tab" id="mobTabProfile" onclick="switchTab('profile'); return false;">
-        <i class="fas fa-user-circle"></i>
-        <span>Profile</span>
+      <a href="#" class="bottom-tab-icon" id="mobTabProfile" onclick="switchTab('profile'); return false;" title="Profile">
+        <i class="fas fa-user"></i>
       </a>
     </nav>
 
   </div>
 
-  <!-- TOP UP CUSTOM MODAL -->
-  <div class="modal-overlay" id="topUpModal">
-    <div class="modal-card">
-      <button class="modal-close" onclick="closeTopUpModal()"><i class="fas fa-times"></i></button>
-      <h2 class="modal-title">Top Up Wallet</h2>
-      <p class="modal-subtitle">Enter amount to credit your account balance</p>
+  <!-- ==================== MODALS ==================== -->
 
-      <form onsubmit="handleCustomTopUp(event)">
+  <!-- SETTINGS MODAL -->
+  <div class="modal-overlay" id="settingsModal">
+    <div class="modal-card">
+      <button class="modal-close" onclick="closeSettingsModal()"><i class="fas fa-times"></i></button>
+      <h2 class="modal-title">Settings</h2>
+      <p class="modal-subtitle">Bot operational parameters &amp; owner contact credentials</p>
+
+      <form id="botSettingsForm" onsubmit="saveBotSettings(event)">
+        <div class="settings-group-title">Bot Preferences</div>
         <div class="form-group">
-          <label class="form-label">Amount ($)</label>
-          <input type="number" id="topUpAmountInput" class="form-control" min="1" step="0.01" placeholder="25.00" required>
+          <label class="form-label" for="settingBotName">Bot Display Name</label>
+          <input type="text" id="settingBotName" class="form-control" placeholder="Terminal Vast" required>
         </div>
 
-        <button type="submit" class="btn primary full-width lg" style="margin-top: 10px;">
-          <i class="fas fa-credit-card"></i> Add Funds Now
+        <div class="form-group">
+          <label class="form-label" for="settingPrefix">Command Prefix</label>
+          <input type="text" id="settingPrefix" class="form-control" placeholder="." required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="settingMode">Visibility Mode</label>
+          <select id="settingMode" class="form-control">
+            <option value="public">Public (Responds to all users)</option>
+            <option value="private">Private (Owner only)</option>
+          </select>
+        </div>
+
+        <div class="settings-group-title" style="margin-top: 16px;">Owner Account</div>
+        <div class="form-group">
+          <label class="form-label" for="settingOwnerName">Owner Name</label>
+          <input type="text" id="settingOwnerName" class="form-control" placeholder="Meddy" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="settingOwnerNumber">Primary Owner Number</label>
+          <input type="tel" id="settingOwnerNumber" class="form-control" placeholder="256702662846" required>
+        </div>
+
+        <button type="submit" id="saveBotSettingsBtn" class="btn primary full-width lg" style="margin-top: 14px;">
+          Save Settings
         </button>
       </form>
+    </div>
+  </div>
+
+  <!-- COMMANDS MODAL -->
+  <div class="modal-overlay" id="commandsModal">
+    <div class="modal-card modal-card-large">
+      <button class="modal-close" onclick="closeCommandsModal()"><i class="fas fa-times"></i></button>
+      <h2 class="modal-title">Bot Commands</h2>
+      <p class="modal-subtitle">Available WhatsApp automation triggers &amp; utilities</p>
+
+      <div class="form-group">
+        <input type="text" id="cmdSearchInput" class="form-control" placeholder="Search commands..." onkeyup="filterCommandsList()">
+      </div>
+
+      <div class="commands-categories-grid" id="commandsContainer">
+        <div class="cmd-category-card">
+          <h4><i class="fas fa-robot text-primary"></i> General Commands</h4>
+          <ul>
+            <li><code>.menu</code> — Show full bot command menu</li>
+            <li><code>.status</code> — Check system uptime and memory</li>
+            <li><code>.ping</code> — Measure response latency</li>
+            <li><code>.owner</code> — Contact bot developer info</li>
+          </ul>
+        </div>
+
+        <div class="cmd-category-card">
+          <h4><i class="fas fa-users text-primary"></i> Group Commands</h4>
+          <ul>
+            <li><code>.add [number]</code> — Add user to group</li>
+            <li><code>.kick [tag]</code> — Remove user from group</li>
+            <li><code>.promote [tag]</code> — Promote user to admin</li>
+            <li><code>.demote [tag]</code> — Demote user from admin</li>
+            <li><code>.tagall</code> — Mention all group members</li>
+          </ul>
+        </div>
+
+        <div class="cmd-category-card">
+          <h4><i class="fas fa-magic text-primary"></i> Media &amp; Fun</h4>
+          <ul>
+            <li><code>.sticker</code> — Convert image or video to sticker</li>
+            <li><code>.play [song]</code> — Download audio song track</li>
+            <li><code>.video [title]</code> — Download YouTube video</li>
+            <li><code>.ai [prompt]</code> — Ask Gemini AI assistant</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NOTIFICATIONS MODAL -->
+  <div class="modal-overlay" id="notificationsModal">
+    <div class="modal-card">
+      <button class="modal-close" onclick="closeNotificationsModal()"><i class="fas fa-times"></i></button>
+      <h2 class="modal-title">Notifications</h2>
+      <p class="modal-subtitle">System notices and updates</p>
+
+      <div id="notificationsList" class="stack-list">
+        <div class="notif-item">
+          <div class="notif-title"><i class="fas fa-check-circle text-primary"></i> System Active</div>
+          <div class="notif-desc">Terminal Vast Android Automation engine is operating normally.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HELP & SUPPORT MODAL -->
+  <div class="modal-overlay" id="helpModal">
+    <div class="modal-card">
+      <button class="modal-close" onclick="closeHelpModal()"><i class="fas fa-times"></i></button>
+      <h2 class="modal-title">Help &amp; Support</h2>
+      <p class="modal-subtitle">Get assistance with Terminal Vast</p>
+
+      <div class="stack-list">
+        <div class="info-row">
+          <span>Official Pairing Platform:</span>
+          <a href="https://terminal-vast-platform-qoa5.onrender.com/" target="_blank" class="text-primary">Visit Platform</a>
+        </div>
+        <div class="info-row">
+          <span>WhatsApp Developer Contact:</span>
+          <strong>+256 702 662 846</strong>
+        </div>
+        <div class="info-row">
+          <span>Documentation &amp; Guides:</span>
+          <a href="/privacy" target="_blank" class="text-primary">Privacy Policy</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ABOUT MODAL -->
+  <div class="modal-overlay" id="aboutModal">
+    <div class="modal-card" style="text-align: center;">
+      <button class="modal-close" onclick="closeAboutModal()"><i class="fas fa-times"></i></button>
+      <h2 class="modal-title" style="color: var(--primary);">Terminal Vast</h2>
+      <span class="badge badge-primary" style="margin-bottom: 12px;">Version 1.0.0 Android</span>
+      <p style="color: var(--muted); font-size: 13.5px; line-height: 1.5; margin-bottom: 16px;">
+        High-performance WhatsApp automation engine powered by Node.js, Baileys, and Android UI design system.
+      </p>
+      <div style="font-size: 12px; color: var(--muted-light);">© 2026 Terminal Vast. All rights reserved.</div>
     </div>
   </div>
 
