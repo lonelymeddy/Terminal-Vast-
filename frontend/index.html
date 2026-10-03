@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#ffffff">
-  <meta name="description" content="Terminal Vast — Android WhatsApp Automation Engine.">
-  <title>Terminal Vast</title>
+  <meta name="theme-color" content="#0B0F17">
+  <meta name="description" content="Tech Stack Analytics & Monitoring — Real-time infrastructure health and bot engine platform.">
+  <title>Tech Stack Analytics & Monitoring</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,22 +18,22 @@
   <!-- ==================== 1. SPLASH SCREEN ==================== -->
   <div id="splashScreen">
     <div class="splash-image-container">
-      <img src="/splash.png" alt="Terminal Vast" class="splash-logo-img">
+      <img src="/splash.png" alt="Tech Stack Analytics" class="splash-logo-img">
     </div>
   </div>
 
   <!-- ==================== 2. ANIMATED INTRO SCREEN ==================== -->
   <div id="introScreen">
-    <div id="introText1" class="intro-text">Wanna automate your WhatsApp?</div>
-    <div id="introText2" class="intro-text" style="display: none;">Terminal Vast is here to help.</div>
+    <div id="introText1" class="intro-text">Initializing Infrastructure Analytics...</div>
+    <div id="introText2" class="intro-text" style="display: none;">Tech Stack Analytics Engine Ready.</div>
   </div>
 
   <!-- ==================== 3. AUTHENTICATION SCREEN ==================== -->
   <div id="authScreen">
     <div class="auth-card">
       <div style="text-align: center; margin-bottom: 24px;">
-        <h2 class="auth-title">Terminal Vast</h2>
-        <p class="auth-subtitle" id="authScreenSubtitle">Sign in to your account</p>
+        <h2 class="auth-title">Tech Stack Analytics</h2>
+        <p class="auth-subtitle" id="authScreenSubtitle">Sign in to access DevOps &amp; WhatsApp Engine</p>
       </div>
 
       <div id="authAlert" style="display:none;" class="auth-alert-box"></div>
@@ -42,7 +42,7 @@
       <form id="loginForm" onsubmit="handleLogin(event)">
         <div class="form-group">
           <label class="form-label" for="loginIdentifier"><i class="fas fa-user"></i> Username or Email</label>
-          <input type="text" id="loginIdentifier" class="form-control" placeholder="e.g. admin or user@terminalvast.bot" required>
+          <input type="text" id="loginIdentifier" class="form-control" placeholder="e.g. admin or alex.rivera@techstack.io" required>
         </div>
 
         <div class="form-group">
@@ -50,7 +50,7 @@
           <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" required>
         </div>
 
-        <button type="submit" class="btn primary full-width lg" style="margin-top: 10px;">
+        <button type="submit" class="btn-primary-blue" style="width: 100%; height: 42px; justify-content: center; margin-top: 10px;">
           <i class="fas fa-sign-in-alt"></i> Login
         </button>
 
@@ -63,12 +63,12 @@
       <form id="registerForm" onsubmit="handleRegister(event)" style="display:none;">
         <div class="form-group">
           <label class="form-label" for="regUsername"><i class="fas fa-user"></i> Username</label>
-          <input type="text" id="regUsername" class="form-control" placeholder="e.g. meddy" required minlength="3">
+          <input type="text" id="regUsername" class="form-control" placeholder="e.g. alexrivera" required minlength="3">
         </div>
 
         <div class="form-group">
           <label class="form-label" for="regEmail"><i class="fas fa-envelope"></i> Email Address</label>
-          <input type="email" id="regEmail" class="form-control" placeholder="e.g. user@terminalvast.bot" required>
+          <input type="email" id="regEmail" class="form-control" placeholder="e.g. alex@techstack.io" required>
         </div>
 
         <div class="form-group">
@@ -76,7 +76,7 @@
           <input type="password" id="regPassword" class="form-control" placeholder="••••••••" required minlength="6">
         </div>
 
-        <button type="submit" class="btn primary full-width lg" style="margin-top: 10px;">
+        <button type="submit" class="btn-primary-blue" style="width: 100%; height: 42px; justify-content: center; margin-top: 10px;">
           <i class="fas fa-user-plus"></i> Create Account
         </button>
 
@@ -86,8 +86,8 @@
       </form>
 
       <!-- Continue as Guest Option -->
-      <div style="margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--border);">
-        <button type="button" class="btn secondary-outline full-width" onclick="handleContinueAsGuest()">
+      <div style="margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--border-color);">
+        <button type="button" class="btn-secondary-slate" style="width: 100%; justify-content: center;" onclick="handleContinueAsGuest()">
           <i class="fas fa-user-clock"></i> Continue as Guest
         </button>
       </div>
@@ -97,507 +97,768 @@
   <!-- ==================== APPLICATION SHELL ==================== -->
   <div id="appShell" style="display: none;">
 
-    <!-- APP NAVBAR HEADER (Terminal Vast + Notification Icon) -->
+    <!-- TOP HEADER BAR -->
     <header class="app-header">
-      <div class="app-header-inner">
-        <!-- Brand Name ONLY (No logo image, no profile avatar, no hamburger icon) -->
-        <a href="#" onclick="switchTab('dashboard'); return false;" class="app-brand-title">
-          Terminal Vast
-        </a>
+      <div class="header-container">
+        <!-- Brand Title & Subtitle -->
+        <div class="header-brand-group">
+          <div class="brand-icon">
+            <i class="fas fa-chart-line"></i>
+          </div>
+          <div>
+            <div class="brand-title">Tech Stack Analytics &amp; Monitoring</div>
+            <div class="brand-subtitle">Real-time infrastructure health, service status, and deployment metrics</div>
+          </div>
+        </div>
 
-        <!-- Right Notification Icon -->
-        <button type="button" class="header-icon-btn" onclick="openNotificationsModal()" title="Notifications">
-          <i class="fas fa-bell"></i>
-          <span class="notification-dot" id="headerNotifDot" style="display: none;"></span>
-        </button>
+        <!-- Center Search Bar -->
+        <div class="header-search-bar">
+          <i class="fas fa-search"></i>
+          <input type="text" class="header-search-input" placeholder="Search servers, services, logs...">
+        </div>
+
+        <!-- Right User & Notif Actions -->
+        <div class="header-right-actions">
+          <button type="button" class="notification-btn" onclick="openNotificationsModal()" title="Notifications">
+            <i class="fas fa-bell"></i>
+            <span class="notification-badge-count" id="headerNotifBadgeCount">3</span>
+          </button>
+
+          <div class="user-profile-badge" onclick="switchTab('profile')">
+            <div class="user-avatar-circle" id="headerUserAvatar">AR</div>
+            <div class="user-info-text">
+              <span class="user-name-str" id="headerUsernameStr">Alex Rivera</span>
+              <span class="user-role-str" id="headerRoleStr">Senior DevOps Lead</span>
+            </div>
+          </div>
+        </div>
       </div>
     </header>
 
-    <!-- MAIN APP CONTENT CONTAINER -->
-    <main class="app-main">
+    <!-- MAIN APP BODY WITH SIDEBAR -->
+    <div class="app-body-container">
 
-      <!-- Admin Direct Messages & Warning Banners -->
-      <div id="adminDirectMessagesBanner" style="display: none; margin-bottom: 16px;"></div>
+      <!-- LEFT SIDEBAR NAVIGATION -->
+      <aside class="app-sidebar">
+        <a href="#" class="sidebar-nav-item active" id="sideNavOverview" onclick="switchTab('dashboard'); return false;">
+          <i class="fas fa-chart-pie"></i>
+          <span>Overview</span>
+        </a>
+        <a href="#" class="sidebar-nav-item" id="sideNavPair" onclick="switchTab('pair'); return false;">
+          <i class="fas fa-server"></i>
+          <span>Infrastructure</span>
+        </a>
+        <a href="#" class="sidebar-nav-item" id="sideNavAutomations" onclick="switchTab('automations'); return false;">
+          <i class="fas fa-cubes"></i>
+          <span>Microservices</span>
+        </a>
+        <a href="#" class="sidebar-nav-item" onclick="openCommandsModal(); return false;">
+          <i class="fas fa-code-branch"></i>
+          <span>CI/CD Pipelines</span>
+        </a>
+        <a href="#" class="sidebar-nav-item" id="sideNavTopup" onclick="switchTab('topup'); return false;">
+          <i class="fas fa-dollar-sign"></i>
+          <span>Cost &amp; Cloud</span>
+        </a>
+        <a href="#" class="sidebar-nav-item" onclick="openSettingsModal(); return false;">
+          <i class="fas fa-shield-alt"></i>
+          <span>Security &amp; Compliance</span>
+        </a>
+        <a href="#" class="sidebar-nav-item" id="sideNavProfile" onclick="switchTab('profile'); return false;">
+          <i class="fas fa-sliders-h"></i>
+          <span>Settings &amp; API</span>
+        </a>
+      </aside>
 
-      <!-- Skeleton Loading State -->
-      <div id="dashSkeletonLoading" style="display: none;">
-        <div class="skeleton-box" style="height: 140px; margin-bottom: 16px;"></div>
-        <div class="grid-2">
-          <div class="skeleton-box" style="height: 100px;"></div>
-          <div class="skeleton-box" style="height: 100px;"></div>
-        </div>
-      </div>
+      <!-- MAIN CONTENT CONTAINER -->
+      <main class="app-main-content">
 
-      <!-- ==================== 1. DASHBOARD PAGE ==================== -->
-      <section class="app-page active" id="pageDashboard">
+        <!-- Admin Direct Messages & Warning Banners -->
+        <div id="adminDirectMessagesBanner" style="display: none; margin-bottom: 16px;"></div>
 
-        <!-- Greeting Section -->
-        <div class="dash-greeting-block">
-          <h1 class="greeting-title" id="dashGreetingText">Good morning, User</h1>
-          <p class="greeting-subtitle">Your WhatsApp automation is ready.</p>
-        </div>
+        <!-- ==================== 1. DASHBOARD OVERVIEW PAGE ==================== -->
+        <section class="app-page active" id="pageDashboard">
 
-        <!-- WhatsApp Status Block (Prominent Dark Card) -->
-        <div class="whatsapp-status-card">
-          <div class="wa-status-header">
-            <span class="wa-status-label">WHATSAPP STATUS</span>
-            <span id="botStatusBadge" class="badge badge-neutral">● Disconnected</span>
-          </div>
-
-          <div class="wa-status-body">
-            <div class="wa-phone-number" id="botConnectedPhonesText">+256 XXX XXX XXX</div>
-            <div class="wa-bot-state" id="botUptimeText">Bot is running</div>
-          </div>
-
-          <div class="wa-status-footer">
-            <a href="https://web.whatsapp.com" target="_blank" rel="noopener" class="btn btn-dark-action">
-              <i class="fab fa-whatsapp"></i> Open WhatsApp
-            </a>
-          </div>
-        </div>
-
-        <!-- Statistics Blocks (Automation + Messages) -->
-        <div class="grid-2">
-          <div class="stat-card">
-            <div class="stat-icon-wrap">
-              <i class="fas fa-bolt"></i>
-            </div>
-            <div class="stat-content">
-              <div class="stat-value" id="statActiveAutomations">0</div>
-              <div class="stat-label">Active Automations</div>
-              <span class="stat-badge success"><i class="fas fa-check-circle"></i> Running</span>
-            </div>
-          </div>
-
-          <div class="stat-card">
-            <div class="stat-icon-wrap">
-              <i class="fas fa-paper-plane"></i>
-            </div>
-            <div class="stat-content">
-              <div class="stat-value" id="statProcessedMessages">0</div>
-              <div class="stat-label">Processed Messages</div>
-              <span class="stat-badge neutral"><i class="fas fa-sync"></i> Realtime</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Wallet Balance Block -->
-        <div class="app-card wallet-summary-card">
-          <div class="wallet-summary-header">
-            <div>
-              <div class="card-eyebrow">WALLET BALANCE</div>
-              <div class="wallet-balance-amount" id="dashWalletBalanceDisplay">$0.00</div>
-            </div>
-            <button class="btn primary sm" onclick="switchTab('topup')">
-              <i class="fas fa-plus-circle"></i> Top Up
-            </button>
-          </div>
-        </div>
-
-        <!-- Recent Activity Feed -->
-        <div class="app-card">
-          <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-history"></i> Recent Activity</h3>
-          </div>
-          <div id="dashRecentActivityList" class="activity-feed-list">
-            <div class="empty-feed-text">No recent bot activity recorded yet.</div>
-          </div>
-        </div>
-
-        <!-- Quick Actions Grid -->
-        <div class="app-card">
-          <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-th-large"></i> Quick Actions</h3>
-          </div>
-          <div class="quick-actions-grid">
-            <button class="quick-action-btn" onclick="switchTab('pair')">
-              <i class="fas fa-link"></i>
-              <span>Pair WhatsApp</span>
-            </button>
-            <button class="quick-action-btn" onclick="switchTab('automations')">
-              <i class="fas fa-robot"></i>
-              <span>Manage Bot</span>
-            </button>
-            <button class="quick-action-btn" onclick="openCommandsModal()">
-              <i class="fas fa-terminal"></i>
-              <span>Commands</span>
-            </button>
-            <button class="quick-action-btn" onclick="openSettingsModal()">
-              <i class="fas fa-cog"></i>
-              <span>Settings</span>
-            </button>
-          </div>
-        </div>
-
-      </section>
-
-      <!-- ==================== 2. PAIR PAGE ==================== -->
-      <section class="app-page" id="pagePair">
-        <div class="page-header-simple">
-          <h1 class="page-title">Pair WhatsApp</h1>
-          <p class="page-subtitle">Connect your WhatsApp phone number using secure 8-digit pairing code.</p>
-        </div>
-
-        <!-- Connection Status Summary -->
-        <div class="app-card">
-          <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-signal"></i> Connection Status</h3>
-            <span id="pairStatusBadge" class="badge badge-neutral">DISCONNECTED</span>
-          </div>
-          <div class="pair-info-grid">
-            <div>
-              <span class="info-label">Linked Number:</span>
-              <strong id="pairLinkedPhoneDisplay" class="info-val">None</strong>
-            </div>
-            <div>
-              <span class="info-label">Active Sessions:</span>
-              <strong id="connectSessionsCount" class="info-val text-primary">0</strong>
-            </div>
-          </div>
-        </div>
-
-        <!-- Pair Code Generator Block -->
-        <div class="app-card">
-          <h3 class="card-title" style="margin-bottom: 6px;"><i class="fas fa-key"></i> Connect / Pair Account</h3>
-          <p style="color: var(--muted); font-size: 13px; margin-bottom: 16px;">Enter phone number with country code (e.g. 256702662846)</p>
-
-          <form onsubmit="handlePairRequest(event)">
-            <div class="form-group">
-              <label class="form-label" for="dashPhoneInput"><i class="fas fa-phone-alt"></i> Phone Number</label>
-              <input type="tel" id="dashPhoneInput" class="form-control" placeholder="256702662846" required>
+          <!-- Top Action Bar -->
+          <div class="dashboard-top-bar">
+            <div class="page-title-group">
+              <h1>Infrastructure Overview</h1>
+              <p>System performance and service health monitoring</p>
             </div>
 
-            <div style="display: flex; gap: 10px;">
-              <button type="submit" id="dashPairSubmitBtn" class="btn primary full-width lg">
-                <i class="fas fa-bolt"></i> Generate Pair Code
+            <div class="dashboard-top-controls">
+              <select class="timeframe-select">
+                <option value="24h">Last 24 Hours</option>
+                <option value="7d">Last 7 Days</option>
+                <option value="30d">Last 30 Days</option>
+              </select>
+
+              <button type="button" class="btn-secondary-slate">
+                <i class="fas fa-download"></i> Export Report
+              </button>
+
+              <button type="button" class="btn-primary-blue">
+                <i class="fas fa-plus"></i> Add Widget
               </button>
             </div>
-          </form>
-
-          <div id="dashPairResultBox" class="pair-result-container" style="display: none;">
-            <span class="pair-code-label">YOUR PAIRING CODE</span>
-            <div id="dashPairCodeDisplay" class="pair-code-text">--------</div>
-            <p class="pair-code-instructions">Open WhatsApp &gt; Linked Devices &gt; Link with Phone Number Instead</p>
-          </div>
-        </div>
-
-        <!-- Active Sessions & Control -->
-        <div class="app-card">
-          <h3 class="card-title" style="margin-bottom: 14px;"><i class="fas fa-microchip"></i> Active Sessions</h3>
-          <div id="activeSessionsList" class="stack-list">
-            <span style="color: var(--muted); font-size: 13px;">No connected sessions.</span>
           </div>
 
-          <div style="margin-top: 18px; display: flex; gap: 10px;">
-            <button type="button" id="restartEngineBtn" class="btn danger full-width sm" onclick="handleRestartEngine()">
-              <i class="fas fa-redo-alt"></i> Reconnect / Restart Bot
-            </button>
-          </div>
-        </div>
-
-        <!-- Sudo Permissions Block -->
-        <div class="app-card">
-          <h3 class="card-title" style="margin-bottom: 6px;"><i class="fas fa-user-shield"></i> Sudo Users Permissions</h3>
-          <p style="color: var(--muted); font-size: 13px; margin-bottom: 14px;">Grant admin bot control to secondary numbers.</p>
-
-          <form onsubmit="handleAddSudo(event)" style="margin-bottom: 14px;">
-            <div class="form-group">
-              <div style="display: flex; gap: 8px;">
-                <input type="tel" id="sudoPhoneInput" class="form-control" placeholder="256702662846" required>
-                <button type="submit" id="addSudoBtn" class="btn primary sm" style="white-space: nowrap;">Add Sudo</button>
+          <!-- 4 SUMMARY METRIC CARDS -->
+          <div class="metrics-summary-grid">
+            <!-- Metric Card 1: System Uptime -->
+            <div class="metric-card">
+              <div>
+                <div class="metric-card-header">
+                  <span class="metric-title">System Uptime</span>
+                  <div class="metric-icon-box"><i class="fas fa-server"></i></div>
+                </div>
+                <div class="metric-value-num" id="statSystemUptime">99.98%</div>
+              </div>
+              <div class="metric-change-row">
+                <span class="pill-badge green"><i class="fas fa-arrow-up"></i> +0.02%</span>
+                <span class="change-label-text">from last week</span>
               </div>
             </div>
-          </form>
 
-          <div id="sudoUsersList" class="stack-list">
-            <span style="color: var(--muted); font-size: 13px;">Loading sudo users...</span>
-          </div>
-        </div>
-
-      </section>
-
-      <!-- ==================== 3. TOP UP PAGE ==================== -->
-      <section class="app-page" id="pageTopup">
-        <div class="page-header-simple">
-          <h1 class="page-title">Top Up Wallet</h1>
-          <p class="page-subtitle">Instant credit addition to your Terminal Vast balance.</p>
-        </div>
-
-        <!-- Main Balance Card -->
-        <div class="app-card topup-balance-card">
-          <span class="card-eyebrow">CURRENT WALLET BALANCE</span>
-          <div id="dashWalletBalanceDisplay_topupPage" class="topup-amount-big">$0.00</div>
-          <p style="color: var(--muted); font-size: 13px;">Credits enable automated features &amp; message processing.</p>
-        </div>
-
-        <!-- Quick Preset Amounts Block ($5, $10, $20, $50) -->
-        <div class="app-card">
-          <h3 class="card-title" style="margin-bottom: 14px;"><i class="fas fa-bolt"></i> Quick Preset Top Up</h3>
-
-          <div class="topup-presets-grid">
-            <div class="preset-block" onclick="executeQuickTopUp(5, this)">
-              <div class="preset-amount">$5</div>
-              <div class="preset-tag">Basic</div>
-            </div>
-            <div class="preset-block" onclick="executeQuickTopUp(10, this)">
-              <div class="preset-amount">$10</div>
-              <div class="preset-tag">Standard</div>
-            </div>
-            <div class="preset-block" onclick="executeQuickTopUp(20, this)">
-              <div class="preset-amount">$20</div>
-              <div class="preset-tag">Pro</div>
-            </div>
-            <div class="preset-block" onclick="executeQuickTopUp(50, this)">
-              <div class="preset-amount">$50</div>
-              <div class="preset-tag">Enterprise</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Custom Amount Section -->
-        <div class="app-card">
-          <h3 class="card-title" style="margin-bottom: 14px;"><i class="fas fa-edit"></i> Custom Amount</h3>
-
-          <form onsubmit="handleCustomTopUp(event)">
-            <div class="form-group">
-              <label class="form-label" for="topUpAmountInput"><i class="fas fa-dollar-sign"></i> Amount ($)</label>
-              <input type="number" id="topUpAmountInput" class="form-control" min="1" step="0.01" placeholder="25.00" required>
-            </div>
-
-            <button type="submit" class="btn primary full-width lg">
-              <i class="fas fa-credit-card"></i> Pay &amp; Top Up Now
-            </button>
-          </form>
-        </div>
-
-        <!-- Transaction History -->
-        <div class="app-card">
-          <h3 class="card-title" style="margin-bottom: 14px;"><i class="fas fa-history"></i> Top Up History</h3>
-          <div id="topupHistoryList" class="stack-list">
-            <span style="color: var(--muted); font-size: 13px;">No top up transactions recorded yet.</span>
-          </div>
-        </div>
-      </section>
-
-      <!-- ==================== 4. AUTOMATIONS PAGE ==================== -->
-      <section class="app-page" id="pageAutomations">
-        <div class="page-header-simple">
-          <h1 class="page-title">Automations</h1>
-          <p class="page-subtitle">Enable and configure real WhatsApp bot automation modules.</p>
-        </div>
-
-        <div class="automations-list" id="automationsListContainer">
-
-          <!-- Auto Reply (AI Chat) -->
-          <div class="app-card automation-card">
-            <div class="automation-header">
-              <div class="automation-icon-box"><i class="fas fa-robot"></i></div>
-              <div class="automation-info">
-                <h3 class="automation-title">Auto Reply / AI Chat</h3>
-                <p class="automation-desc">Automated intelligent AI responses to incoming messages.</p>
+            <!-- Metric Card 2: Active Services -->
+            <div class="metric-card">
+              <div>
+                <div class="metric-card-header">
+                  <span class="metric-title">Active Services</span>
+                  <div class="metric-icon-box"><i class="fas fa-cubes"></i></div>
+                </div>
+                <div class="metric-value-num" id="statActiveServices">42 / 45</div>
               </div>
-              <label class="toggle-switch">
-                <input type="checkbox" id="autoToggleAiChat" onchange="toggleAutomation('aiChat', this.checked)">
-                <span class="toggle-slider"></span>
-              </label>
-            </div>
-          </div>
-
-          <!-- Welcome Messages -->
-          <div class="app-card automation-card">
-            <div class="automation-header">
-              <div class="automation-icon-box"><i class="fas fa-door-open"></i></div>
-              <div class="automation-info">
-                <h3 class="automation-title">Welcome Messages</h3>
-                <p class="automation-desc">Greeting card and welcome text when new participants join groups.</p>
+              <div class="metric-change-row">
+                <span class="pill-badge amber"><i class="fas fa-exclamation-triangle"></i> 3 degraded</span>
+                <span class="change-label-text">requires attention</span>
               </div>
-              <label class="toggle-switch">
-                <input type="checkbox" id="autoToggleWelcome" onchange="toggleAutomation('welcome', this.checked)">
-                <span class="toggle-slider"></span>
-              </label>
             </div>
-          </div>
 
-          <!-- Auto Read -->
-          <div class="app-card automation-card">
-            <div class="automation-header">
-              <div class="automation-icon-box"><i class="fas fa-check-double"></i></div>
-              <div class="automation-info">
-                <h3 class="automation-title">Auto Read Messages</h3>
-                <p class="automation-desc">Automatically mark received messages as read in real time.</p>
+            <!-- Metric Card 3: Total Request Volume -->
+            <div class="metric-card">
+              <div>
+                <div class="metric-card-header">
+                  <span class="metric-title">Total Request Volume</span>
+                  <div class="metric-icon-box"><i class="fas fa-exchange-alt"></i></div>
+                </div>
+                <div class="metric-value-num" id="statTotalRequests">12.4M</div>
               </div>
-              <label class="toggle-switch">
-                <input type="checkbox" id="autoToggleAutoRead" onchange="toggleAutomation('autoRead', this.checked)">
-                <span class="toggle-slider"></span>
-              </label>
-            </div>
-          </div>
-
-          <!-- Auto View Status -->
-          <div class="app-card automation-card">
-            <div class="automation-header">
-              <div class="automation-icon-box"><i class="fas fa-eye"></i></div>
-              <div class="automation-info">
-                <h3 class="automation-title">Status Automation</h3>
-                <p class="automation-desc">Automatically view contacts' WhatsApp status updates.</p>
+              <div class="metric-change-row">
+                <span class="pill-badge green"><i class="fas fa-arrow-up"></i> +18.5%</span>
+                <span class="change-label-text">vs yesterday</span>
               </div>
-              <label class="toggle-switch">
-                <input type="checkbox" id="autoToggleAutoViewStatus" onchange="toggleAutomation('autoViewStatus', this.checked)">
-                <span class="toggle-slider"></span>
-              </label>
             </div>
-          </div>
 
-          <!-- Auto React -->
-          <div class="app-card automation-card">
-            <div class="automation-header">
-              <div class="automation-icon-box"><i class="fas fa-grin-beam"></i></div>
-              <div class="automation-info">
-                <h3 class="automation-title">Auto React</h3>
-                <p class="automation-desc">React with emojis automatically to incoming chats and status updates.</p>
+            <!-- Metric Card 4: Avg Response Time -->
+            <div class="metric-card">
+              <div>
+                <div class="metric-card-header">
+                  <span class="metric-title">Avg Response Time</span>
+                  <div class="metric-icon-box"><i class="fas fa-bolt"></i></div>
+                </div>
+                <div class="metric-value-num" id="statAvgResponseTime">142 ms</div>
               </div>
-              <label class="toggle-switch">
-                <input type="checkbox" id="autoToggleAutoReact" onchange="toggleAutomation('autoReact', this.checked)">
-                <span class="toggle-slider"></span>
-              </label>
-            </div>
-          </div>
-
-          <!-- Anti Call -->
-          <div class="app-card automation-card">
-            <div class="automation-header">
-              <div class="automation-icon-box"><i class="fas fa-phone-slash"></i></div>
-              <div class="automation-info">
-                <h3 class="automation-title">Anti Call Protection</h3>
-                <p class="automation-desc">Reject or block unexpected WhatsApp voice and video calls.</p>
+              <div class="metric-change-row">
+                <span class="pill-badge green"><i class="fas fa-arrow-down"></i> -12 ms</span>
+                <span class="change-label-text">improvement</span>
               </div>
-              <label class="toggle-switch">
-                <input type="checkbox" id="autoToggleAntiCall" onchange="toggleAutomation('antiCall', this.checked ? 'decline' : 'off')">
-                <span class="toggle-slider"></span>
-              </label>
             </div>
           </div>
 
-          <!-- Anti Delete -->
-          <div class="app-card automation-card">
-            <div class="automation-header">
-              <div class="automation-icon-box"><i class="fas fa-trash-restore"></i></div>
-              <div class="automation-info">
-                <h3 class="automation-title">Anti Delete Recovery</h3>
-                <p class="automation-desc">Retain deleted messages and media sent by contacts.</p>
+          <!-- MIDDLE SECTION: RESOURCE UTILIZATION CHART & SERVICE HEALTH -->
+          <div class="dashboard-middle-grid">
+
+            <!-- Resource Utilization Chart Widget -->
+            <div class="widget-card">
+              <div class="widget-header">
+                <div class="widget-title">
+                  <i class="fas fa-chart-area"></i>
+                  <span>Infrastructure Resource Utilization</span>
+                </div>
+
+                <div class="chart-tabs-group">
+                  <button type="button" class="chart-tab-btn active" onclick="switchChartTab('cpu', this)">CPU Load</button>
+                  <button type="button" class="chart-tab-btn" onclick="switchChartTab('memory', this)">Memory Usage</button>
+                  <button type="button" class="chart-tab-btn" onclick="switchChartTab('network', this)">Network I/O</button>
+                  <button type="button" class="chart-tab-btn" onclick="switchChartTab('disk', this)">Disk Operations</button>
+                </div>
               </div>
-              <label class="toggle-switch">
-                <input type="checkbox" id="autoToggleAntiDelete" onchange="toggleAutomation('antiDelete', this.checked)">
-                <span class="toggle-slider"></span>
-              </label>
+
+              <!-- Time-series Canvas -->
+              <div class="chart-container-box">
+                <canvas id="utilizationChartCanvas"></canvas>
+              </div>
+            </div>
+
+            <!-- Service Health & Status Widget -->
+            <div class="widget-card">
+              <div class="widget-header">
+                <div class="widget-title">
+                  <i class="fas fa-heartbeat"></i>
+                  <span>Service Health &amp; Status</span>
+                </div>
+                <a href="#" style="font-size: 12px; color: var(--primary-blue); font-weight: 600;">View All (45)</a>
+              </div>
+
+              <div class="service-health-list" id="serviceHealthListContainer">
+                <!-- API Gateway -->
+                <div class="service-item-row">
+                  <div class="service-name-group">
+                    <span class="service-dot healthy"></span>
+                    <div>
+                      <div class="service-title-str">API Gateway</div>
+                      <div class="service-meta-str">v4.0.5 • k8s-prod-us-east</div>
+                    </div>
+                  </div>
+                  <div class="service-stats-group">
+                    <div class="service-stat-item">
+                      <span class="stat-val-bold">99.99%</span>
+                      <span class="stat-lbl-dim">uptime</span>
+                    </div>
+                    <div class="service-stat-item">
+                      <span class="stat-val-bold">24 ms</span>
+                      <span class="stat-lbl-dim">latency</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Auth Service -->
+                <div class="service-item-row">
+                  <div class="service-name-group">
+                    <span class="service-dot healthy"></span>
+                    <div>
+                      <div class="service-title-str">Auth Service</div>
+                      <div class="service-meta-str">v2.4.1 • k8s-prod-us-east</div>
+                    </div>
+                  </div>
+                  <div class="service-stats-group">
+                    <div class="service-stat-item">
+                      <span class="stat-val-bold">99.95%</span>
+                      <span class="stat-lbl-dim">uptime</span>
+                    </div>
+                    <div class="service-stat-item">
+                      <span class="stat-val-bold">42 ms</span>
+                      <span class="stat-lbl-dim">latency</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Payment Processing -->
+                <div class="service-item-row">
+                  <div class="service-name-group">
+                    <span class="service-dot degraded"></span>
+                    <div>
+                      <div class="service-title-str">Payment Processing</div>
+                      <div class="service-meta-str">v1.8.0 • k8s-prod-eu-west</div>
+                    </div>
+                  </div>
+                  <div class="service-stats-group">
+                    <div class="service-stat-item">
+                      <span class="stat-val-bold" style="color: var(--warning-amber);">98.50%</span>
+                      <span class="stat-lbl-dim">uptime</span>
+                    </div>
+                    <div class="service-stat-item">
+                      <span class="stat-val-bold" style="color: var(--warning-amber);">380 ms</span>
+                      <span class="stat-lbl-dim">latency</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Search Indexer -->
+                <div class="service-item-row">
+                  <div class="service-name-group">
+                    <span class="service-dot healthy"></span>
+                    <div>
+                      <div class="service-title-str">Search Indexer</div>
+                      <div class="service-meta-str">v3.1.2 • k8s-prod-us-west</div>
+                    </div>
+                  </div>
+                  <div class="service-stats-group">
+                    <div class="service-stat-item">
+                      <span class="stat-val-bold">99.90%</span>
+                      <span class="stat-lbl-dim">uptime</span>
+                    </div>
+                    <div class="service-stat-item">
+                      <span class="stat-val-bold">85 ms</span>
+                      <span class="stat-lbl-dim">latency</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Notification Worker -->
+                <div class="service-item-row">
+                  <div class="service-name-group">
+                    <span class="service-dot healthy"></span>
+                    <div>
+                      <div class="service-title-str">Notification Worker</div>
+                      <div class="service-meta-str">v1.2.9 • k8s-prod-us-east</div>
+                    </div>
+                  </div>
+                  <div class="service-stats-group">
+                    <div class="service-stat-item">
+                      <span class="stat-val-bold">99.98%</span>
+                      <span class="stat-lbl-dim">uptime</span>
+                    </div>
+                    <div class="service-stat-item">
+                      <span class="stat-val-bold">18 ms</span>
+                      <span class="stat-lbl-dim">latency</span>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
             </div>
           </div>
 
-        </div>
-      </section>
+          <!-- BOTTOM SECTION: RECENT DEPLOYMENTS & ACTIVE ALERTS -->
+          <div class="dashboard-bottom-grid">
 
-      <!-- ==================== 5. PROFILE PAGE (CONTAINS HAMBURGER SIDEBAR DRAWER) ==================== -->
-      <section class="app-page" id="pageProfile">
+            <!-- Recent Deployment Activity Widget -->
+            <div class="widget-card">
+              <div class="widget-header">
+                <div class="widget-title">
+                  <i class="fas fa-history"></i>
+                  <span>Recent Deployment Activity</span>
+                </div>
+                <a href="#" style="font-size: 12px; color: var(--primary-blue); font-weight: 600;">Audit Logs</a>
+              </div>
 
-        <!-- Profile Header with Hamburger Drawer Trigger -->
-        <div class="profile-header-bar">
-          <div class="page-header-simple" style="margin-bottom: 0;">
-            <h1 class="page-title">Profile</h1>
-            <p class="page-subtitle">Account credentials &amp; sidebar settings.</p>
+              <div class="deployments-table-wrap">
+                <table class="deploy-table">
+                  <thead>
+                    <tr>
+                      <th>Service / Version</th>
+                      <th>Deployed By</th>
+                      <th>Timestamp</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="deploymentActivityTableBody">
+                    <tr>
+                      <td><strong>auth-service</strong> <span class="service-version-code">v2.4.1</span></td>
+                      <td>Alex R.</td>
+                      <td>12 mins ago</td>
+                      <td><span class="pill-badge green"><i class="fas fa-check-circle"></i> Success</span></td>
+                    </tr>
+                    <tr>
+                      <td><strong>payment-gateway</strong> <span class="service-version-code">v1.8.0</span></td>
+                      <td>CI/CD Pipeline</td>
+                      <td>45 mins ago</td>
+                      <td><span class="pill-badge green"><i class="fas fa-check-circle"></i> Success</span></td>
+                    </tr>
+                    <tr>
+                      <td><strong>search-indexer</strong> <span class="service-version-code">v3.1.2</span></td>
+                      <td>Sarah T.</td>
+                      <td>2 hours ago</td>
+                      <td><span class="pill-badge red"><i class="fas fa-times-circle"></i> Failed</span></td>
+                    </tr>
+                    <tr>
+                      <td><strong>api-gateway</strong> <span class="service-version-code">v4.0.5</span></td>
+                      <td>Alex R.</td>
+                      <td>4 hours ago</td>
+                      <td><span class="pill-badge green"><i class="fas fa-check-circle"></i> Success</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Active Alerts & Incident Log Widget -->
+            <div class="widget-card">
+              <div class="widget-header">
+                <div class="widget-title">
+                  <i class="fas fa-exclamation-circle"></i>
+                  <span>Active Alerts &amp; Incident Log</span>
+                </div>
+                <span class="pill-badge red" id="activeAlertCountBadge">3 Active</span>
+              </div>
+
+              <div class="incidents-feed-list" id="activeAlertsListContainer">
+                <div class="alert-item-card high">
+                  <div class="alert-card-top">
+                    <span class="pill-badge red"><i class="fas fa-fire"></i> HIGH</span>
+                    <span class="alert-timestamp-str">14 mins ago</span>
+                  </div>
+                  <div class="alert-msg-text">High Latency Spike (>380ms) detected on Payment Processing Service (k8s-prod-eu-west).</div>
+                </div>
+
+                <div class="alert-item-card medium">
+                  <div class="alert-card-top">
+                    <span class="pill-badge amber"><i class="fas fa-exclamation-triangle"></i> MEDIUM</span>
+                    <span class="alert-timestamp-str">1 hour ago</span>
+                  </div>
+                  <div class="alert-msg-text">Memory Utilization exceeded 85% threshold on DB-Node-02 (PostgreSQL Primary).</div>
+                </div>
+
+                <div class="alert-item-card low">
+                  <div class="alert-card-top">
+                    <span class="pill-badge" style="background: var(--primary-blue-light); color: var(--primary-blue); border: 1px solid rgba(37, 99, 235, 0.3);"><i class="fas fa-info-circle"></i> LOW</span>
+                    <span class="alert-timestamp-str">3 hours ago</span>
+                  </div>
+                  <div class="alert-msg-text">SSL Wildcard Certificate automatically renewed for *.techstack.io.</div>
+                </div>
+              </div>
+            </div>
+
           </div>
 
-          <!-- Hamburger Button inside Profile Page ONLY -->
-          <button type="button" class="profile-drawer-toggle" onclick="toggleProfileDrawer()" title="Open Profile Sidebar">
-            <i class="fas fa-bars"></i>
-          </button>
-        </div>
+        </section>
 
-        <!-- Profile Hero Card -->
-        <div class="app-card profile-hero-card">
-          <div class="profile-avatar-wrapper" id="profileBigAvatar">U</div>
-          <div class="profile-hero-details">
-            <h2 id="profileUsernameDisplay" class="profile-hero-name">User</h2>
-            <div class="profile-hero-meta">
-              <span id="profileRoleBadge" class="badge badge-primary">USER</span>
-              <span id="profileEmailDisplay" style="color: var(--muted); font-size: 13px;">user@terminalvast.bot</span>
+        <!-- ==================== 2. INFRASTRUCTURE / PAIR PAGE ==================== -->
+        <section class="app-page" id="pagePair">
+          <div class="dashboard-top-bar">
+            <div class="page-title-group">
+              <h1>Infrastructure &amp; WhatsApp Engine</h1>
+              <p>Manage node instances, phone pairings, and active sessions</p>
+            </div>
+            <span id="pairStatusBadge" class="pill-badge green">CONNECTED</span>
+          </div>
+
+          <!-- Connection Status Summary Card -->
+          <div class="app-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+              <h3 style="font-size: 16px; font-weight: 700;"><i class="fas fa-network-wired text-primary"></i> Engine Connection Summary</h3>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+              <div>
+                <span style="font-size: 12px; color: var(--text-muted);">Linked Number:</span>
+                <div id="pairLinkedPhoneDisplay" style="font-size: 16px; font-weight: 800; color: var(--text-main); margin-top: 2px;">None</div>
+              </div>
+              <div>
+                <span style="font-size: 12px; color: var(--text-muted);">Active Sessions:</span>
+                <div id="connectSessionsCount" style="font-size: 16px; font-weight: 800; color: var(--primary-blue); margin-top: 2px;">0</div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- PROFILE DRAWER OVERLAY & SIDEBAR -->
-        <div class="profile-drawer-overlay" id="profileDrawerOverlay" onclick="closeProfileDrawer()"></div>
-        <aside class="profile-sidebar-drawer" id="profileSidebarDrawer">
-          <div class="drawer-header">
-            <h3>Menu &amp; Settings</h3>
-            <button class="drawer-close-btn" onclick="closeProfileDrawer()"><i class="fas fa-times"></i></button>
+          <!-- Pair Code Generator Card -->
+          <div class="app-card">
+            <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 6px;"><i class="fas fa-key text-primary"></i> Connect / Pair WhatsApp Engine</h3>
+            <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">Enter phone number with international country code (e.g. 256702662846)</p>
+
+            <form onsubmit="handlePairRequest(event)">
+              <div class="form-group">
+                <label class="form-label" for="dashPhoneInput"><i class="fas fa-phone-alt"></i> Phone Number</label>
+                <input type="tel" id="dashPhoneInput" class="form-control" placeholder="256702662846" required>
+              </div>
+
+              <button type="submit" id="dashPairSubmitBtn" class="btn-primary-blue" style="width: 100%; height: 42px; justify-content: center;">
+                <i class="fas fa-bolt"></i> Generate Pairing Code
+              </button>
+            </form>
+
+            <div id="dashPairResultBox" style="display: none; margin-top: 16px; padding: 16px; background: var(--bg-dark); border: 1px dashed var(--primary-blue); border-radius: var(--radius-md); text-align: center;">
+              <span style="font-size: 11px; font-weight: 700; color: var(--primary-blue); letter-spacing: 0.05em;">YOUR PAIRING CODE</span>
+              <div id="dashPairCodeDisplay" style="font-family: monospace; font-size: 28px; font-weight: 800; color: var(--text-main); letter-spacing: 4px; margin: 8px 0;">--------</div>
+              <p style="font-size: 12px; color: var(--text-muted);">Open WhatsApp &gt; Linked Devices &gt; Link with Phone Number Instead</p>
+            </div>
           </div>
 
-          <nav class="drawer-nav">
-            <a href="#" class="drawer-link active" onclick="switchProfileSection('overview'); closeProfileDrawer(); return false;">
-              <i class="fas fa-user"></i> Overview
-            </a>
-            <a href="#" class="drawer-link" onclick="openSettingsModal(); closeProfileDrawer(); return false;">
-              <i class="fas fa-cog"></i> Settings
-            </a>
-            <a href="#" class="drawer-link" onclick="openCommandsModal(); closeProfileDrawer(); return false;">
-              <i class="fas fa-terminal"></i> Commands
-            </a>
-            <a href="#" class="drawer-link" onclick="switchProfileSection('avatar'); closeProfileDrawer(); return false;">
-              <i class="fas fa-camera"></i> Profile Studio
-            </a>
-            <a href="#" class="drawer-link" onclick="switchProfileSection('security'); closeProfileDrawer(); return false;">
-              <i class="fas fa-lock"></i> Security &amp; Password
-            </a>
-            <a href="#" class="drawer-link" onclick="switchProfileSection('history'); closeProfileDrawer(); return false;">
-              <i class="fas fa-history"></i> Activity Logs
-            </a>
-            <a href="#" class="drawer-link" onclick="switchProfileSection('blog'); closeProfileDrawer(); return false;">
-              <i class="fas fa-newspaper"></i> Platform Blog
-            </a>
-            <a href="#" class="drawer-link" id="pSubNavAdmin" onclick="switchProfileSection('admin'); closeProfileDrawer(); return false;" style="display: none; color: var(--primary);">
-              <i class="fas fa-user-shield"></i> Admin Panel
-            </a>
-            <a href="#" class="drawer-link" onclick="openNotificationsModal(); closeProfileDrawer(); return false;">
-              <i class="fas fa-bell"></i> Notifications
-            </a>
-            <a href="#" class="drawer-link" onclick="openHelpModal(); closeProfileDrawer(); return false;">
-              <i class="fas fa-question-circle"></i> Help &amp; Support
-            </a>
-            <a href="#" class="drawer-link" onclick="openAboutModal(); closeProfileDrawer(); return false;">
-              <i class="fas fa-info-circle"></i> About
-            </a>
+          <!-- Active Sessions & Control Card -->
+          <div class="app-card">
+            <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 14px;"><i class="fas fa-microchip text-primary"></i> Active Node Sessions</h3>
+            <div id="activeSessionsList" style="display: flex; flex-direction: column; gap: 8px;">
+              <span style="color: var(--text-muted); font-size: 13px;">No connected sessions.</span>
+            </div>
 
-            <div style="margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--border);">
-              <button type="button" class="btn danger full-width sm" onclick="handleLogout()">
-                <i class="fas fa-sign-out-alt"></i> Logout
+            <div style="margin-top: 18px;">
+              <button type="button" id="restartEngineBtn" class="btn-secondary-slate" style="color: var(--danger-red); border-color: var(--danger-red-border); width: 100%; justify-content: center;" onclick="handleRestartEngine()">
+                <i class="fas fa-redo-alt"></i> Restart Engine / Reconnect
               </button>
             </div>
-          </nav>
-        </aside>
+          </div>
 
-        <!-- PROFILE DYNAMIC CONTENT SECTION -->
-        <div class="profile-content-body">
+          <!-- Sudo Permissions Card -->
+          <div class="app-card">
+            <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 6px;"><i class="fas fa-user-shield text-primary"></i> Sudo User Permissions</h3>
+            <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 14px;">Grant administrative control to secondary phone numbers.</p>
+
+            <form onsubmit="handleAddSudo(event)" style="margin-bottom: 14px;">
+              <div class="form-group">
+                <div style="display: flex; gap: 8px;">
+                  <input type="tel" id="sudoPhoneInput" class="form-control" placeholder="256702662846" required>
+                  <button type="submit" id="addSudoBtn" class="btn-primary-blue" style="white-space: nowrap;">Add Sudo</button>
+                </div>
+              </div>
+            </form>
+
+            <div id="sudoUsersList" style="display: flex; flex-direction: column; gap: 8px;">
+              <span style="color: var(--text-muted); font-size: 13px;">Loading sudo users...</span>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- ==================== 3. COST & CLOUD / TOP UP PAGE ==================== -->
+        <section class="app-page" id="pageTopup">
+          <div class="dashboard-top-bar">
+            <div class="page-title-group">
+              <h1>Cost &amp; Cloud Credits</h1>
+              <p>Manage cloud infrastructure credits and top up balance</p>
+            </div>
+          </div>
+
+          <!-- Current Balance Display -->
+          <div class="app-card" style="text-align: center; padding: 28px 20px;">
+            <span style="font-size: 12px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.05em;">CURRENT CLOUD BALANCE</span>
+            <div id="dashWalletBalanceDisplay_topupPage" style="font-size: 42px; font-weight: 800; color: var(--text-main); margin: 6px 0;">$0.00</div>
+            <p style="color: var(--text-muted); font-size: 13px;">Credits fuel microservice execution and automated message processing.</p>
+          </div>
+
+          <!-- Quick Preset Amounts Card -->
+          <div class="app-card">
+            <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 14px;"><i class="fas fa-bolt text-primary"></i> Quick Credit Presets</h3>
+
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+              <div class="btn-secondary-slate" style="flex-direction: column; padding: 16px; height: auto; text-align: center;" onclick="executeQuickTopUp(5, this)">
+                <div style="font-size: 22px; font-weight: 800;">$5.00</div>
+                <div style="font-size: 11px; color: var(--text-muted);">Developer Tier</div>
+              </div>
+              <div class="btn-secondary-slate" style="flex-direction: column; padding: 16px; height: auto; text-align: center;" onclick="executeQuickTopUp(10, this)">
+                <div style="font-size: 22px; font-weight: 800;">$10.00</div>
+                <div style="font-size: 11px; color: var(--text-muted);">Standard Cluster</div>
+              </div>
+              <div class="btn-secondary-slate" style="flex-direction: column; padding: 16px; height: auto; text-align: center;" onclick="executeQuickTopUp(20, this)">
+                <div style="font-size: 22px; font-weight: 800;">$20.00</div>
+                <div style="font-size: 11px; color: var(--text-muted);">Pro Scale</div>
+              </div>
+              <div class="btn-secondary-slate" style="flex-direction: column; padding: 16px; height: auto; text-align: center;" onclick="executeQuickTopUp(50, this)">
+                <div style="font-size: 22px; font-weight: 800;">$50.00</div>
+                <div style="font-size: 11px; color: var(--text-muted);">Enterprise Volume</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Custom Amount Section -->
+          <div class="app-card">
+            <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 14px;"><i class="fas fa-credit-card text-primary"></i> Custom Credit Amount</h3>
+
+            <form onsubmit="handleCustomTopUp(event)">
+              <div class="form-group">
+                <label class="form-label" for="topUpAmountInput"><i class="fas fa-dollar-sign"></i> Amount ($)</label>
+                <input type="number" id="topUpAmountInput" class="form-control" min="1" step="0.01" placeholder="25.00" required>
+              </div>
+
+              <button type="submit" class="btn-primary-blue" style="width: 100%; height: 42px; justify-content: center;">
+                <i class="fas fa-plus-circle"></i> Add Cloud Credits
+              </button>
+            </form>
+          </div>
+
+          <!-- Top Up Transaction History -->
+          <div class="app-card">
+            <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 14px;"><i class="fas fa-history text-primary"></i> Credit History</h3>
+            <div id="topupHistoryList" style="display: flex; flex-direction: column; gap: 8px;">
+              <span style="color: var(--text-muted); font-size: 13px;">No credit transactions recorded yet.</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== 4. MICROSERVICES / AUTOMATIONS PAGE ==================== -->
+        <section class="app-page" id="pageAutomations">
+          <div class="dashboard-top-bar">
+            <div class="page-title-group">
+              <h1>Microservice Feature Automations</h1>
+              <p>Configure automated microservice behavior and message handling modules</p>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 14px;" id="automationsListContainer">
+
+            <!-- AI Chat Microservice -->
+            <div class="app-card" style="margin-bottom: 0;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 14px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <div style="width: 40px; height: 40px; border-radius: var(--radius-md); background: var(--primary-blue-light); color: var(--primary-blue); display: flex; align-items: center; justify-content: center; font-size: 18px;">
+                    <i class="fas fa-robot"></i>
+                  </div>
+                  <div>
+                    <div style="font-size: 15px; font-weight: 700; color: var(--text-main);">AI Chat Intelligence</div>
+                    <div style="font-size: 12px; color: var(--text-muted);">Automated AI responses powered by Gemini LLM</div>
+                  </div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="autoToggleAiChat" onchange="toggleAutomation('aiChat', this.checked)">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Welcome Service -->
+            <div class="app-card" style="margin-bottom: 0;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 14px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <div style="width: 40px; height: 40px; border-radius: var(--radius-md); background: var(--primary-blue-light); color: var(--primary-blue); display: flex; align-items: center; justify-content: center; font-size: 18px;">
+                    <i class="fas fa-door-open"></i>
+                  </div>
+                  <div>
+                    <div style="font-size: 15px; font-weight: 700; color: var(--text-main);">Welcome Greeting Service</div>
+                    <div style="font-size: 12px; color: var(--text-muted);">Automated cards and greetings when members join</div>
+                  </div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="autoToggleWelcome" onchange="toggleAutomation('welcome', this.checked)">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Auto Read Service -->
+            <div class="app-card" style="margin-bottom: 0;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 14px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <div style="width: 40px; height: 40px; border-radius: var(--radius-md); background: var(--primary-blue-light); color: var(--primary-blue); display: flex; align-items: center; justify-content: center; font-size: 18px;">
+                    <i class="fas fa-check-double"></i>
+                  </div>
+                  <div>
+                    <div style="font-size: 15px; font-weight: 700; color: var(--text-main);">Auto Read Receipts</div>
+                    <div style="font-size: 12px; color: var(--text-muted);">Acknowledge and mark messages as read automatically</div>
+                  </div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="autoToggleAutoRead" onchange="toggleAutomation('autoRead', this.checked)">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Status Automation Service -->
+            <div class="app-card" style="margin-bottom: 0;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 14px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <div style="width: 40px; height: 40px; border-radius: var(--radius-md); background: var(--primary-blue-light); color: var(--primary-blue); display: flex; align-items: center; justify-content: center; font-size: 18px;">
+                    <i class="fas fa-eye"></i>
+                  </div>
+                  <div>
+                    <div style="font-size: 15px; font-weight: 700; color: var(--text-main);">Status Viewing Worker</div>
+                    <div style="font-size: 12px; color: var(--text-muted);">Auto-view incoming WhatsApp contact statuses</div>
+                  </div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="autoToggleAutoViewStatus" onchange="toggleAutomation('autoViewStatus', this.checked)">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Auto React Service -->
+            <div class="app-card" style="margin-bottom: 0;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 14px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <div style="width: 40px; height: 40px; border-radius: var(--radius-md); background: var(--primary-blue-light); color: var(--primary-blue); display: flex; align-items: center; justify-content: center; font-size: 18px;">
+                    <i class="fas fa-grin-beam"></i>
+                  </div>
+                  <div>
+                    <div style="font-size: 15px; font-weight: 700; color: var(--text-main);">Emoji Auto Reactor</div>
+                    <div style="font-size: 12px; color: var(--text-muted);">React automatically with context emojis to chats</div>
+                  </div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="autoToggleAutoReact" onchange="toggleAutomation('autoReact', this.checked)">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Anti Call Protection -->
+            <div class="app-card" style="margin-bottom: 0;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 14px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <div style="width: 40px; height: 40px; border-radius: var(--radius-md); background: var(--primary-blue-light); color: var(--primary-blue); display: flex; align-items: center; justify-content: center; font-size: 18px;">
+                    <i class="fas fa-phone-slash"></i>
+                  </div>
+                  <div>
+                    <div style="font-size: 15px; font-weight: 700; color: var(--text-main);">Anti Call Shield</div>
+                    <div style="font-size: 12px; color: var(--text-muted);">Decline or block incoming WhatsApp call interruptions</div>
+                  </div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="autoToggleAntiCall" onchange="toggleAutomation('antiCall', this.checked ? 'decline' : 'off')">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Anti Delete Service -->
+            <div class="app-card" style="margin-bottom: 0;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 14px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <div style="width: 40px; height: 40px; border-radius: var(--radius-md); background: var(--primary-blue-light); color: var(--primary-blue); display: flex; align-items: center; justify-content: center; font-size: 18px;">
+                    <i class="fas fa-trash-restore"></i>
+                  </div>
+                  <div>
+                    <div style="font-size: 15px; font-weight: 700; color: var(--text-main);">Anti Delete Recovery</div>
+                    <div style="font-size: 12px; color: var(--text-muted);">Capture and store revoked or deleted chat messages</div>
+                  </div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="autoToggleAntiDelete" onchange="toggleAutomation('antiDelete', this.checked)">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- ==================== 5. SETTINGS & PROFILE PAGE ==================== -->
+        <section class="app-page" id="pageProfile">
+          <div class="dashboard-top-bar">
+            <div class="page-title-group">
+              <h1>Settings &amp; DevOps Profile</h1>
+              <p>Manage credentials, system configuration, and administration</p>
+            </div>
+
+            <button type="button" class="btn-secondary-slate" onclick="handleLogout()">
+              <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+          </div>
+
+          <!-- Hero User Card -->
+          <div class="app-card" style="display: flex; align-items: center; gap: 20px; padding: 24px;">
+            <div style="width: 64px; height: 64px; border-radius: 50%; background: var(--primary-blue); color: #FFFFFF; font-weight: 800; font-size: 24px; display: flex; align-items: center; justify-content: center; overflow: hidden;" id="profileBigAvatar">AR</div>
+            <div>
+              <h2 id="profileUsernameDisplay" style="font-size: 20px; font-weight: 800; color: var(--text-main);">Alex Rivera</h2>
+              <div style="display: flex; align-items: center; gap: 10px; margin-top: 4px;">
+                <span id="profileRoleBadge" class="pill-badge" style="background: var(--primary-blue-light); color: var(--primary-blue); border: 1px solid rgba(37, 99, 235, 0.3);">SENIOR DEVOPS LEAD</span>
+                <span id="profileEmailDisplay" style="color: var(--text-muted); font-size: 13px;">alex.rivera@techstack.io</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Navigation Tabs inside Settings & Profile -->
+          <div class="chart-tabs-group" style="margin-bottom: 20px; flex-wrap: wrap;">
+            <button class="chart-tab-btn active" onclick="switchProfileSection('overview')">Overview</button>
+            <button class="chart-tab-btn" onclick="openSettingsModal()">Bot Settings</button>
+            <button class="chart-tab-btn" onclick="openCommandsModal()">Commands</button>
+            <button class="chart-tab-btn" onclick="switchProfileSection('avatar')">Avatar Studio</button>
+            <button class="chart-tab-btn" onclick="switchProfileSection('security')">Security</button>
+            <button class="chart-tab-btn" onclick="switchProfileSection('history')">Activity Logs</button>
+            <button class="chart-tab-btn" onclick="switchProfileSection('blog')">Blog</button>
+            <button class="chart-tab-btn" id="pSubNavAdmin" onclick="switchProfileSection('admin')" style="display: none; color: var(--primary-blue);">Admin Panel</button>
+          </div>
 
           <!-- SUBSECTION 1: OVERVIEW -->
           <div class="profile-sub-view active" id="pSubViewOverview">
             <div class="app-card">
-              <h3 class="card-title" style="margin-bottom: 14px;"><i class="fas fa-id-card"></i> Account Information</h3>
-              <div class="info-row">
-                <span class="info-label"><i class="fas fa-envelope"></i> Email:</span>
-                <strong id="profileOverviewEmail" class="info-val">user@terminalvast.bot</strong>
+              <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 14px;"><i class="fas fa-id-card text-primary"></i> Account Credentials</h3>
+              <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border-color);">
+                <span style="color: var(--text-muted);"><i class="fas fa-envelope"></i> Email:</span>
+                <strong id="profileOverviewEmail">alex.rivera@techstack.io</strong>
               </div>
-              <div class="info-row">
-                <span class="info-label"><i class="fas fa-wallet"></i> Wallet Balance:</span>
-                <strong id="profileBalanceDisplay" class="info-val text-primary">$0.00</strong>
+              <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border-color);">
+                <span style="color: var(--text-muted);"><i class="fas fa-wallet"></i> Balance:</span>
+                <strong id="profileBalanceDisplay" style="color: var(--primary-blue);">$0.00</strong>
               </div>
-              <div class="info-row">
-                <span class="info-label"><i class="fas fa-calendar-alt"></i> Member Since:</span>
-                <span id="profileJoinedDisplay" class="info-val">2026</span>
+              <div style="display: flex; justify-content: space-between; padding: 10px 0;">
+                <span style="color: var(--text-muted);"><i class="fas fa-calendar-alt"></i> Member Since:</span>
+                <span id="profileJoinedDisplay">2026</span>
               </div>
 
               <div style="margin-top: 16px; display: flex; gap: 10px;">
-                <button class="btn primary sm full-width" onclick="switchProfileSection('edit')"><i class="fas fa-edit"></i> Edit Details</button>
-                <button class="btn sm full-width" onclick="switchProfileSection('avatar')"><i class="fas fa-crop-alt"></i> Change Picture</button>
+                <button class="btn-primary-blue" style="flex: 1; justify-content: center;" onclick="switchProfileSection('edit')"><i class="fas fa-edit"></i> Edit Details</button>
+                <button class="btn-secondary-slate" style="flex: 1; justify-content: center;" onclick="switchProfileSection('avatar')"><i class="fas fa-camera"></i> Change Picture</button>
               </div>
             </div>
           </div>
@@ -605,50 +866,50 @@
           <!-- SUBSECTION 2: EDIT DETAILS -->
           <div class="profile-sub-view" id="pSubViewEdit">
             <div class="app-card">
-              <h3 class="card-title" style="margin-bottom: 14px;"><i class="fas fa-user-edit"></i> Edit Account Info</h3>
+              <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 14px;"><i class="fas fa-user-edit text-primary"></i> Edit Profile Info</h3>
               <form id="profileDetailsForm" onsubmit="handleProfileUpdate(event)">
                 <div class="form-group">
-                  <label class="form-label" for="editProfileEmail"><i class="fas fa-envelope"></i> Email Address</label>
+                  <label class="form-label" for="editProfileEmail">Email Address</label>
                   <input type="email" id="editProfileEmail" class="form-control" required>
                 </div>
                 <div class="form-group">
-                  <label class="form-label" for="editProfileBio"><i class="fas fa-quote-left"></i> Account Bio / Status</label>
-                  <textarea id="editProfileBio" class="form-control" rows="3" placeholder="Tell us about your account..."></textarea>
+                  <label class="form-label" for="editProfileBio">Account Bio / Notes</label>
+                  <textarea id="editProfileBio" class="form-control" rows="3"></textarea>
                 </div>
-                <button type="submit" id="saveProfileBtn" class="btn primary full-width">Save Changes</button>
+                <button type="submit" id="saveProfileBtn" class="btn-primary-blue" style="width: 100%; height: 42px; justify-content: center;">Save Changes</button>
               </form>
             </div>
           </div>
 
-          <!-- SUBSECTION 3: AVATAR CROPPER STUDIO -->
+          <!-- SUBSECTION 3: AVATAR STUDIO -->
           <div class="profile-sub-view" id="pSubViewAvatar">
             <div class="app-card">
-              <h3 class="card-title" style="margin-bottom: 14px;"><i class="fas fa-camera"></i> Profile Picture Studio</h3>
+              <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 14px;"><i class="fas fa-camera text-primary"></i> Profile Picture Studio</h3>
               <div style="display: flex; gap: 10px; margin-bottom: 14px;">
-                <label for="cropperFileInput" class="btn primary sm" style="cursor: pointer;">
+                <label for="cropperFileInput" class="btn-primary-blue" style="cursor: pointer;">
                   <i class="fas fa-upload"></i> Select Image
                 </label>
                 <input type="file" id="cropperFileInput" accept="image/*" style="display: none;" onchange="handleCropperFileSelect(event)">
-                <button type="button" class="btn danger sm" onclick="handleRemoveAvatar()">Remove Picture</button>
+                <button type="button" class="btn-secondary-slate" style="color: var(--danger-red);" onclick="handleRemoveAvatar()">Remove</button>
               </div>
 
-              <div class="cropper-container-box" id="cropperContainer">
+              <div style="position: relative; width: 100%; max-width: 280px; height: 280px; margin: 0 auto 16px; background: var(--bg-dark); border: 2px dashed var(--border-strong); border-radius: var(--radius-md); overflow: hidden; display: flex; align-items: center; justify-content: center;" id="cropperContainer">
                 <canvas id="cropperCanvas" width="300" height="300"></canvas>
-                <div id="cropperPlaceholder" class="cropper-placeholder">
-                  <i class="fas fa-image"></i>
+                <div id="cropperPlaceholder" style="text-align: center; color: var(--text-dim);">
+                  <i class="fas fa-image" style="font-size: 32px; margin-bottom: 6px; display: block;"></i>
                   <span>No image selected</span>
                 </div>
               </div>
 
               <div id="cropperControls" style="display: none; flex-direction: column; gap: 10px; margin-bottom: 16px;">
                 <div style="display: flex; align-items: center; gap: 10px;">
-                  <button type="button" class="btn sm" onclick="adjustCropperZoom(-0.1)"><i class="fas fa-search-minus"></i></button>
+                  <button type="button" class="btn-secondary-slate" onclick="adjustCropperZoom(-0.1)"><i class="fas fa-search-minus"></i></button>
                   <input type="range" id="cropperZoomSlider" min="0.2" max="3" step="0.05" value="1" style="flex: 1;" oninput="onCropperZoomSliderChange(event)">
-                  <button type="button" class="btn sm" onclick="adjustCropperZoom(0.1)"><i class="fas fa-search-plus"></i></button>
+                  <button type="button" class="btn-secondary-slate" onclick="adjustCropperZoom(0.1)"><i class="fas fa-search-plus"></i></button>
                 </div>
               </div>
 
-              <button type="button" id="saveCroppedAvatarBtn" class="btn primary full-width" onclick="handleSaveCroppedAvatar()" disabled>
+              <button type="button" id="saveCroppedAvatarBtn" class="btn-primary-blue" style="width: 100%; height: 42px; justify-content: center;" onclick="handleSaveCroppedAvatar()" disabled>
                 Save Profile Picture
               </button>
             </div>
@@ -657,7 +918,7 @@
           <!-- SUBSECTION 4: SECURITY -->
           <div class="profile-sub-view" id="pSubViewSecurity">
             <div class="app-card">
-              <h3 class="card-title" style="margin-bottom: 14px;"><i class="fas fa-lock"></i> Change Password</h3>
+              <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 14px;"><i class="fas fa-lock text-primary"></i> Change Password</h3>
               <form onsubmit="handlePasswordChange(event)">
                 <div class="form-group">
                   <label class="form-label" for="oldPasswordInput">Current Password</label>
@@ -667,7 +928,7 @@
                   <label class="form-label" for="newPasswordInput">New Password (min 6 chars)</label>
                   <input type="password" id="newPasswordInput" class="form-control" required minlength="6">
                 </div>
-                <button type="submit" id="changePasswordBtn" class="btn primary full-width">Update Password</button>
+                <button type="submit" id="changePasswordBtn" class="btn-primary-blue" style="width: 100%; height: 42px; justify-content: center;">Update Password</button>
               </form>
             </div>
           </div>
@@ -675,26 +936,26 @@
           <!-- SUBSECTION 5: HISTORY LOGS -->
           <div class="profile-sub-view" id="pSubViewHistory">
             <div class="app-card">
-              <h3 class="card-title" style="margin-bottom: 14px;"><i class="fas fa-history"></i> Activity Logs</h3>
-              <div id="historyLogsList" class="stack-list"></div>
+              <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 14px;"><i class="fas fa-history text-primary"></i> Activity Logs</h3>
+              <div id="historyLogsList" style="display: flex; flex-direction: column; gap: 8px;"></div>
             </div>
           </div>
 
           <!-- SUBSECTION 6: BLOG -->
           <div class="profile-sub-view" id="pSubViewBlog">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-              <h3 class="card-title"><i class="fas fa-newspaper"></i> Platform Blog</h3>
+              <h3 style="font-size: 16px; font-weight: 700;"><i class="fas fa-newspaper text-primary"></i> Platform Blog</h3>
               <div id="blogActionContainer" style="display: none;">
-                <button class="btn primary sm" onclick="switchProfileSection('blog-create')"><i class="fas fa-pen"></i> Create Article</button>
+                <button class="btn-primary-blue" onclick="switchProfileSection('blog-create')"><i class="fas fa-pen"></i> Create Article</button>
               </div>
             </div>
-            <div id="blogPostsContainer" class="stack-list"></div>
+            <div id="blogPostsContainer" style="display: flex; flex-direction: column; gap: 12px;"></div>
           </div>
 
           <!-- SUBSECTION 6B: BLOG CREATE -->
           <div class="profile-sub-view" id="pSubViewBlogCreate">
             <div class="app-card">
-              <h3 class="card-title" style="margin-bottom: 14px;"><i class="fas fa-pen"></i> Publish Article</h3>
+              <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 14px;"><i class="fas fa-pen text-primary"></i> Publish Article</h3>
               <form onsubmit="handleCreateBlogPostStandalone(event)">
                 <div class="form-group">
                   <label class="form-label">Article Title</label>
@@ -709,27 +970,27 @@
                   <textarea id="standaloneBlogContentInput" class="form-control" rows="6" required></textarea>
                 </div>
                 <div style="display: flex; gap: 10px;">
-                  <button type="submit" id="standaloneCreatePostSubmitBtn" class="btn primary full-width">Publish</button>
-                  <button type="button" class="btn sm" onclick="switchProfileSection('blog')">Cancel</button>
+                  <button type="submit" id="standaloneCreatePostSubmitBtn" class="btn-primary-blue" style="flex: 1; justify-content: center;">Publish</button>
+                  <button type="button" class="btn-secondary-slate" onclick="switchProfileSection('blog')">Cancel</button>
                 </div>
               </form>
             </div>
           </div>
 
-          <!-- SUBSECTION 7: ADMIN -->
+          <!-- SUBSECTION 7: ADMIN CONTROL CENTER -->
           <div class="profile-sub-view" id="pSubViewAdmin">
             <div class="app-card">
-              <h3 class="card-title" style="margin-bottom: 14px;"><i class="fas fa-user-shield"></i> Admin Control Center</h3>
-              <div class="admin-tabs-wrap">
-                <button class="admin-tab-btn active" id="tabBtnSecUsers" onclick="switchAdminSection('adminSecUsers')">Users</button>
-                <button class="admin-tab-btn" id="tabBtnSecModeration" onclick="switchAdminSection('adminSecModeration')">Status</button>
-                <button class="admin-tab-btn" id="tabBtnSecTopup" onclick="switchAdminSection('adminSecTopup')">Wallet</button>
-                <button class="admin-tab-btn" id="tabBtnSecMessages" onclick="switchAdminSection('adminSecMessages')">Notices</button>
+              <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 14px;"><i class="fas fa-user-shield text-primary"></i> Admin Control Center</h3>
+              <div class="chart-tabs-group" style="margin-bottom: 14px;">
+                <button class="chart-tab-btn active" id="tabBtnSecUsers" onclick="switchAdminSection('adminSecUsers')">Users</button>
+                <button class="chart-tab-btn" id="tabBtnSecModeration" onclick="switchAdminSection('adminSecModeration')">Status</button>
+                <button class="chart-tab-btn" id="tabBtnSecTopup" onclick="switchAdminSection('adminSecTopup')">Wallet</button>
+                <button class="chart-tab-btn" id="tabBtnSecMessages" onclick="switchAdminSection('adminSecMessages')">Notices</button>
               </div>
 
               <div class="admin-sec active" id="adminSecUsers">
-                <div class="table-responsive">
-                  <table class="admin-table">
+                <div style="overflow-x: auto;">
+                  <table class="deploy-table">
                     <thead>
                       <tr><th>User</th><th>Email</th><th>Role</th><th>Balance</th><th>Action</th></tr>
                     </thead>
@@ -738,7 +999,7 @@
                 </div>
               </div>
 
-              <div class="admin-sec" id="adminSecModeration">
+              <div class="admin-sec" id="adminSecModeration" style="display: none;">
                 <form onsubmit="handleAdminStatusChange(event)">
                   <div class="form-group">
                     <label class="form-label">Select User</label>
@@ -753,11 +1014,11 @@
                       <option value="banned">Banned</option>
                     </select>
                   </div>
-                  <button type="submit" class="btn primary full-width">Apply Status</button>
+                  <button type="submit" class="btn-primary-blue" style="width: 100%; justify-content: center;">Apply Status</button>
                 </form>
               </div>
 
-              <div class="admin-sec" id="adminSecTopup">
+              <div class="admin-sec" id="adminSecTopup" style="display: none;">
                 <form onsubmit="handleAdminTopUp(event)">
                   <div class="form-group">
                     <label class="form-label">Target Account</label>
@@ -767,11 +1028,11 @@
                     <label class="form-label">Credit Amount ($)</label>
                     <input type="number" id="adminTopupAmount" class="form-control" min="0.01" step="0.01" required>
                   </div>
-                  <button type="submit" class="btn primary full-width">Credit Wallet</button>
+                  <button type="submit" class="btn-primary-blue" style="width: 100%; justify-content: center;">Credit Wallet</button>
                 </form>
               </div>
 
-              <div class="admin-sec" id="adminSecMessages">
+              <div class="admin-sec" id="adminSecMessages" style="display: none;">
                 <form onsubmit="handleAdminSendMessage(event)">
                   <div class="form-group">
                     <label class="form-label">Recipient</label>
@@ -783,40 +1044,35 @@
                     <label class="form-label">Notice Message</label>
                     <textarea id="adminMsgText" class="form-control" rows="3" required></textarea>
                   </div>
-                  <button type="submit" class="btn primary full-width">Send Notice</button>
+                  <button type="submit" class="btn-primary-blue" style="width: 100%; justify-content: center;">Send Notice</button>
                 </form>
               </div>
 
             </div>
           </div>
 
-        </div>
+        </section>
 
-      </section>
+      </main>
 
-    </main>
+    </div>
 
-    <!-- FIXED ANDROID BOTTOM NAVIGATION BAR (EXACTLY 5 TABS, ICON ONLY, ALL ORANGE) -->
-    <!-- 1: Dashboard (Home) | 2: Pair (Link) | 3: Top Up (Wallet) | 4: Automations (Lightning) | 5: Profile (User) -->
-    <nav class="bottom-nav-fixed" aria-label="Bottom Navigation Bar">
-      <a href="#" class="bottom-tab-icon active" id="mobTabDashboard" onclick="switchTab('dashboard'); return false;" title="Dashboard">
-        <i class="fas fa-home"></i>
+    <!-- MOBILE BOTTOM NAVIGATION -->
+    <nav class="bottom-nav-fixed" aria-label="Bottom Navigation">
+      <a href="#" class="bottom-tab-icon active" id="mobTabDashboard" onclick="switchTab('dashboard'); return false;">
+        <i class="fas fa-chart-pie"></i>
       </a>
-
-      <a href="#" class="bottom-tab-icon" id="mobTabPair" onclick="switchTab('pair'); return false;" title="Pair">
-        <i class="fas fa-link"></i>
+      <a href="#" class="bottom-tab-icon" id="mobTabPair" onclick="switchTab('pair'); return false;">
+        <i class="fas fa-server"></i>
       </a>
-
-      <a href="#" class="bottom-tab-icon" id="mobTabTopup" onclick="switchTab('topup'); return false;" title="Top Up">
-        <i class="fas fa-wallet"></i>
+      <a href="#" class="bottom-tab-icon" id="mobTabAutomations" onclick="switchTab('automations'); return false;">
+        <i class="fas fa-cubes"></i>
       </a>
-
-      <a href="#" class="bottom-tab-icon" id="mobTabAutomations" onclick="switchTab('automations'); return false;" title="Automations">
-        <i class="fas fa-bolt"></i>
+      <a href="#" class="bottom-tab-icon" id="mobTabTopup" onclick="switchTab('topup'); return false;">
+        <i class="fas fa-dollar-sign"></i>
       </a>
-
-      <a href="#" class="bottom-tab-icon" id="mobTabProfile" onclick="switchTab('profile'); return false;" title="Profile">
-        <i class="fas fa-user"></i>
+      <a href="#" class="bottom-tab-icon" id="mobTabProfile" onclick="switchTab('profile'); return false;">
+        <i class="fas fa-sliders-h"></i>
       </a>
     </nav>
 
@@ -828,14 +1084,13 @@
   <div class="modal-overlay" id="settingsModal">
     <div class="modal-card">
       <button class="modal-close" onclick="closeSettingsModal()"><i class="fas fa-times"></i></button>
-      <h2 class="modal-title">Settings</h2>
-      <p class="modal-subtitle">Bot operational parameters &amp; owner contact credentials</p>
+      <h2 class="modal-title">System Settings</h2>
+      <p class="modal-subtitle">Operational parameters and bot control configurations</p>
 
       <form id="botSettingsForm" onsubmit="saveBotSettings(event)">
-        <div class="settings-group-title">Bot Preferences</div>
         <div class="form-group">
-          <label class="form-label" for="settingBotName">Bot Display Name</label>
-          <input type="text" id="settingBotName" class="form-control" placeholder="Terminal Vast" required>
+          <label class="form-label" for="settingBotName">Bot Engine Display Name</label>
+          <input type="text" id="settingBotName" class="form-control" placeholder="Tech Stack Bot" required>
         </div>
 
         <div class="form-group">
@@ -851,18 +1106,17 @@
           </select>
         </div>
 
-        <div class="settings-group-title" style="margin-top: 16px;">Owner Account</div>
         <div class="form-group">
           <label class="form-label" for="settingOwnerName">Owner Name</label>
-          <input type="text" id="settingOwnerName" class="form-control" placeholder="Meddy" required>
+          <input type="text" id="settingOwnerName" class="form-control" placeholder="Alex Rivera" required>
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="settingOwnerNumber">Primary Owner Number</label>
+          <label class="form-label" for="settingOwnerNumber">Primary Owner Phone</label>
           <input type="tel" id="settingOwnerNumber" class="form-control" placeholder="256702662846" required>
         </div>
 
-        <button type="submit" id="saveBotSettingsBtn" class="btn primary full-width lg" style="margin-top: 14px;">
+        <button type="submit" id="saveBotSettingsBtn" class="btn-primary-blue" style="width: 100%; height: 42px; justify-content: center; margin-top: 14px;">
           Save Settings
         </button>
       </form>
@@ -873,42 +1127,32 @@
   <div class="modal-overlay" id="commandsModal">
     <div class="modal-card modal-card-large">
       <button class="modal-close" onclick="closeCommandsModal()"><i class="fas fa-times"></i></button>
-      <h2 class="modal-title">Bot Commands</h2>
-      <p class="modal-subtitle">Available WhatsApp automation triggers &amp; utilities</p>
+      <h2 class="modal-title">CI/CD &amp; Bot Commands</h2>
+      <p class="modal-subtitle">Available command triggers and automation utilities</p>
 
       <div class="form-group">
         <input type="text" id="cmdSearchInput" class="form-control" placeholder="Search commands..." onkeyup="filterCommandsList()">
       </div>
 
-      <div class="commands-categories-grid" id="commandsContainer">
-        <div class="cmd-category-card">
-          <h4><i class="fas fa-robot text-primary"></i> General Commands</h4>
-          <ul>
-            <li><code>.menu</code> — Show full bot command menu</li>
-            <li><code>.status</code> — Check system uptime and memory</li>
-            <li><code>.ping</code> — Measure response latency</li>
-            <li><code>.owner</code> — Contact bot developer info</li>
+      <div style="display: flex; flex-direction: column; gap: 14px;" id="commandsContainer">
+        <div class="app-card" style="margin-bottom: 0;">
+          <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 8px;"><i class="fas fa-robot text-primary"></i> General Commands</h4>
+          <ul style="list-style: none; display: flex; flex-direction: column; gap: 6px; font-size: 13px;">
+            <li><code class="service-version-code">.menu</code> — Show full bot command menu</li>
+            <li><code class="service-version-code">.status</code> — Check system uptime and memory</li>
+            <li><code class="service-version-code">.ping</code> — Measure response latency</li>
+            <li><code class="service-version-code">.owner</code> — Contact bot developer info</li>
           </ul>
         </div>
 
-        <div class="cmd-category-card">
-          <h4><i class="fas fa-users text-primary"></i> Group Commands</h4>
-          <ul>
-            <li><code>.add [number]</code> — Add user to group</li>
-            <li><code>.kick [tag]</code> — Remove user from group</li>
-            <li><code>.promote [tag]</code> — Promote user to admin</li>
-            <li><code>.demote [tag]</code> — Demote user from admin</li>
-            <li><code>.tagall</code> — Mention all group members</li>
-          </ul>
-        </div>
-
-        <div class="cmd-category-card">
-          <h4><i class="fas fa-magic text-primary"></i> Media &amp; Fun</h4>
-          <ul>
-            <li><code>.sticker</code> — Convert image or video to sticker</li>
-            <li><code>.play [song]</code> — Download audio song track</li>
-            <li><code>.video [title]</code> — Download YouTube video</li>
-            <li><code>.ai [prompt]</code> — Ask Gemini AI assistant</li>
+        <div class="app-card" style="margin-bottom: 0;">
+          <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 8px;"><i class="fas fa-users text-primary"></i> Group Commands</h4>
+          <ul style="list-style: none; display: flex; flex-direction: column; gap: 6px; font-size: 13px;">
+            <li><code class="service-version-code">.add [number]</code> — Add user to group</li>
+            <li><code class="service-version-code">.kick [tag]</code> — Remove user from group</li>
+            <li><code class="service-version-code">.promote [tag]</code> — Promote user to admin</li>
+            <li><code class="service-version-code">.demote [tag]</code> — Demote user from admin</li>
+            <li><code class="service-version-code">.tagall</code> — Mention all group members</li>
           </ul>
         </div>
       </div>
@@ -919,52 +1163,25 @@
   <div class="modal-overlay" id="notificationsModal">
     <div class="modal-card">
       <button class="modal-close" onclick="closeNotificationsModal()"><i class="fas fa-times"></i></button>
-      <h2 class="modal-title">Notifications</h2>
-      <p class="modal-subtitle">System notices and updates</p>
+      <h2 class="modal-title">Alert Notifications</h2>
+      <p class="modal-subtitle">Real-time alerts and platform notices</p>
 
-      <div id="notificationsList" class="stack-list">
-        <div class="notif-item">
-          <div class="notif-title"><i class="fas fa-check-circle text-primary"></i> System Active</div>
-          <div class="notif-desc">Terminal Vast Android Automation engine is operating normally.</div>
+      <div id="notificationsList" style="display: flex; flex-direction: column; gap: 10px;">
+        <div class="alert-item-card high">
+          <div class="alert-card-top">
+            <span class="pill-badge red"><i class="fas fa-fire"></i> HIGH</span>
+            <span class="alert-timestamp-str">14 mins ago</span>
+          </div>
+          <div class="alert-msg-text">High Latency Spike (>380ms) detected on Payment Processing Service.</div>
+        </div>
+        <div class="alert-item-card medium">
+          <div class="alert-card-top">
+            <span class="pill-badge amber"><i class="fas fa-exclamation-triangle"></i> MEDIUM</span>
+            <span class="alert-timestamp-str">1 hour ago</span>
+          </div>
+          <div class="alert-msg-text">Memory Utilization exceeded 85% threshold on DB-Node-02.</div>
         </div>
       </div>
-    </div>
-  </div>
-
-  <!-- HELP & SUPPORT MODAL -->
-  <div class="modal-overlay" id="helpModal">
-    <div class="modal-card">
-      <button class="modal-close" onclick="closeHelpModal()"><i class="fas fa-times"></i></button>
-      <h2 class="modal-title">Help &amp; Support</h2>
-      <p class="modal-subtitle">Get assistance with Terminal Vast</p>
-
-      <div class="stack-list">
-        <div class="info-row">
-          <span>Official Pairing Platform:</span>
-          <a href="https://terminal-vast-platform-qoa5.onrender.com/" target="_blank" class="text-primary">Visit Platform</a>
-        </div>
-        <div class="info-row">
-          <span>WhatsApp Developer Contact:</span>
-          <strong>+256 702 662 846</strong>
-        </div>
-        <div class="info-row">
-          <span>Documentation &amp; Guides:</span>
-          <a href="/privacy" target="_blank" class="text-primary">Privacy Policy</a>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ABOUT MODAL -->
-  <div class="modal-overlay" id="aboutModal">
-    <div class="modal-card" style="text-align: center;">
-      <button class="modal-close" onclick="closeAboutModal()"><i class="fas fa-times"></i></button>
-      <h2 class="modal-title" style="color: var(--primary);">Terminal Vast</h2>
-      <span class="badge badge-primary" style="margin-bottom: 12px;">Version 1.0.0 Android</span>
-      <p style="color: var(--muted); font-size: 13.5px; line-height: 1.5; margin-bottom: 16px;">
-        High-performance WhatsApp automation engine powered by Node.js, Baileys, and Android UI design system.
-      </p>
-      <div style="font-size: 12px; color: var(--muted-light);">© 2026 Terminal Vast. All rights reserved.</div>
     </div>
   </div>
 
