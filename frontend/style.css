@@ -4,27 +4,28 @@
    ========================================================================== */
 
 :root {
-  /* Color System */
-  --bg: #ffffff;
+  /* Exact Terminal Vast Brand Color System */
+  --bg: #F8F9FB; /* Very light / off-white main background */
   --surface: #ffffff;
-  --surface-2: #f6f7f9;
-  --surface-3: #eef0f3;
-  --dark-card: #141416;
-  --dark-card-border: #26262a;
+  --surface-2: #f3f4f6;
+  --surface-3: #e5e7eb;
 
-  --text: #0f1419;
-  --text-secondary: #536471;
-  --muted: #657786;
-  --muted-light: #aab8c2;
+  --dark-card: #111827; /* Dark charcoal card background */
+  --dark-card-border: #1f2937;
 
-  --border: #e1e8ed;
-  --border-strong: #cfd9de;
+  --text: #111827;
+  --text-secondary: #4b5563;
+  --muted: #6b7280;
+  --muted-light: #9ca3af;
 
-  /* Primary Accent: #FF6B00 Orange */
+  --border: #e5e7eb;
+  --border-strong: #d1d5db;
+
+  /* Primary Accent: Exact #FF6B00 Orange */
   --primary: #FF6B00;
-  --primary-hover: #e56000;
-  --primary-light: #fff3eb;
-  --primary-border: #ffd6be;
+  --primary-hover: #e05e00;
+  --primary-light: #FFF4EC;
+  --primary-border: #FFD2B8;
 
   /* Status Colors */
   --success: #10b981;
@@ -39,20 +40,20 @@
   --warning-light: #fffbeb;
 
   /* Geometry & Typography */
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
   --radius-sm: 8px;
   --radius: 14px;
-  --radius-lg: 18px;
+  --radius-lg: 20px;
   --radius-pill: 9999px;
 
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
-  --shadow: 0 4px 12px rgba(0,0,0,0.05);
-  --shadow-md: 0 8px 24px rgba(0,0,0,0.08);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
+  --shadow: 0 4px 14px rgba(0,0,0,0.06);
+  --shadow-md: 0 8px 24px rgba(0,0,0,0.1);
 
   --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  --nav-height: 56px;
-  --bottom-nav-height: 60px;
+  --nav-height: 60px;
+  --bottom-nav-height: 64px;
 }
 
 /* ==========================================================================
@@ -228,7 +229,7 @@ input, select, textarea {
   height: var(--nav-height);
   display: flex;
   align-items: center;
-  padding: 0 16px;
+  padding: 0 20px;
 }
 
 .app-header-inner {
@@ -241,41 +242,42 @@ input, select, textarea {
 }
 
 .app-brand-title {
-  font-size: 19px;
+  font-size: 21px;
   font-weight: 800;
-  color: var(--text);
+  color: var(--primary); /* EXACT ORANGE BRAND TEXT */
   letter-spacing: -0.03em;
   text-decoration: none;
 }
 
 .header-icon-btn {
   position: relative;
-  width: 38px;
-  height: 38px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
-  background: var(--surface-2);
-  color: var(--text);
+  background: #ffffff;
+  border: 1px solid var(--border);
+  color: #374151;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: 18px;
   transition: var(--transition);
 }
 
 .header-icon-btn:active {
-  background: var(--surface-3);
+  background: var(--surface-2);
   transform: scale(0.95);
 }
 
 .notification-dot {
   position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 8px;
-  height: 8px;
+  top: 10px;
+  right: 10px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  background: var(--primary);
-  border: 2px solid #ffffff;
+  background: var(--primary); /* ORANGE NOTIFICATION DOT */
+  border: 1.5px solid #ffffff;
 }
 
 /* ==========================================================================
@@ -378,258 +380,499 @@ input, select, textarea {
 }
 
 /* ==========================================================================
-   1. DASHBOARD COMPONENTS
+   1. DASHBOARD COMPONENTS (EXACT MATCH TO REFERENCE IMAGE)
    ========================================================================== */
 
 .dash-greeting-block {
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .greeting-title {
-  font-size: 21px;
+  font-size: 22px;
   font-weight: 800;
-  color: var(--text);
+  color: #111827;
   letter-spacing: -0.02em;
 }
 
 .greeting-subtitle {
-  font-size: 13.5px;
-  color: var(--muted);
-  margin-top: 2px;
+  font-size: 14px;
+  color: #6b7280;
+  margin-top: 4px;
 }
 
-/* WhatsApp Status Block (Dark Charcoal Card) */
+/* WhatsApp Status Card (Dark charcoal with flowing green translucent sheets) */
 .whatsapp-status-card {
+  position: relative;
   background: var(--dark-card);
   border: 1px solid var(--dark-card-border);
   border-radius: var(--radius-lg);
   padding: 20px;
   color: #ffffff;
   margin-bottom: 16px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  overflow: hidden;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
 }
 
-.wa-status-header {
+.wa-card-bg-waves {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 60%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.wa-card-bg-waves svg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.wa-card-inner {
+  position: relative;
+  z-index: 2;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 14px;
+  gap: 16px;
 }
 
-.wa-status-label {
-  font-size: 11px;
+.wa-card-left {
+  flex-shrink: 0;
+}
+
+.wa-icon-wrapper {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: rgba(37, 211, 102, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wa-icon-wrapper i {
+  font-size: 30px;
+  color: #25D366; /* WhatsApp Green */
+}
+
+.wa-card-center {
+  flex: 1;
+  min-width: 0;
+}
+
+.wa-card-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #9ca3af;
+}
+
+.wa-card-status-badge {
+  font-size: 13px;
   font-weight: 700;
-  color: #888890;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 2px 0 4px;
 }
 
-.wa-status-body {
-  margin-bottom: 16px;
+.status-dot.green {
+  color: #25D366;
+  font-size: 10px;
 }
 
-.wa-phone-number {
-  font-size: 20px;
+.wa-card-phone {
+  font-size: 16px;
   font-weight: 800;
   color: #ffffff;
   letter-spacing: 0.02em;
 }
 
-.wa-bot-state {
-  font-size: 13px;
-  color: #a0a0ab;
-  margin-top: 4px;
+.wa-card-uptime {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: 2px;
 }
 
-.wa-status-footer {
-  display: flex;
-  align-items: center;
+.wa-card-right {
+  flex-shrink: 0;
 }
 
-.btn-dark-action {
-  background: #25252a;
-  border: 1px solid #383840;
+.btn-wa-open {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   color: #ffffff;
-  padding: 10px 18px;
-  border-radius: var(--radius-sm);
-  font-size: 13.5px;
+  padding: 8px 14px;
+  border-radius: var(--radius-pill);
+  font-size: 12.5px;
   font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
+  white-space: nowrap;
+  backdrop-filter: blur(4px);
   transition: var(--transition);
 }
 
-.btn-dark-action:active {
-  background: #32323a;
-  transform: scale(0.98);
+.btn-wa-open:active {
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(0.97);
 }
 
-.btn-dark-action i {
-  color: #25D366; /* WhatsApp Green */
-  font-size: 16px;
+/* Statistics Side-by-Side Cards */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
-/* Statistics Cards */
 .stat-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 16px;
   display: flex;
+  flex-direction: column;
+  transition: var(--transition);
+}
+
+/* LEFT Stat Card (Orange-tinted) */
+.stat-card-orange {
+  background: #FFF8F3;
+  border: 1px solid #FFE4D1;
+}
+
+/* RIGHT Stat Card (Light gray/white) */
+.stat-card-gray {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  cursor: pointer;
+}
+
+.stat-card-top {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 14px;
+  margin-bottom: 10px;
+}
+
+.stat-icon-box {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.stat-icon-box.orange {
+  background: #FFE8D6;
+  color: var(--primary);
+}
+
+.stat-icon-box.gray {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.stat-chevron {
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+.stat-card-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.stat-card-val {
+  font-size: 22px;
+  font-weight: 800;
+  color: #111827;
+  margin: 2px 0;
+  line-height: 1.1;
+}
+
+.stat-card-sub {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.text-orange {
+  color: var(--primary) !important;
+}
+
+.text-muted {
+  color: #6b7280 !important;
+}
+
+/* Wallet Horizontal Card */
+.wallet-horizontal-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
   box-shadow: var(--shadow-sm);
 }
 
-.stat-icon-wrap {
+.wallet-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.wallet-icon-box {
   width: 42px;
   height: 42px;
-  border-radius: var(--radius-sm);
-  background: var(--primary-light);
+  border-radius: 12px;
+  background: #FFF4EC;
   color: var(--primary);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 18px;
-  flex-shrink: 0;
 }
 
-.stat-content {
-  flex: 1;
-  min-width: 0;
+.wallet-info {
+  display: flex;
+  flex-direction: column;
 }
 
-.stat-value {
+.wallet-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.wallet-amount {
   font-size: 20px;
   font-weight: 800;
-  color: var(--text);
+  color: #111827;
   line-height: 1.1;
 }
 
-.stat-label {
-  font-size: 12px;
-  color: var(--muted);
-  margin-top: 2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.stat-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 10.5px;
-  font-weight: 700;
-  margin-top: 4px;
-}
-
-.stat-badge.success {
-  color: var(--success);
-}
-
-.stat-badge.neutral {
-  color: var(--muted);
-}
-
-/* Wallet Summary Block */
-.wallet-summary-card {
-  background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
-}
-
-.wallet-summary-header {
+.wallet-right {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 12px;
 }
 
-.wallet-balance-amount {
-  font-size: 28px;
-  font-weight: 800;
-  color: var(--text);
-  line-height: 1.1;
-}
-
-/* Recent Activity Feed */
-.activity-feed-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.activity-item {
-  padding: 10px 12px;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  border-left: 3px solid var(--primary);
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.activity-item-title {
+.btn-topup-outline {
+  border: 1.5px solid var(--primary);
+  color: var(--primary);
+  background: transparent;
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
   font-size: 13px;
   font-weight: 700;
-  color: var(--text);
-  display: flex;
-  justify-content: space-between;
-}
-
-.activity-item-time {
-  font-size: 11px;
-  color: var(--muted);
-  font-weight: 400;
-}
-
-.activity-item-desc {
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-
-.empty-feed-text {
-  font-size: 13px;
-  color: var(--muted);
-  text-align: center;
-  padding: 12px 0;
-}
-
-/* Quick Actions Block Grid */
-.quick-actions-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-}
-
-.quick-action-btn {
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 14px 12px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
   transition: var(--transition);
 }
 
-.quick-action-btn i {
-  font-size: 20px;
-  color: var(--primary);
+.btn-topup-outline:active {
+  background: var(--primary-light);
+  transform: scale(0.97);
 }
 
-.quick-action-btn span {
+.wallet-chevron {
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+/* Recent Activity Card (Large dark charcoal rounded card) */
+.activity-card-dark {
+  background: var(--dark-card);
+  border: 1px solid var(--dark-card-border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+}
+
+.activity-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.activity-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.activity-clock-icon {
+  font-size: 18px;
+  color: #9ca3af;
+}
+
+.activity-header-left h3 {
+  font-size: 16px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.view-all-link {
   font-size: 13px;
   font-weight: 600;
-  color: var(--text);
+  color: #9ca3af;
+  text-decoration: none;
 }
 
-.quick-action-btn:active {
-  background: var(--primary-light);
-  border-color: var(--primary-border);
-  transform: scale(0.97);
+.view-all-link:hover {
+  color: #ffffff;
+}
+
+.activity-list-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.activity-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid #1f2937;
+}
+
+.activity-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.activity-row-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.check-badge-green {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #10b981;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.activity-row-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.activity-row-time {
+  font-size: 12.5px;
+  color: #9ca3af;
+}
+
+/* Quick Actions Section */
+.quick-actions-section {
+  margin-bottom: 20px;
+}
+
+.qa-header {
+  margin-bottom: 14px;
+}
+
+.qa-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.qa-lightning-icon {
+  font-size: 18px;
+}
+
+.qa-title-row h2 {
+  font-size: 18px;
+  font-weight: 800;
+  color: #111827;
+}
+
+.qa-subtitle {
+  font-size: 13px;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+.quick-actions-grid-dark {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.qa-dark-card {
+  background: var(--dark-card);
+  border: 1px solid var(--dark-card-border);
+  border-radius: var(--radius);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.qa-dark-card:active {
+  transform: scale(0.98);
+  border-color: #374151;
+}
+
+.qa-card-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  margin-bottom: 12px;
+}
+
+.qa-card-icon.orange { background: rgba(255, 107, 0, 0.15); color: #FF6B00; }
+.qa-card-icon.green { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+.qa-card-icon.blue { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+.qa-card-icon.purple { background: rgba(168, 85, 247, 0.15); color: #a855f7; }
+
+.qa-card-body {
+  margin-bottom: 8px;
+}
+
+.qa-card-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.qa-card-desc {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: 2px;
+}
+
+.qa-circle-arrow-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #1f2937;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
 }
 
 /* ==========================================================================
@@ -1208,23 +1451,25 @@ select.form-control {
 }
 
 /* ==========================================================================
-   FIXED ANDROID BOTTOM NAVIGATION BAR (5 TABS, ICON ONLY, ALL ORANGE)
+   FIXED ANDROID BOTTOM NAVIGATION BAR (EXACT 5 ORANGE ICONS, NO TEXT LABELS)
    ========================================================================== */
 
 .bottom-nav-fixed {
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(calc(100% - 32px), 560px);
   z-index: 1000;
   background: #ffffff;
-  border-top: 1px solid var(--border);
+  border: 1px solid var(--border);
+  border-radius: 30px;
   height: var(--bottom-nav-height);
   display: flex;
   align-items: center;
   justify-content: space-around;
-  padding: 0 12px calc(env(safe-area-inset-bottom, 0px));
-  box-shadow: 0 -2px 10px rgba(0,0,0,0.04);
+  padding: 0 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
 }
 
 .bottom-tab-icon {
@@ -1233,14 +1478,14 @@ select.form-control {
   justify-content: center;
   flex: 1;
   height: 100%;
-  color: var(--primary); /* ALL 5 ICONS ORANGE AS SPECIFIED */
-  opacity: 0.7;
+  color: var(--primary); /* ALL 5 ICONS ARE STRICTLY ORANGE */
+  opacity: 0.65;
   text-decoration: none;
   transition: var(--transition);
 }
 
 .bottom-tab-icon i {
-  font-size: 22px;
+  font-size: 20px;
   transition: transform var(--transition);
 }
 
@@ -1249,7 +1494,7 @@ select.form-control {
 }
 
 .bottom-tab-icon.active i {
-  transform: scale(1.15);
+  transform: scale(1.2);
 }
 
 /* ==========================================================================

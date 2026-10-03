@@ -100,15 +100,15 @@
     <!-- APP NAVBAR HEADER (Terminal Vast + Notification Icon) -->
     <header class="app-header">
       <div class="app-header-inner">
-        <!-- Brand Name ONLY (No logo image, no profile avatar, no hamburger icon) -->
+        <!-- Brand Name ONLY in bold orange (No logo image, no profile avatar, no hamburger icon) -->
         <a href="#" onclick="switchTab('dashboard'); return false;" class="app-brand-title">
           Terminal Vast
         </a>
 
-        <!-- Right Notification Icon -->
+        <!-- Right Notification Icon with small orange dot -->
         <button type="button" class="header-icon-btn" onclick="openNotificationsModal()" title="Notifications">
-          <i class="fas fa-bell"></i>
-          <span class="notification-dot" id="headerNotifDot" style="display: none;"></span>
+          <i class="far fa-bell"></i>
+          <span class="notification-dot" id="headerNotifDot"></span>
         </button>
       </div>
     </header>
@@ -133,99 +133,187 @@
 
         <!-- Greeting Section -->
         <div class="dash-greeting-block">
-          <h1 class="greeting-title" id="dashGreetingText">Good morning, User</h1>
-          <p class="greeting-subtitle">Your WhatsApp automation is ready.</p>
+          <h1 class="greeting-title" id="dashGreetingText">Good morning, User 👋</h1>
+          <p class="greeting-subtitle">Your WhatsApp automation is ready. 🚀</p>
         </div>
 
-        <!-- WhatsApp Status Block (Prominent Dark Card) -->
+        <!-- WhatsApp Status Card (Dark card with flowing green sheet pattern) -->
         <div class="whatsapp-status-card">
-          <div class="wa-status-header">
-            <span class="wa-status-label">WHATSAPP STATUS</span>
-            <span id="botStatusBadge" class="badge badge-neutral">● Disconnected</span>
+          <!-- Translucent flowing green sheet / wave pattern graphic background -->
+          <div class="wa-card-bg-waves" aria-hidden="true">
+            <svg viewBox="0 0 320 180" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M120,-10 C180,30 220,110 330,80 L330,190 L120,190 Z" fill="#064e3b" opacity="0.6" />
+              <path d="M160,-10 C210,40 250,90 330,120 L330,190 L160,190 Z" fill="#047857" opacity="0.45" />
+              <path d="M200,-10 C240,50 270,70 330,140 L330,190 L200,190 Z" fill="#10b981" opacity="0.35" />
+              <path d="M230,-10 C270,60 290,110 330,150 L330,190 L230,190 Z" fill="#25D366" opacity="0.25" />
+            </svg>
           </div>
 
-          <div class="wa-status-body">
-            <div class="wa-phone-number" id="botConnectedPhonesText">+256 XXX XXX XXX</div>
-            <div class="wa-bot-state" id="botUptimeText">Bot is running</div>
-          </div>
-
-          <div class="wa-status-footer">
-            <a href="https://web.whatsapp.com" target="_blank" rel="noopener" class="btn btn-dark-action">
-              <i class="fab fa-whatsapp"></i> Open WhatsApp
-            </a>
-          </div>
-        </div>
-
-        <!-- Statistics Blocks (Automation + Messages) -->
-        <div class="grid-2">
-          <div class="stat-card">
-            <div class="stat-icon-wrap">
-              <i class="fas fa-bolt"></i>
+          <div class="wa-card-inner">
+            <div class="wa-card-left">
+              <div class="wa-icon-wrapper">
+                <i class="fab fa-whatsapp"></i>
+              </div>
             </div>
-            <div class="stat-content">
-              <div class="stat-value" id="statActiveAutomations">0</div>
-              <div class="stat-label">Active Automations</div>
-              <span class="stat-badge success"><i class="fas fa-check-circle"></i> Running</span>
-            </div>
-          </div>
 
-          <div class="stat-card">
-            <div class="stat-icon-wrap">
-              <i class="fas fa-paper-plane"></i>
+            <div class="wa-card-center">
+              <div class="wa-card-title">WhatsApp Status</div>
+              <div class="wa-card-status-badge" id="botStatusBadge">
+                <span class="status-dot green">●</span> Connected
+              </div>
+              <div class="wa-card-phone" id="botConnectedPhonesText">+256 XXX XXX XXX</div>
+              <div class="wa-card-uptime" id="botUptimeText">Bot is running</div>
             </div>
-            <div class="stat-content">
-              <div class="stat-value" id="statProcessedMessages">0</div>
-              <div class="stat-label">Processed Messages</div>
-              <span class="stat-badge neutral"><i class="fas fa-sync"></i> Realtime</span>
+
+            <div class="wa-card-right">
+              <a href="https://web.whatsapp.com" target="_blank" rel="noopener" class="btn btn-wa-open">
+                Open WhatsApp
+              </a>
             </div>
           </div>
         </div>
 
-        <!-- Wallet Balance Block -->
-        <div class="app-card wallet-summary-card">
-          <div class="wallet-summary-header">
-            <div>
-              <div class="card-eyebrow">WALLET BALANCE</div>
-              <div class="wallet-balance-amount" id="dashWalletBalanceDisplay">$0.00</div>
+        <!-- Statistics Blocks (Automation + Messages Side-by-Side) -->
+        <div class="grid-2 stats-grid">
+          <!-- LEFT: Orange-tinted light card -->
+          <div class="stat-card stat-card-orange">
+            <div class="stat-card-top">
+              <div class="stat-icon-box orange">
+                <i class="fas fa-bolt"></i>
+              </div>
             </div>
-            <button class="btn primary sm" onclick="switchTab('topup')">
-              <i class="fas fa-plus-circle"></i> Top Up
-            </button>
+            <div class="stat-card-title">Automation</div>
+            <div class="stat-card-val" id="statActiveAutomations">12</div>
+            <div class="stat-card-sub text-orange">Active</div>
+          </div>
+
+          <!-- RIGHT: Very light gray/white card with right chevron -->
+          <div class="stat-card stat-card-gray" onclick="switchTab('automations')">
+            <div class="stat-card-top">
+              <div class="stat-icon-box gray">
+                <i class="far fa-comment-alt"></i>
+              </div>
+              <i class="fas fa-chevron-right stat-chevron"></i>
+            </div>
+            <div class="stat-card-title">Messages</div>
+            <div class="stat-card-val" id="statProcessedMessages">1,284</div>
+            <div class="stat-card-sub text-muted">Processed</div>
           </div>
         </div>
 
-        <!-- Recent Activity Feed -->
-        <div class="app-card">
-          <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-history"></i> Recent Activity</h3>
+        <!-- Wallet Balance Card (Full-width light/orange-tinted horizontal card) -->
+        <div class="wallet-horizontal-card">
+          <div class="wallet-left">
+            <div class="wallet-icon-box">
+              <i class="fas fa-wallet"></i>
+            </div>
+            <div class="wallet-info">
+              <span class="wallet-label">Wallet Balance</span>
+              <span class="wallet-amount" id="dashWalletBalanceDisplay">$0.00</span>
+            </div>
           </div>
-          <div id="dashRecentActivityList" class="activity-feed-list">
-            <div class="empty-feed-text">No recent bot activity recorded yet.</div>
+
+          <div class="wallet-right">
+            <button type="button" class="btn-topup-outline" onclick="switchTab('topup')">
+              + Top Up
+            </button>
+            <i class="fas fa-chevron-right wallet-chevron"></i>
           </div>
         </div>
 
-        <!-- Quick Actions Grid -->
-        <div class="app-card">
-          <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-th-large"></i> Quick Actions</h3>
+        <!-- Recent Activity Feed (Large dark charcoal rounded card) -->
+        <div class="activity-card-dark">
+          <div class="activity-card-header">
+            <div class="activity-header-left">
+              <i class="far fa-clock activity-clock-icon"></i>
+              <h3>Recent Activity</h3>
+            </div>
+            <a href="#" class="view-all-link" onclick="switchProfileSection('history'); switchTab('profile'); return false;">View all &gt;</a>
           </div>
-          <div class="quick-actions-grid">
-            <button class="quick-action-btn" onclick="switchTab('pair')">
-              <i class="fas fa-link"></i>
-              <span>Pair WhatsApp</span>
-            </button>
-            <button class="quick-action-btn" onclick="switchTab('automations')">
-              <i class="fas fa-robot"></i>
-              <span>Manage Bot</span>
-            </button>
-            <button class="quick-action-btn" onclick="openCommandsModal()">
-              <i class="fas fa-terminal"></i>
-              <span>Commands</span>
-            </button>
-            <button class="quick-action-btn" onclick="openSettingsModal()">
-              <i class="fas fa-cog"></i>
-              <span>Settings</span>
-            </button>
+
+          <div id="dashRecentActivityList" class="activity-list-container">
+            <div class="activity-row">
+              <div class="activity-row-left">
+                <span class="check-badge-green"><i class="fas fa-check"></i></span>
+                <span class="activity-row-text">Bot connected</span>
+              </div>
+              <span class="activity-row-time">2m ago</span>
+            </div>
+            <div class="activity-row">
+              <div class="activity-row-left">
+                <span class="check-badge-green"><i class="fas fa-check"></i></span>
+                <span class="activity-row-text">Auto-reply sent</span>
+              </div>
+              <span class="activity-row-time">8m ago</span>
+            </div>
+            <div class="activity-row">
+              <div class="activity-row-left">
+                <span class="check-badge-green"><i class="fas fa-check"></i></span>
+                <span class="activity-row-text">Command executed</span>
+              </div>
+              <span class="activity-row-time">14m ago</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Actions (Light rounded section with 4 compact dark cards) -->
+        <div class="quick-actions-section">
+          <div class="qa-header">
+            <div class="qa-title-row">
+              <i class="fas fa-bolt text-orange qa-lightning-icon"></i>
+              <h2>Quick Actions</h2>
+            </div>
+            <p class="qa-subtitle">Manage your automation, commands and settings.</p>
+          </div>
+
+          <div class="quick-actions-grid-dark">
+            <!-- 1. Pair WhatsApp -->
+            <div class="qa-dark-card" onclick="switchTab('pair')">
+              <div class="qa-card-icon orange"><i class="fas fa-link"></i></div>
+              <div class="qa-card-body">
+                <div class="qa-card-title">Pair WhatsApp</div>
+                <div class="qa-card-desc">Connect your number</div>
+              </div>
+              <button type="button" class="qa-circle-arrow-btn" aria-label="Pair WhatsApp">
+                <i class="fas fa-arrow-right"></i>
+              </button>
+            </div>
+
+            <!-- 2. Manage Bot -->
+            <div class="qa-dark-card" onclick="switchTab('automations')">
+              <div class="qa-card-icon green"><i class="fas fa-robot"></i></div>
+              <div class="qa-card-body">
+                <div class="qa-card-title">Manage Bot</div>
+                <div class="qa-card-desc">Customize &amp; control</div>
+              </div>
+              <button type="button" class="qa-circle-arrow-btn" aria-label="Manage Bot">
+                <i class="fas fa-arrow-right"></i>
+              </button>
+            </div>
+
+            <!-- 3. Commands -->
+            <div class="qa-dark-card" onclick="openCommandsModal()">
+              <div class="qa-card-icon blue"><i class="fas fa-terminal"></i></div>
+              <div class="qa-card-body">
+                <div class="qa-card-title">Commands</div>
+                <div class="qa-card-desc">View all commands</div>
+              </div>
+              <button type="button" class="qa-circle-arrow-btn" aria-label="Commands">
+                <i class="fas fa-arrow-right"></i>
+              </button>
+            </div>
+
+            <!-- 4. Settings -->
+            <div class="qa-dark-card" onclick="openSettingsModal()">
+              <div class="qa-card-icon purple"><i class="fas fa-cog"></i></div>
+              <div class="qa-card-body">
+                <div class="qa-card-title">Settings</div>
+                <div class="qa-card-desc">Bot &amp; app settings</div>
+              </div>
+              <button type="button" class="qa-circle-arrow-btn" aria-label="Settings">
+                <i class="fas fa-arrow-right"></i>
+              </button>
+            </div>
           </div>
         </div>
 
