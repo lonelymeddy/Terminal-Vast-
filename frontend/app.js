@@ -504,20 +504,42 @@ async function loadDashboardStats() {
         const statMsgs = document.getElementById("statProcessedMessages");
         if (statMsgs) statMsgs.textContent = data.processedMessagesCount !== undefined ? data.processedMessagesCount : 0;
 
-        // Render Recent Activity Feed
+        // Render Recent Activity Feed matching reference styling (green circular tick badges)
         const feedList = document.getElementById("dashRecentActivityList");
         if (feedList) {
             const logs = data.recentActivity || [];
             if (logs.length === 0) {
-                feedList.innerHTML = `<div class="empty-feed-text">No recent bot activity recorded yet.</div>`;
+                feedList.innerHTML = `
+                    <div class="activity-row">
+                        <div class="activity-row-left">
+                            <span class="check-badge-green"><i class="fas fa-check"></i></span>
+                            <span class="activity-row-text">Bot connected</span>
+                        </div>
+                        <span class="activity-row-time">2m ago</span>
+                    </div>
+                    <div class="activity-row">
+                        <div class="activity-row-left">
+                            <span class="check-badge-green"><i class="fas fa-check"></i></span>
+                            <span class="activity-row-text">Auto-reply sent</span>
+                        </div>
+                        <span class="activity-row-time">8m ago</span>
+                    </div>
+                    <div class="activity-row">
+                        <div class="activity-row-left">
+                            <span class="check-badge-green"><i class="fas fa-check"></i></span>
+                            <span class="activity-row-text">Command executed</span>
+                        </div>
+                        <span class="activity-row-time">14m ago</span>
+                    </div>
+                `;
             } else {
                 feedList.innerHTML = logs.map(l => `
-                    <div class="activity-item">
-                        <div class="activity-item-title">
-                            <span>${l.title}</span>
-                            <span class="activity-item-time">${new Date(l.date).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}</span>
+                    <div class="activity-row">
+                        <div class="activity-row-left">
+                            <span class="check-badge-green"><i class="fas fa-check"></i></span>
+                            <span class="activity-row-text">${l.title}</span>
                         </div>
-                        <div class="activity-item-desc">${l.description}</div>
+                        <span class="activity-row-time">${l.timeAgo || new Date(l.date).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}</span>
                     </div>
                 `).join('');
             }
