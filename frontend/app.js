@@ -1,6 +1,6 @@
 let currentUser = null;
 let currentTab = getTabFromPath() || localStorage.getItem('tv_active_tab') || 'dashboard';
-let currentProfileSubpage = 'overview';
+let currentProfileSection = 'overview';
 let isGuest = false;
 
 function getTabFromPath() {
@@ -8,14 +8,13 @@ function getTabFromPath() {
     if (!rawPath || rawPath === 'dashboard' || rawPath === 'home') return 'dashboard';
     if (rawPath === 'pair' || rawPath === 'connect') return 'pair';
     if (rawPath === 'topup' || rawPath === 'wallet') return 'topup';
-    if (rawPath === 'settings') return 'settings';
+    if (rawPath === 'automations' || rawPath === 'automation') return 'automations';
     if (rawPath.startsWith('profile') || rawPath === 'blog' || rawPath === 'history' || rawPath === 'admin') return 'profile';
     return null;
 }
 
 document.addEventListener("DOMContentLoaded", () => {
     disablePageZoomGestures();
-    initClock();
     initCropperEvents();
     startStartupSequence();
 });
@@ -25,25 +24,19 @@ document.addEventListener("DOMContentLoaded", () => {
    ========================================================================== */
 function startStartupSequence() {
     const splashScreen = document.getElementById("splashScreen");
-    const introScreen = document.getElementById("introScreen");
-    const authScreen = document.getElementById("authScreen");
-    const appShell = document.getElementById("appShell");
-
-    // Check if session check should be performed in background
     let sessionResultPromise = checkSessionInternal();
 
-    // 1. SPLASH SCREEN (6 SECONDS)
     setTimeout(() => {
         if (splashScreen) {
             splashScreen.style.opacity = "0";
             setTimeout(() => {
                 splashScreen.style.display = "none";
                 runAnimatedIntro(sessionResultPromise);
-            }, 500);
+            }, 400);
         } else {
             runAnimatedIntro(sessionResultPromise);
         }
-    }, 6000);
+    }, 1500);
 }
 
 function runAnimatedIntro(sessionResultPromise) {
@@ -58,12 +51,10 @@ function runAnimatedIntro(sessionResultPromise) {
 
     introScreen.style.display = "flex";
 
-    // Text 1: "Wanna automate your WhatsApp?"
     setTimeout(() => {
         introText1.classList.add("visible");
     }, 100);
 
-    // Fade out Text 1 & prepare Text 2
     setTimeout(() => {
         introText1.classList.remove("visible");
         setTimeout(() => {
@@ -72,17 +63,16 @@ function runAnimatedIntro(sessionResultPromise) {
             setTimeout(() => {
                 introText2.classList.add("visible");
             }, 50);
-        }, 600);
-    }, 2200);
+        }, 400);
+    }, 1200);
 
-    // Transition to Auth / App
     setTimeout(() => {
         introText2.classList.remove("visible");
         setTimeout(() => {
             introScreen.style.display = "none";
             finishStartupFlow(sessionResultPromise);
-        }, 600);
-    }, 4500);
+        }, 400);
+    }, 2400);
 }
 
 async function finishStartupFlow(sessionResultPromise) {
@@ -93,7 +83,6 @@ async function finishStartupFlow(sessionResultPromise) {
         isGuest = false;
         showAppDashboard();
     } else {
-        // Show Auth Screen
         showAuthScreen();
     }
 }
@@ -138,12 +127,6 @@ function disablePageZoomGestures() {
         }
         lastTouchEnd = now;
     }, false);
-
-    document.addEventListener('wheel', (e) => {
-        if (e.ctrlKey) {
-            e.preventDefault();
-        }
-    }, { passive: false });
 }
 
 window.addEventListener("popstate", () => {
@@ -156,7 +139,7 @@ window.addEventListener("popstate", () => {
 /* ==========================================================================
    LOADING SPINNER HELPER
    ========================================================================== */
-async function runWithSpinner(buttonEl, loadingText, asyncTaskFn, minMs = 500) {
+async function runWithSpinner(buttonEl, loadingText, asyncTaskFn, minMs = 400) {
     if (!buttonEl) return await asyncTaskFn();
     const originalText = buttonEl.innerHTML;
     buttonEl.disabled = true;
@@ -185,22 +168,6 @@ async function runWithSpinner(buttonEl, loadingText, asyncTaskFn, minMs = 500) {
 }
 
 /* ==========================================================================
-   LIVE CLOCK
-   ========================================================================== */
-function initClock() {
-    function updateClock() {
-        const now = new Date();
-        const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        const clockValue = document.getElementById("clockValue");
-        if (clockValue) {
-            clockValue.textContent = timeStr;
-        }
-    }
-    updateClock();
-    setInterval(updateClock, 1000);
-}
-
-/* ==========================================================================
    SESSION CHECK & AUTHENTICATION
    ========================================================================== */
 async function checkSessionInternal() {
@@ -224,11 +191,23 @@ function renderAuthenticatedUI() {
         const uDisp = document.getElementById("profileUsernameDisplay");
         if (uDisp) uDisp.textContent = currentUser.username;
 
+        const greetingText = document.getElementById("dashGreetingText");
+        if (greetingText) {
+            const hour = new Date().getHours();
+            let tod = "Good morning";
+            if (hour >= 12 && hour < 17) tod = "Good afternoon";
+            else if (hour >= 17) tod = "Good evening";
+            greetingText.textContent = `${tod}, ${currentUser.username}`;
+        }
+
         const eDisp = document.getElementById("profileEmailDisplay");
         if (eDisp) eDisp.textContent = currentUser.email || 'N/A';
 
+        const oEmail = document.getElementById("profileOverviewEmail");
+        if (oEmail) oEmail.textContent = currentUser.email || 'N/A';
+
         const rBadge = document.getElementById("profileRoleBadge");
-        if (rBadge) rBadge.textContent = isGuest ? 'GUEST' : (currentUser.role || 'user');
+        if (rBadge) rBadge.textContent = isGuest ? 'GUEST' : (currentUser.role || 'user').toUpperCase();
 
         const editEmail = document.getElementById("editProfileEmail");
         if (editEmail) editEmail.value = currentUser.email || '';
@@ -247,7 +226,6 @@ function renderAuthenticatedUI() {
 
         updateWalletDisplay(currentUser.balance || 0);
 
-        // Check Admin
         const ADMIN_EMAILS = ['delostvoyage@gmail.com', 'voyagedelost@gmail.com'];
         const isAdmin = !isGuest && (currentUser.role === 'admin' || (currentUser.email && ADMIN_EMAILS.includes(currentUser.email.trim().toLowerCase())));
 
@@ -260,27 +238,25 @@ function renderAuthenticatedUI() {
         renderDirectMessagesAndWarnings();
     }
 
-    // Load initial data
     loadBotSettings();
     loadSudoAndSessions();
     loadBotStatus();
+    loadDashboardStats();
+    loadAutomationsState();
 
     switchTab(currentTab, false);
 }
 
 function updateProfileAvatarDisplay() {
     if (!currentUser) return;
-    const topbarAvatarEl = document.getElementById("topbarProfileAvatar");
     const profileBigAvatarEl = document.getElementById("profileBigAvatar");
 
     if (currentUser.avatar) {
         const imgHTML = `<img src="${currentUser.avatar}" alt="Avatar" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
-        if (topbarAvatarEl) topbarAvatarEl.innerHTML = imgHTML;
         if (profileBigAvatarEl) profileBigAvatarEl.innerHTML = imgHTML;
     } else {
-        const avatarLetter = (currentUser.username || 'G').charAt(0).toUpperCase();
-        if (topbarAvatarEl) topbarAvatarEl.innerHTML = `<span style="font-weight:700;">${avatarLetter}</span>`;
-        if (profileBigAvatarEl) profileBigAvatarEl.innerHTML = `<span style="font-weight:800; font-size:32px;">${avatarLetter}</span>`;
+        const avatarLetter = (currentUser.username || 'U').charAt(0).toUpperCase();
+        if (profileBigAvatarEl) profileBigAvatarEl.innerHTML = avatarLetter;
     }
 }
 
@@ -396,51 +372,19 @@ async function handleLogout() {
     showAuthScreen();
 }
 
-async function handlePasswordChange(e) {
-    e.preventDefault();
-    if (isGuest) return alert("Please log in to change account password.");
-    const oldPassword = document.getElementById("oldPasswordInput").value;
-    const newPassword = document.getElementById("newPasswordInput").value;
-    const submitBtn = e.target.querySelector('button[type="submit"]');
-
-    try {
-        await runWithSpinner(submitBtn, "Updating password...", async () => {
-            const res = await fetch('/api/auth/password', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ oldPassword, newPassword })
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || 'Failed to update password');
-
-            alert("Password updated successfully!");
-            document.getElementById("oldPasswordInput").value = "";
-            document.getElementById("newPasswordInput").value = "";
-        });
-    } catch (err) {
-        alert("Error: " + err.message);
-    }
-}
-
 /* ==========================================================================
-   PRIMARY NAVIGATION (5 TABS ROUTER)
-   Dashboard | Pair | Top Up | Settings | Profile
+   PRIMARY NAVIGATION (5 FIXED BOTTOM TABS)
+   Dashboard | Pair | Top Up | Automations | Profile
    ========================================================================== */
 function switchTab(tabId, updateHistory = true) {
     currentTab = tabId;
     localStorage.setItem('tv_active_tab', tabId);
 
-    const validTabs = ['dashboard', 'pair', 'topup', 'settings', 'profile'];
+    const validTabs = ['dashboard', 'pair', 'topup', 'automations', 'profile'];
     if (!validTabs.includes(tabId)) tabId = 'dashboard';
 
-    // Highlight Desktop Tabs
-    const deskTabs = document.querySelectorAll(".desktop-nav .nav-tab");
-    deskTabs.forEach(t => t.classList.remove("active"));
-    const deskTarget = document.getElementById(`deskTab${capitalize(tabId)}`);
-    if (deskTarget) deskTarget.classList.add("active");
-
     // Highlight Mobile Bottom Tabs
-    const mobTabs = document.querySelectorAll(".bottom-nav .bottom-tab");
+    const mobTabs = document.querySelectorAll(".bottom-nav-fixed .bottom-tab-icon");
     mobTabs.forEach(t => t.classList.remove("active"));
     const mobTarget = document.getElementById(`mobTab${capitalize(tabId)}`);
     if (mobTarget) mobTarget.classList.add("active");
@@ -453,7 +397,6 @@ function switchTab(tabId, updateHistory = true) {
     const targetPage = document.getElementById(`page${capitalize(tabId)}`);
     if (targetPage) targetPage.classList.add("active");
 
-    // Push History State
     if (updateHistory && window.history) {
         const route = `/${tabId}`;
         if (window.location.pathname !== route) {
@@ -463,56 +406,10 @@ function switchTab(tabId, updateHistory = true) {
 
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
 
-    // Actions on tab switch
+    if (tabId === 'dashboard') loadDashboardStats();
+    if (tabId === 'automations') loadAutomationsState();
     if (tabId === 'pair') startBotStatusPolling();
     else stopBotStatusPolling();
-}
-
-/* ==========================================================================
-   PROFILE DEDICATED SIDEBAR NAVIGATION
-   ========================================================================== */
-function switchProfileSubpage(subpageId) {
-    currentProfileSubpage = subpageId;
-
-    // Subpage Navigation Links
-    const links = document.querySelectorAll(".profile-sidebar .profile-nav-link");
-    links.forEach(l => l.classList.remove("active"));
-
-    const navTargetMap = {
-        'overview': 'pSubNavOverview',
-        'edit': 'pSubNavEdit',
-        'avatar': 'pSubNavAvatar',
-        'security': 'pSubNavSecurity',
-        'history': 'pSubNavHistory',
-        'blog': 'pSubNavBlog',
-        'blog-create': 'pSubNavBlog',
-        'admin': 'pSubNavAdmin'
-    };
-
-    const targetLink = document.getElementById(navTargetMap[subpageId]);
-    if (targetLink) targetLink.classList.add("active");
-
-    // Subpages Views
-    const subpages = document.querySelectorAll(".profile-subpage");
-    subpages.forEach(s => s.classList.remove("active"));
-
-    const pageTargetMap = {
-        'overview': 'pSubPageOverview',
-        'edit': 'pSubPageEdit',
-        'avatar': 'pSubPageAvatar',
-        'security': 'pSubPageSecurity',
-        'history': 'pSubPageHistory',
-        'blog': 'pSubPageBlog',
-        'blog-create': 'pSubPageBlogCreate',
-        'admin': 'pSubPageAdmin'
-    };
-
-    const targetSubpage = document.getElementById(pageTargetMap[subpageId]);
-    if (targetSubpage) targetSubpage.classList.add("active");
-
-    if (subpageId === 'history') loadHistoryLogs();
-    if (subpageId === 'blog') loadBlogPosts();
-    if (subpageId === 'admin') loadAdminDashboardData();
 }
 
 function capitalize(s) {
@@ -520,464 +417,396 @@ function capitalize(s) {
 }
 
 /* ==========================================================================
-   BLOG FUNCTIONALITY
+   PROFILE DRAWER & SUBSECTIONS
    ========================================================================== */
-let uploadedBlogBase64Image = null;
-
-async function loadBlogPosts() {
-    const container = document.getElementById("blogPostsContainer");
-    if (!container) return;
-
-    try {
-        const res = await fetch('/api/blog');
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Failed to load blog posts');
-
-        const posts = data.posts || [];
-        if (posts.length === 0) {
-            container.innerHTML = `
-                <div class="app-card" style="text-align: center; padding: 40px 20px;">
-                    <i class="fas fa-newspaper" style="font-size: 36px; color: var(--muted-light); margin-bottom: 12px;"></i>
-                    <h3 style="color: var(--text);">No blog articles published yet</h3>
-                    <p style="color: var(--muted); font-size: 13.5px;">Check back later for updates and announcements.</p>
-                </div>
-            `;
-            return;
-        }
-
-        const isAdmin = !isGuest && currentUser && currentUser.role === 'admin';
-
-        container.innerHTML = posts.map(post => {
-            const likesCount = (post.likes || []).length;
-            const dislikesCount = (post.dislikes || []).length;
-            const userLiked = currentUser && (post.likes || []).includes(currentUser.username);
-            const userDisliked = currentUser && (post.dislikes || []).includes(currentUser.username);
-            const commentsList = post.comments || [];
-
-            return `
-                <article class="blog-card" id="blogPostCard_${post.id}">
-                    ${post.image ? `<img src="${post.image}" alt="${post.title}" class="blog-img" loading="lazy">` : ''}
-
-                    <div class="blog-meta">
-                        <span><i class="fas fa-user-circle" style="color: var(--primary);"></i> ${post.author || 'Admin'}</span>
-                        <span>•</span>
-                        <span><i class="fas fa-calendar-alt"></i> ${new Date(post.createdAt).toLocaleDateString()}</span>
-                    </div>
-
-                    <h2 class="blog-title">${post.title}</h2>
-                    <div class="blog-body">${post.content}</div>
-
-                    <div class="blog-footer">
-                        <button class="react-btn ${userLiked ? 'active-like' : ''}" onclick="toggleBlogReaction('${post.id}', 'like')">
-                            <i class="fas fa-thumbs-up"></i> <span>${likesCount}</span>
-                        </button>
-
-                        <button class="react-btn ${userDisliked ? 'active-dislike' : ''}" onclick="toggleBlogReaction('${post.id}', 'dislike')">
-                            <i class="fas fa-thumbs-down"></i> <span>${dislikesCount}</span>
-                        </button>
-
-                        <span style="font-size: 13px; color: var(--muted); margin-left: auto;">
-                            <i class="fas fa-comments"></i> ${commentsList.length} Comments
-                        </span>
-
-                        ${isAdmin ? `
-                            <button class="btn danger sm" onclick="deleteBlogPost('${post.id}')" title="Delete Article (Admin)">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        ` : ''}
-                    </div>
-
-                    <!-- Comment Section -->
-                    <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border);">
-                        <form onsubmit="handleAddBlogComment(event, '${post.id}')" style="display: flex; gap: 8px; margin-bottom: 12px;">
-                            <input type="text" class="form-control" placeholder="Write a comment..." required style="min-height: 36px; padding: 6px 12px; font-size: 13px;">
-                            <button type="submit" class="btn primary sm" style="white-space: nowrap;">Comment</button>
-                        </form>
-
-                        <div style="display: flex; flex-direction: column; gap: 8px;">
-                            ${commentsList.length === 0 ? `<span style="font-size: 12px; color: var(--muted);">No comments yet.</span>` : ''}
-                            ${commentsList.map(c => `
-                                <div style="background: var(--surface-2); padding: 8px 12px; border-radius: var(--radius-sm); font-size: 13px;">
-                                    <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
-                                        <strong style="color: var(--primary);">${c.username}</strong>
-                                        <span style="font-size: 11px; color: var(--muted);">${new Date(c.createdAt).toLocaleTimeString()}</span>
-                                    </div>
-                                    <div style="color: var(--text);">${c.text}</div>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                </article>
-            `;
-        }).join('');
-    } catch (err) {
-        console.error("Error loading blog posts:", err);
+function toggleProfileDrawer() {
+    const overlay = document.getElementById("profileDrawerOverlay");
+    const drawer = document.getElementById("profileSidebarDrawer");
+    if (overlay && drawer) {
+        overlay.classList.toggle("active");
+        drawer.classList.toggle("active");
     }
 }
 
-async function toggleBlogReaction(postId, type) {
-    if (isGuest) return showAuthScreen();
-    try {
-        const res = await fetch('/api/blog/react', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ postId, type })
-        });
-        if (res.ok) await loadBlogPosts();
-    } catch (err) {
-        console.error("Error reacting to blog post:", err);
+function closeProfileDrawer() {
+    const overlay = document.getElementById("profileDrawerOverlay");
+    const drawer = document.getElementById("profileSidebarDrawer");
+    if (overlay && drawer) {
+        overlay.classList.remove("active");
+        drawer.classList.remove("active");
     }
 }
 
-async function handleAddBlogComment(e, postId) {
-    e.preventDefault();
-    if (isGuest) return showAuthScreen();
-    const inputEl = e.target.querySelector('input');
-    const text = inputEl.value.trim();
-    if (!text) return;
+function switchProfileSection(sectionId) {
+    currentProfileSection = sectionId;
 
-    try {
-        const res = await fetch('/api/blog/comment', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ postId, text })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Failed to post comment');
+    const subViews = document.querySelectorAll(".profile-sub-view");
+    subViews.forEach(v => v.classList.remove("active"));
 
-        inputEl.value = "";
-        await loadBlogPosts();
-    } catch (err) {
-        alert("Error: " + err.message);
-    }
-}
-
-let uploadedStandaloneBlogBase64Image = null;
-
-function handleStandaloneBlogImageFileSelect(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    if (file.size > 8 * 1024 * 1024) return alert('Image file size must be smaller than 8MB.');
-
-    const nameDisplay = document.getElementById("standaloneBlogFileNameDisplay");
-    if (nameDisplay) nameDisplay.textContent = file.name;
-
-    const reader = new FileReader();
-    reader.onload = () => {
-        uploadedStandaloneBlogBase64Image = reader.result;
+    const secMap = {
+        'overview': 'pSubViewOverview',
+        'edit': 'pSubViewEdit',
+        'avatar': 'pSubViewAvatar',
+        'security': 'pSubViewSecurity',
+        'history': 'pSubViewHistory',
+        'blog': 'pSubViewBlog',
+        'blog-create': 'pSubViewBlogCreate',
+        'admin': 'pSubViewAdmin'
     };
-    reader.readAsDataURL(file);
+
+    const targetSubView = document.getElementById(secMap[sectionId]);
+    if (targetSubView) targetSubView.classList.add("active");
+
+    if (sectionId === 'history') loadHistoryLogs();
+    if (sectionId === 'blog') loadBlogPosts();
+    if (sectionId === 'admin') loadAdminDashboardData();
 }
 
-async function handleCreateBlogPostStandalone(e) {
-    e.preventDefault();
-    if (isGuest) return showAuthScreen();
+/* ==========================================================================
+   MODALS CONTROLLER
+   ========================================================================== */
+function openSettingsModal() { document.getElementById("settingsModal").classList.add("open"); }
+function closeSettingsModal() { document.getElementById("settingsModal").classList.remove("open"); }
 
-    const title = document.getElementById("standaloneBlogTitleInput").value.trim();
-    const urlImage = document.getElementById("standaloneBlogImageUrlInput").value.trim();
-    const content = document.getElementById("standaloneBlogContentInput").value.trim();
-    const submitBtn = document.getElementById("standaloneCreatePostSubmitBtn");
+function openCommandsModal() { document.getElementById("commandsModal").classList.add("open"); }
+function closeCommandsModal() { document.getElementById("commandsModal").classList.remove("open"); }
 
-    const finalImage = uploadedStandaloneBlogBase64Image || urlImage || null;
+function openNotificationsModal() { document.getElementById("notificationsModal").classList.add("open"); }
+function closeNotificationsModal() { document.getElementById("notificationsModal").classList.remove("open"); }
 
-    try {
-        await runWithSpinner(submitBtn, "Publishing article...", async () => {
-            const res = await fetch('/api/blog/create', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title, content, image: finalImage })
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || 'Failed to publish post');
+function openHelpModal() { document.getElementById("helpModal").classList.add("open"); }
+function closeHelpModal() { document.getElementById("helpModal").classList.remove("open"); }
 
-            document.getElementById("standaloneBlogTitleInput").value = "";
-            document.getElementById("standaloneBlogImageUrlInput").value = "";
-            document.getElementById("standaloneBlogContentInput").value = "";
-            uploadedStandaloneBlogBase64Image = null;
-            const nameDisplay = document.getElementById("standaloneBlogFileNameDisplay");
-            if (nameDisplay) nameDisplay.textContent = "No file attached";
+function openAboutModal() { document.getElementById("aboutModal").classList.add("open"); }
+function closeAboutModal() { document.getElementById("aboutModal").classList.remove("open"); }
 
-            alert("Article published successfully!");
-            switchProfileSubpage('blog');
-        });
-    } catch (err) {
-        alert("Publishing error: " + err.message);
-    }
+function filterCommandsList() {
+    const query = document.getElementById("cmdSearchInput").value.toLowerCase();
+    const cards = document.querySelectorAll("#commandsContainer .cmd-category-card");
+    cards.forEach(card => {
+        const text = card.textContent.toLowerCase();
+        card.style.display = text.includes(query) ? "block" : "none";
+    });
 }
 
-async function deleteBlogPost(postId) {
-    if (isGuest) return showAuthScreen();
-    if (!confirm("Are you sure you want to delete this blog article?")) return;
+/* ==========================================================================
+   DASHBOARD STATS & REAL TIME DATA
+   ========================================================================== */
+async function loadDashboardStats() {
     try {
-        const res = await fetch('/api/blog/delete', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ postId })
-        });
+        const res = await fetch('/api/stats');
+        if (!res.ok) return;
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Failed to delete post');
 
-        await loadBlogPosts();
-        alert("Article deleted successfully.");
+        const statAuto = document.getElementById("statActiveAutomations");
+        if (statAuto) statAuto.textContent = data.activeAutomationsCount !== undefined ? data.activeAutomationsCount : 0;
+
+        const statMsgs = document.getElementById("statProcessedMessages");
+        if (statMsgs) statMsgs.textContent = data.processedMessagesCount !== undefined ? data.processedMessagesCount : 0;
+
+        // Render Recent Activity Feed
+        const feedList = document.getElementById("dashRecentActivityList");
+        if (feedList) {
+            const logs = data.recentActivity || [];
+            if (logs.length === 0) {
+                feedList.innerHTML = `<div class="empty-feed-text">No recent bot activity recorded yet.</div>`;
+            } else {
+                feedList.innerHTML = logs.map(l => `
+                    <div class="activity-item">
+                        <div class="activity-item-title">
+                            <span>${l.title}</span>
+                            <span class="activity-item-time">${new Date(l.date).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}</span>
+                        </div>
+                        <div class="activity-item-desc">${l.description}</div>
+                    </div>
+                `).join('');
+            }
+        }
     } catch (err) {
-        alert("Error: " + err.message);
+        console.error("Failed to load stats:", err);
     }
 }
 
 /* ==========================================================================
-   HISTORY LOGS
+   AUTOMATIONS PAGE LOGIC
    ========================================================================== */
-async function loadHistoryLogs() {
-    const container = document.getElementById("historyLogsList");
-    if (!container) return;
+async function loadAutomationsState() {
+    try {
+        const res = await fetch('/api/automations');
+        if (!res.ok) return;
+        const data = await res.json();
 
-    if (isGuest) {
-        container.innerHTML = `<span style="color: var(--muted); font-size: 13px;">Guest users do not have persistent history logs.</span>`;
-        return;
+        const tAi = document.getElementById("autoToggleAiChat");
+        if (tAi) tAi.checked = Boolean(data.aiChat);
+
+        const tWel = document.getElementById("autoToggleWelcome");
+        if (tWel) tWel.checked = Boolean(data.welcome);
+
+        const tRead = document.getElementById("autoToggleAutoRead");
+        if (tRead) tRead.checked = Boolean(data.autoRead);
+
+        const tView = document.getElementById("autoToggleAutoViewStatus");
+        if (tView) tView.checked = Boolean(data.autoViewStatus);
+
+        const tReact = document.getElementById("autoToggleAutoReact");
+        if (tReact) tReact.checked = Boolean(data.autoReact);
+
+        const tCall = document.getElementById("autoToggleAntiCall");
+        if (tCall) tCall.checked = Boolean(data.antiCall && data.antiCall !== 'off');
+
+        const tDel = document.getElementById("autoToggleAntiDelete");
+        if (tDel) tDel.checked = Boolean(data.antiDelete);
+    } catch (err) {
+        console.error("Failed to load automations state:", err);
     }
+}
+
+async function toggleAutomation(feature, enabled) {
+    if (isGuest) {
+        alert("Please log in to toggle bot automation settings.");
+        return showAuthScreen();
+    }
+
+    try {
+        const res = await fetch('/api/automations', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ feature, enabled })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to update automation toggle');
+
+        loadDashboardStats();
+    } catch (err) {
+        alert("Automation toggle error: " + err.message);
+        loadAutomationsState();
+    }
+}
+
+/* ==========================================================================
+   TOP UP & WALLET ACTIONS
+   ========================================================================== */
+async function executeQuickTopUp(amount, buttonEl = null) {
+    if (isGuest) {
+        alert("Please log in or register an account to add wallet credits.");
+        return showAuthScreen();
+    }
+    const action = async () => {
+        try {
+            const res = await fetch('/api/wallet/topup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ amount })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Top up failed');
+
+            if (currentUser) currentUser.balance = data.balance;
+            updateWalletDisplay(data.balance);
+            alert(`Successfully added $${amount.toFixed(2)} to your balance!`);
+            loadTopupHistory();
+        } catch (err) {
+            alert("Top up error: " + err.message);
+        }
+    };
+
+    if (buttonEl) {
+        await runWithSpinner(buttonEl, "Processing...", action);
+    } else {
+        await action();
+    }
+}
+
+async function handleCustomTopUp(e) {
+    e.preventDefault();
+    if (isGuest) {
+        alert("Please log in or register an account to add wallet credits.");
+        return showAuthScreen();
+    }
+    const amtInput = document.getElementById("topUpAmountInput").value;
+    const amount = parseFloat(amtInput);
+    if (isNaN(amount) || amount <= 0) return alert("Please enter a valid amount.");
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+
+    await runWithSpinner(submitBtn, "Processing...", async () => {
+        await executeQuickTopUp(amount);
+        document.getElementById("topUpAmountInput").value = "";
+    });
+}
+
+async function loadTopupHistory() {
+    const listEl = document.getElementById("topupHistoryList");
+    if (!listEl) return;
 
     try {
         const res = await fetch('/api/history');
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Failed to fetch history logs');
+        if (!res.ok) return;
 
-        const logs = data.history || [];
+        const logs = (data.history || []).filter(h => h.type === 'topup');
         if (logs.length === 0) {
-            container.innerHTML = `<span style="color: var(--muted); font-size: 13px;">No activity history recorded yet.</span>`;
+            listEl.innerHTML = `<span style="color: var(--muted); font-size: 13px;">No top up transactions recorded yet.</span>`;
             return;
         }
 
-        container.innerHTML = logs.map(h => `
-            <div class="history-item">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <strong style="color: var(--text); font-size: 14px;">${h.title}</strong>
-                    <span style="font-size: 11px; color: var(--muted);"><i class="fas fa-clock"></i> ${new Date(h.date).toLocaleString()}</span>
+        listEl.innerHTML = logs.map(h => `
+            <div class="activity-item">
+                <div class="activity-item-title">
+                    <span><i class="fas fa-plus-circle text-primary"></i> ${h.title}</span>
+                    <span class="activity-item-time">${new Date(h.date).toLocaleDateString()}</span>
                 </div>
-                <div style="font-size: 13px; color: var(--text-secondary);">${h.description}</div>
+                <div class="activity-item-desc">${h.description}</div>
             </div>
         `).join('');
+    } catch (_) {}
+}
+
+/* ==========================================================================
+   CONNECT / PAIR WHATSAPP
+   ========================================================================== */
+let botStatusPollTimer = null;
+
+async function loadBotStatus() {
+    try {
+        const res = await fetch('/api/bot/status');
+        if (!res.ok) return;
+        const data = await res.json();
+        updateBotStatusUI(data);
     } catch (err) {
-        console.error("Error loading history logs:", err);
+        console.error("Failed to load bot status:", err);
+        updateBotStatusUI({ status: 'error' });
+    }
+}
+
+function updateBotStatusUI(data) {
+    const status = data.status || 'disconnected';
+    const badgeEl = document.getElementById("botStatusBadge");
+    const pairBadgeEl = document.getElementById("pairStatusBadge");
+    const phonesEl = document.getElementById("botConnectedPhonesText");
+    const pairLinkedPhone = document.getElementById("pairLinkedPhoneDisplay");
+    const uptimeEl = document.getElementById("botUptimeText");
+
+    const phoneStr = (data.connectedPhones && data.connectedPhones.length > 0) ? `+${data.connectedPhones[0]}` : 'None';
+
+    if (phonesEl) phonesEl.textContent = phoneStr;
+    if (pairLinkedPhone) pairLinkedPhone.textContent = phoneStr;
+    if (uptimeEl) uptimeEl.textContent = data.uptime ? `Engine uptime: ${data.uptime}` : 'Bot is running';
+
+    if (badgeEl) {
+        if (status === 'connected') {
+            badgeEl.className = "badge badge-success";
+            badgeEl.textContent = "● Connected";
+        } else if (status === 'connecting' || status === 'reconnecting') {
+            badgeEl.className = "badge badge-primary";
+            badgeEl.textContent = "● Connecting...";
+        } else {
+            badgeEl.className = "badge badge-neutral";
+            badgeEl.textContent = "● Disconnected";
+        }
+    }
+
+    if (pairBadgeEl) {
+        if (status === 'connected') {
+            pairBadgeEl.className = "badge badge-success";
+            pairBadgeEl.textContent = "CONNECTED";
+        } else {
+            pairBadgeEl.className = "badge badge-neutral";
+            pairBadgeEl.textContent = "DISCONNECTED";
+        }
+    }
+}
+
+function startBotStatusPolling() {
+    stopBotStatusPolling();
+    loadBotStatus();
+    botStatusPollTimer = setInterval(loadBotStatus, 3000);
+}
+
+function stopBotStatusPolling() {
+    if (botStatusPollTimer) {
+        clearInterval(botStatusPollTimer);
+        botStatusPollTimer = null;
+    }
+}
+
+async function handlePairRequest(e) {
+    e.preventDefault();
+    const phone = document.getElementById("dashPhoneInput").value.trim();
+    const submitBtn = document.getElementById("dashPairSubmitBtn");
+    const resultBox = document.getElementById("dashPairResultBox");
+    const codeDisplay = document.getElementById("dashPairCodeDisplay");
+
+    updateBotStatusUI({ status: 'connecting' });
+    startBotStatusPolling();
+
+    try {
+        await runWithSpinner(submitBtn, "Generating code...", async () => {
+            const res = await fetch('/api/pair', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed to request pairing code');
+
+            if (data.code) {
+                codeDisplay.textContent = data.code;
+                resultBox.style.display = "block";
+            } else if (data.status === 'connected') {
+                alert('This session is already connected!');
+            }
+            loadBotStatus();
+        });
+    } catch (err) {
+        alert("Pairing error: " + err.message);
+        loadBotStatus();
     }
 }
 
 /* ==========================================================================
-   ADMIN PANEL
+   BOT SETTINGS
    ========================================================================== */
-let adminUsersCache = [];
-
-function switchAdminSection(sectionId) {
-    const sections = document.querySelectorAll(".admin-sec");
-    sections.forEach(s => s.classList.remove("active"));
-
-    const tabs = document.querySelectorAll(".admin-tab-btn");
-    tabs.forEach(t => t.classList.remove("active"));
-
-    const targetSec = document.getElementById(sectionId);
-    if (targetSec) targetSec.classList.add("active");
-
-    const tabMap = {
-        'adminSecUsers': 'tabBtnSecUsers',
-        'adminSecModeration': 'tabBtnSecModeration',
-        'adminSecTopup': 'tabBtnSecTopup',
-        'adminSecMessages': 'tabBtnSecMessages',
-        'adminSecRoles': 'tabBtnSecRoles',
-        'adminSecPayments': 'tabBtnSecPayments'
-    };
-    const targetTab = document.getElementById(tabMap[sectionId]);
-    if (targetTab) targetTab.classList.add("active");
-}
-
-async function loadAdminDashboardData() {
-    if (isGuest) return;
+async function loadBotSettings() {
     try {
-        const res = await fetch('/api/admin/users');
-        const data = await res.json();
+        const res = await fetch('/api/settings');
         if (!res.ok) return;
-
-        adminUsersCache = data.users || [];
-        renderAdminTablesAndSelects(adminUsersCache);
-    } catch (err) {
-        console.error("Error loading admin dashboard data:", err);
-    }
-}
-
-function renderAdminTablesAndSelects(users) {
-    const tbodyUsers = document.getElementById("adminUsersTableBody");
-    if (tbodyUsers) {
-        tbodyUsers.innerHTML = users.map(u => `
-            <tr>
-                <td><strong>${u.username}</strong></td>
-                <td>${u.email}</td>
-                <td><span class="badge badge-primary">${(u.role || 'user').toUpperCase()}</span></td>
-                <td><span class="badge ${u.accountStatus === 'banned' ? 'badge-danger' : u.accountStatus === 'warned' ? 'badge-warning' : 'badge-success'}">${(u.accountStatus || 'active').toUpperCase()}</span></td>
-                <td style="color: var(--primary); font-weight: 700;">$${parseFloat(u.balance || 0).toFixed(2)}</td>
-                <td>
-                    <button class="btn danger sm" onclick="handleAdminDeleteUser('${u.username}')" title="Delete User">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
-                </td>
-            </tr>
-        `).join('');
-    }
-
-    const optionsHTML = users.map(u => `<option value="${u.username}">${u.username} (${u.email})</option>`).join('');
-
-    const selMod = document.getElementById("adminStatusUserSelect");
-    const selTop = document.getElementById("adminTopupUserSelect");
-    const selRole = document.getElementById("adminRoleUserSelect");
-    const selMsg = document.getElementById("adminMsgTargetSelect");
-
-    if (selMod) selMod.innerHTML = optionsHTML;
-    if (selTop) selTop.innerHTML = optionsHTML;
-    if (selRole) selRole.innerHTML = optionsHTML;
-
-    if (selMsg) {
-        selMsg.innerHTML = `<option value="all">📢 Broadcast to ALL Users</option>` + optionsHTML;
-    }
-
-    const totalUsersEl = document.getElementById("statTotalUsers");
-    const totalFundsEl = document.getElementById("statTotalFunds");
-    const totalAdminsEl = document.getElementById("statTotalAdmins");
-
-    const totalFunds = users.reduce((acc, curr) => acc + (parseFloat(curr.balance) || 0), 0);
-    const totalAdmins = users.filter(u => u.role === 'admin').length;
-
-    if (totalUsersEl) totalUsersEl.textContent = users.length;
-    if (totalFundsEl) totalFundsEl.textContent = `$${totalFunds.toFixed(2)}`;
-    if (totalAdminsEl) totalAdminsEl.textContent = totalAdmins;
-
-    const tbodyPayments = document.getElementById("adminPaymentsTableBody");
-    if (tbodyPayments) {
-        tbodyPayments.innerHTML = users.map(u => `
-            <tr>
-                <td><strong>${u.username}</strong></td>
-                <td><span class="badge badge-success">Verified Paid</span></td>
-                <td style="color: var(--primary); font-weight: 700;">$${parseFloat(u.balance || 0).toFixed(2)}</td>
-                <td><span style="font-size: 12px; color: ${u.accountStatus === 'banned' ? 'var(--danger)' : '#059669'};">${u.accountStatus || 'active'}</span></td>
-            </tr>
-        `).join('');
-    }
-}
-
-async function handleAdminStatusChange(e) {
-    e.preventDefault();
-    if (isGuest) return showAuthScreen();
-    const username = document.getElementById("adminStatusUserSelect").value;
-    const status = document.getElementById("adminAccountStatusSelect").value;
-    const warningMessage = document.getElementById("adminWarningInput").value;
-    const submitBtn = e.target.querySelector('button[type="submit"]');
-
-    try {
-        await runWithSpinner(submitBtn, "Updating status...", async () => {
-            const res = await fetch('/api/admin/user/status', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, status, warningMessage })
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || 'Failed to update user status');
-
-            alert(`Updated status for ${username} to ${status}`);
-            await loadAdminDashboardData();
-        });
-    } catch (err) {
-        alert("Error: " + err.message);
-    }
-}
-
-async function handleAdminDeleteUser(username) {
-    if (isGuest) return showAuthScreen();
-    if (!username) return;
-    if (!confirm(`Are you sure you want to permanently delete account for user "${username}"?`)) return;
-
-    try {
-        const res = await fetch('/api/admin/user/delete', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username })
-        });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Failed to delete user');
 
-        alert(data.message || `Deleted account for ${username}`);
-        await loadAdminDashboardData();
+        if (data.botname && document.getElementById("settingBotName")) document.getElementById("settingBotName").value = data.botname;
+        if (data.ownername && document.getElementById("settingOwnerName")) document.getElementById("settingOwnerName").value = data.ownername;
+        if (data.ownernumber && document.getElementById("settingOwnerNumber")) document.getElementById("settingOwnerNumber").value = data.ownernumber;
+        if (data.prefix && document.getElementById("settingPrefix")) document.getElementById("settingPrefix").value = data.prefix;
+        if (data.mode && document.getElementById("settingMode")) document.getElementById("settingMode").value = data.mode;
     } catch (err) {
-        alert("Delete error: " + err.message);
+        console.error("Failed to load bot settings:", err);
     }
 }
 
-async function handleAdminTopUp(e) {
+async function saveBotSettings(e) {
     e.preventDefault();
-    if (isGuest) return showAuthScreen();
-    const username = document.getElementById("adminTopupUserSelect").value;
-    const amount = document.getElementById("adminTopupAmount").value;
-    const submitBtn = e.target.querySelector('button[type="submit"]');
-
-    try {
-        await runWithSpinner(submitBtn, "Crediting funds...", async () => {
-            const res = await fetch('/api/admin/user/topup', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, amount })
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || 'Failed to top up balance');
-
-            alert(`Successfully credited $${parseFloat(amount).toFixed(2)} to ${username}`);
-            document.getElementById("adminTopupAmount").value = "";
-            await loadAdminDashboardData();
-        });
-    } catch (err) {
-        alert("Error: " + err.message);
+    if (isGuest) {
+        alert("Please log in to update bot settings.");
+        return showAuthScreen();
     }
-}
-
-async function handleAdminSendMessage(e) {
-    e.preventDefault();
-    if (isGuest) return showAuthScreen();
-    const targetUsername = document.getElementById("adminMsgTargetSelect").value;
-    const message = document.getElementById("adminMsgText").value;
-    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const botname = document.getElementById("settingBotName").value;
+    const ownername = document.getElementById("settingOwnerName").value;
+    const ownernumber = document.getElementById("settingOwnerNumber").value;
+    const prefix = document.getElementById("settingPrefix").value;
+    const mode = document.getElementById("settingMode").value;
+    const submitBtn = document.getElementById("saveBotSettingsBtn");
 
     try {
-        await runWithSpinner(submitBtn, "Sending message...", async () => {
-            const res = await fetch('/api/admin/message/send', {
+        await runWithSpinner(submitBtn, "Saving settings...", async () => {
+            const res = await fetch('/api/settings', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ targetUsername, message })
+                body: JSON.stringify({ botname, ownername, ownernumber, prefix, mode })
             });
             const data = await res.json();
-            if (!res.ok) throw new Error(data.error || 'Failed to send message');
+            if (!res.ok) throw new Error(data.error || 'Failed to save settings');
 
-            alert(data.message || "Message sent successfully!");
-            document.getElementById("adminMsgText").value = "";
-        });
-    } catch (err) {
-        alert("Error: " + err.message);
-    }
-}
-
-async function handleAdminRoleChange(e) {
-    e.preventDefault();
-    if (isGuest) return showAuthScreen();
-    const username = document.getElementById("adminRoleUserSelect").value;
-    const role = document.getElementById("adminRoleSelect").value;
-    const submitBtn = e.target.querySelector('button[type="submit"]');
-
-    try {
-        await runWithSpinner(submitBtn, "Updating role...", async () => {
-            const res = await fetch('/api/admin/user/role', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, role })
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || 'Failed to update user role');
-
-            alert(`Updated role for ${username} to ${role}`);
-            await loadAdminDashboardData();
+            alert("Bot settings updated successfully!");
+            closeSettingsModal();
         });
     } catch (err) {
         alert("Error: " + err.message);
@@ -993,7 +822,6 @@ async function loadSudoAndSessions() {
         if (!res.ok) return;
         const data = await res.json();
 
-        // Render Sudo Users
         const sudoListEl = document.getElementById("sudoUsersList");
         if (sudoListEl) {
             const sudoArr = data.sudo || [];
@@ -1003,8 +831,8 @@ async function loadSudoAndSessions() {
                 sudoListEl.innerHTML = sudoArr.map(s => {
                     const cleanPhone = s.split('@')[0];
                     return `
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px;">
-                            <span><i class="fas fa-user-shield" style="color: var(--primary); margin-right: 8px;"></i> ${cleanPhone}</span>
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px;">
+                            <span><i class="fas fa-user-shield text-primary"></i> +${cleanPhone}</span>
                             <button type="button" class="btn danger sm" onclick="removeSudo('${cleanPhone}')"><i class="fas fa-trash-alt"></i></button>
                         </div>
                     `;
@@ -1012,7 +840,6 @@ async function loadSudoAndSessions() {
             }
         }
 
-        // Render Active Sessions
         const sessionsArr = data.sessions || [];
         const sessionsCountEl = document.getElementById("connectSessionsCount");
         if (sessionsCountEl) sessionsCountEl.textContent = sessionsArr.length;
@@ -1023,12 +850,12 @@ async function loadSudoAndSessions() {
                 activeSessionsListEl.innerHTML = `<span style="color: var(--muted); font-size: 13px;">No active connected sessions.</span>`;
             } else {
                 activeSessionsListEl.innerHTML = sessionsArr.map(sess => `
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px;">
                         <div>
-                            <strong style="color: var(--text);"><i class="fab fa-whatsapp" style="color: #10b981; margin-right: 6px;"></i> +${sess.phone}</strong>
-                            <div style="font-size: 11px; color: var(--muted);">Status: ${sess.status}</div>
+                            <strong>+${sess.phone}</strong>
+                            <div style="font-size: 11px; color: var(--muted);">${sess.status}</div>
                         </div>
-                        <span class="badge badge-success"><span class="badge-dot"></span> Active</span>
+                        <span class="badge badge-success">Active</span>
                     </div>
                 `).join('');
             }
@@ -1144,7 +971,6 @@ function initCropperEvents() {
         }
     });
 
-    // Touch events for mobile support
     canvas.addEventListener("touchstart", (e) => {
         if (!cropperImg || e.touches.length !== 1) return;
         isDraggingCropper = true;
@@ -1167,13 +993,6 @@ function initCropperEvents() {
     window.addEventListener("touchend", () => {
         isDraggingCropper = false;
     });
-
-    canvas.addEventListener("wheel", (e) => {
-        if (!cropperImg) return;
-        e.preventDefault();
-        const delta = e.deltaY < 0 ? 0.08 : -0.08;
-        adjustCropperZoom(delta);
-    }, { passive: false });
 }
 
 function handleCropperFileSelect(e) {
@@ -1225,16 +1044,6 @@ function onCropperZoomSliderChange(e) {
     drawCropperCanvas();
 }
 
-function resetCropperPosition() {
-    if (!cropperImg) return;
-    cropperZoom = 1;
-    cropperPanX = 0;
-    cropperPanY = 0;
-    const slider = document.getElementById("cropperZoomSlider");
-    if (slider) slider.value = "1";
-    drawCropperCanvas();
-}
-
 function drawCropperCanvas() {
     const canvas = document.getElementById("cropperCanvas");
     if (!canvas || !cropperImg) return;
@@ -1266,30 +1075,27 @@ function drawCropperCanvas() {
     ctx.arc(width / 2, height / 2, width / 2 - 10, 0, Math.PI * 2, true);
     ctx.fill();
 
-    ctx.strokeStyle = "var(--primary, #FF6A00)";
+    ctx.strokeStyle = "var(--primary, #FF6B00)";
     ctx.lineWidth = 3;
     ctx.beginPath();
     ctx.arc(width / 2, height / 2, width / 2 - 10, 0, Math.PI * 2);
     ctx.stroke();
 }
 
-function generateCroppedBase64(outW = 400, outH = 400) {
+function generateCroppedBase64(outW = 300, outH = 300) {
     if (!cropperImg) return null;
     const canvas = document.createElement("canvas");
     canvas.width = outW;
     canvas.height = outH;
     const ctx = canvas.getContext("2d");
 
-    const width = 340;
-    const height = 340;
+    const width = 300;
+    const height = 300;
     const aspect = cropperImg.width / cropperImg.height;
     let baseW = width;
     let baseH = height;
-    if (aspect > 1) {
-        baseH = width / aspect;
-    } else {
-        baseW = height * aspect;
-    }
+    if (aspect > 1) baseH = width / aspect;
+    else baseW = height * aspect;
 
     const drawW = baseW * cropperZoom;
     const drawH = baseH * cropperZoom;
@@ -1305,7 +1111,7 @@ function generateCroppedBase64(outW = 400, outH = 400) {
 async function handleSaveCroppedAvatar() {
     if (isGuest) return alert("Guest users cannot update profile avatars.");
     if (!cropperImg) return;
-    const base64Avatar = generateCroppedBase64(400, 400);
+    const base64Avatar = generateCroppedBase64(300, 300);
     if (!base64Avatar) return;
 
     const saveBtn = document.getElementById("saveCroppedAvatarBtn");
@@ -1323,7 +1129,7 @@ async function handleSaveCroppedAvatar() {
             currentUser = data.user;
             updateProfileAvatarDisplay();
             alert('Profile picture updated successfully!');
-            switchProfileSubpage('overview');
+            switchProfileSection('overview');
         });
     } catch (err) {
         alert('Avatar upload error: ' + err.message);
@@ -1357,7 +1163,7 @@ async function handleRemoveAvatar() {
 
         updateProfileAvatarDisplay();
         alert('Profile picture removed successfully.');
-        switchProfileSubpage('overview');
+        switchProfileSection('overview');
     } catch (err) {
         alert('Error removing avatar: ' + err.message);
     }
@@ -1383,11 +1189,309 @@ async function handleProfileUpdate(e) {
             currentUser = data.user;
             const pEmail = document.getElementById("profileEmailDisplay");
             if (pEmail) pEmail.textContent = currentUser.email;
+            const oEmail = document.getElementById("profileOverviewEmail");
+            if (oEmail) oEmail.textContent = currentUser.email;
+
             alert('Profile details updated successfully!');
-            switchProfileSubpage('overview');
+            switchProfileSection('overview');
         });
     } catch (err) {
         alert('Error updating profile: ' + err.message);
+    }
+}
+
+async function handlePasswordChange(e) {
+    e.preventDefault();
+    if (isGuest) return alert("Please log in to change account password.");
+    const oldPassword = document.getElementById("oldPasswordInput").value;
+    const newPassword = document.getElementById("newPasswordInput").value;
+    const submitBtn = document.getElementById("changePasswordBtn");
+
+    try {
+        await runWithSpinner(submitBtn, "Updating password...", async () => {
+            const res = await fetch('/api/auth/password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ oldPassword, newPassword })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed to update password');
+
+            alert("Password updated successfully!");
+            document.getElementById("oldPasswordInput").value = "";
+            document.getElementById("newPasswordInput").value = "";
+        });
+    } catch (err) {
+        alert("Error: " + err.message);
+    }
+}
+
+/* ==========================================================================
+   HISTORY, BLOG & ADMIN
+   ========================================================================== */
+async function loadHistoryLogs() {
+    const container = document.getElementById("historyLogsList");
+    if (!container) return;
+
+    if (isGuest) {
+        container.innerHTML = `<span style="color: var(--muted); font-size: 13px;">Guest users do not have persistent history logs.</span>`;
+        return;
+    }
+
+    try {
+        const res = await fetch('/api/history');
+        const data = await res.json();
+        if (!res.ok) return;
+
+        const logs = data.history || [];
+        if (logs.length === 0) {
+            container.innerHTML = `<span style="color: var(--muted); font-size: 13px;">No activity logs recorded yet.</span>`;
+            return;
+        }
+
+        container.innerHTML = logs.map(h => `
+            <div class="activity-item">
+                <div class="activity-item-title">
+                    <span>${h.title}</span>
+                    <span class="activity-item-time">${new Date(h.date).toLocaleString()}</span>
+                </div>
+                <div class="activity-item-desc">${h.description}</div>
+            </div>
+        `).join('');
+    } catch (err) {
+        console.error("Error loading history:", err);
+    }
+}
+
+async function loadBlogPosts() {
+    const container = document.getElementById("blogPostsContainer");
+    if (!container) return;
+
+    try {
+        const res = await fetch('/api/blog');
+        const data = await res.json();
+        if (!res.ok) return;
+
+        const posts = data.posts || [];
+        if (posts.length === 0) {
+            container.innerHTML = `<span style="color: var(--muted); font-size: 13px;">No blog articles published yet.</span>`;
+            return;
+        }
+
+        const isAdmin = !isGuest && currentUser && currentUser.role === 'admin';
+
+        container.innerHTML = posts.map(post => `
+            <div class="app-card">
+                ${post.image ? `<img src="${post.image}" alt="Cover" style="width:100%; max-height:200px; object-fit:cover; border-radius: var(--radius-sm); margin-bottom: 10px;">` : ''}
+                <div style="font-size: 11px; color: var(--muted); margin-bottom: 4px;">By ${post.author || 'Admin'} • ${new Date(post.createdAt).toLocaleDateString()}</div>
+                <h3 style="font-size: 16px; font-weight: 800; margin-bottom: 6px;">${post.title}</h3>
+                <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5;">${post.content}</p>
+                ${isAdmin ? `<button class="btn danger sm" style="margin-top: 10px;" onclick="deleteBlogPost('${post.id}')">Delete Post</button>` : ''}
+            </div>
+        `).join('');
+    } catch (err) {
+        console.error("Error loading blog posts:", err);
+    }
+}
+
+async function handleCreateBlogPostStandalone(e) {
+    e.preventDefault();
+    if (isGuest) return showAuthScreen();
+
+    const title = document.getElementById("standaloneBlogTitleInput").value.trim();
+    const urlImage = document.getElementById("standaloneBlogImageUrlInput").value.trim();
+    const content = document.getElementById("standaloneBlogContentInput").value.trim();
+    const submitBtn = document.getElementById("standaloneCreatePostSubmitBtn");
+
+    try {
+        await runWithSpinner(submitBtn, "Publishing...", async () => {
+            const res = await fetch('/api/blog/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, content, image: urlImage || null })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed to publish post');
+
+            document.getElementById("standaloneBlogTitleInput").value = "";
+            document.getElementById("standaloneBlogImageUrlInput").value = "";
+            document.getElementById("standaloneBlogContentInput").value = "";
+
+            alert("Article published successfully!");
+            switchProfileSection('blog');
+        });
+    } catch (err) {
+        alert("Publishing error: " + err.message);
+    }
+}
+
+async function deleteBlogPost(postId) {
+    if (isGuest) return showAuthScreen();
+    if (!confirm("Are you sure you want to delete this article?")) return;
+    try {
+        const res = await fetch('/api/blog/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ postId })
+        });
+        if (res.ok) await loadBlogPosts();
+    } catch (err) {
+        alert("Error: " + err.message);
+    }
+}
+
+/* Admin Dashboard Data */
+async function loadAdminDashboardData() {
+    if (isGuest) return;
+    try {
+        const res = await fetch('/api/admin/users');
+        const data = await res.json();
+        if (!res.ok) return;
+
+        const users = data.users || [];
+        renderAdminTablesAndSelects(users);
+    } catch (err) {
+        console.error("Error loading admin dashboard data:", err);
+    }
+}
+
+function switchAdminSection(sectionId) {
+    const sections = document.querySelectorAll(".admin-sec");
+    sections.forEach(s => s.classList.remove("active"));
+
+    const tabs = document.querySelectorAll(".admin-tab-btn");
+    tabs.forEach(t => t.classList.remove("active"));
+
+    const targetSec = document.getElementById(sectionId);
+    if (targetSec) targetSec.classList.add("active");
+
+    const tabMap = {
+        'adminSecUsers': 'tabBtnSecUsers',
+        'adminSecModeration': 'tabBtnSecModeration',
+        'adminSecTopup': 'tabBtnSecTopup',
+        'adminSecMessages': 'tabBtnSecMessages'
+    };
+    const targetTab = document.getElementById(tabMap[sectionId]);
+    if (targetTab) targetTab.classList.add("active");
+}
+
+function renderAdminTablesAndSelects(users) {
+    const tbodyUsers = document.getElementById("adminUsersTableBody");
+    if (tbodyUsers) {
+        tbodyUsers.innerHTML = users.map(u => `
+            <tr>
+                <td><strong>${u.username}</strong></td>
+                <td>${u.email}</td>
+                <td><span class="badge badge-primary">${(u.role || 'user').toUpperCase()}</span></td>
+                <td style="color: var(--primary); font-weight: 700;">$${parseFloat(u.balance || 0).toFixed(2)}</td>
+                <td>
+                    <button class="btn danger sm" onclick="handleAdminDeleteUser('${u.username}')">Delete</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    const optionsHTML = users.map(u => `<option value="${u.username}">${u.username} (${u.email})</option>`).join('');
+
+    const selMod = document.getElementById("adminStatusUserSelect");
+    const selTop = document.getElementById("adminTopupUserSelect");
+    const selMsg = document.getElementById("adminMsgTargetSelect");
+
+    if (selMod) selMod.innerHTML = optionsHTML;
+    if (selTop) selTop.innerHTML = optionsHTML;
+    if (selMsg) selMsg.innerHTML = `<option value="all">📢 Broadcast to All</option>` + optionsHTML;
+}
+
+async function handleAdminStatusChange(e) {
+    e.preventDefault();
+    if (isGuest) return showAuthScreen();
+    const username = document.getElementById("adminStatusUserSelect").value;
+    const status = document.getElementById("adminAccountStatusSelect").value;
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+
+    try {
+        await runWithSpinner(submitBtn, "Updating status...", async () => {
+            const res = await fetch('/api/admin/user/status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, status })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed to update user status');
+
+            alert(`Updated status for ${username} to ${status}`);
+            await loadAdminDashboardData();
+        });
+    } catch (err) {
+        alert("Error: " + err.message);
+    }
+}
+
+async function handleAdminDeleteUser(username) {
+    if (isGuest) return showAuthScreen();
+    if (!username) return;
+    if (!confirm(`Are you sure you want to delete account for "${username}"?`)) return;
+
+    try {
+        const res = await fetch('/api/admin/user/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username })
+        });
+        if (res.ok) await loadAdminDashboardData();
+    } catch (err) {
+        alert("Delete error: " + err.message);
+    }
+}
+
+async function handleAdminTopUp(e) {
+    e.preventDefault();
+    if (isGuest) return showAuthScreen();
+    const username = document.getElementById("adminTopupUserSelect").value;
+    const amount = document.getElementById("adminTopupAmount").value;
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+
+    try {
+        await runWithSpinner(submitBtn, "Crediting...", async () => {
+            const res = await fetch('/api/admin/user/topup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, amount })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed to top up balance');
+
+            alert(`Credited $${parseFloat(amount).toFixed(2)} to ${username}`);
+            document.getElementById("adminTopupAmount").value = "";
+            await loadAdminDashboardData();
+        });
+    } catch (err) {
+        alert("Error: " + err.message);
+    }
+}
+
+async function handleAdminSendMessage(e) {
+    e.preventDefault();
+    if (isGuest) return showAuthScreen();
+    const targetUsername = document.getElementById("adminMsgTargetSelect").value;
+    const message = document.getElementById("adminMsgText").value;
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+
+    try {
+        await runWithSpinner(submitBtn, "Sending...", async () => {
+            const res = await fetch('/api/admin/message/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ targetUsername, message })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed to send message');
+
+            alert("Message sent successfully!");
+            document.getElementById("adminMsgText").value = "";
+        });
+    } catch (err) {
+        alert("Error: " + err.message);
     }
 }
 
@@ -1402,16 +1506,8 @@ function renderDirectMessagesAndWarnings() {
 
     if (currentUser.accountStatus === 'warned' || currentUser.warningMessage) {
         bannerHTML += `
-            <div style="padding: 14px 18px; background: var(--warning-light); border: 1px solid var(--warning-border); border-radius: var(--radius); color: #d97706; font-size: 14px; display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-                <i class="fas fa-exclamation-triangle" style="font-size: 18px;"></i>
-                <div><strong>Account Warning:</strong> ${currentUser.warningMessage || 'Your account has an active warning flag.'}</div>
-            </div>
-        `;
-    } else if (currentUser.accountStatus === 'restricted' || currentUser.accountStatus === 'banned') {
-        bannerHTML += `
-            <div style="padding: 14px 18px; background: var(--danger-light); border: 1px solid var(--danger-border); border-radius: var(--radius); color: var(--danger); font-size: 14px; display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-                <i class="fas fa-ban" style="font-size: 18px;"></i>
-                <div><strong>Account Notice (${currentUser.accountStatus.toUpperCase()}):</strong> ${currentUser.warningMessage || 'Account access is restricted.'}</div>
+            <div style="padding: 12px 14px; background: var(--warning-light); border: 1px solid var(--warning); border-radius: var(--radius-sm); color: #d97706; font-size: 13px; margin-bottom: 10px;">
+                <strong>Warning:</strong> ${currentUser.warningMessage || 'Account has active warning flag.'}
             </div>
         `;
     }
@@ -1420,10 +1516,10 @@ function renderDirectMessagesAndWarnings() {
     if (msgs.length > 0) {
         msgs.forEach(m => {
             bannerHTML += `
-                <div style="padding: 14px 18px; background: var(--primary-light); border: 1px solid var(--primary-border); border-radius: var(--radius); color: var(--text); font-size: 14px; margin-bottom: 12px;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                        <strong style="color: var(--primary);"><i class="fas fa-envelope"></i> Message from ${m.sender || 'Admin'}</strong>
-                        <span style="font-size: 11px; color: var(--muted);">${new Date(m.createdAt).toLocaleString()}</span>
+                <div style="padding: 12px 14px; background: var(--primary-light); border: 1px solid var(--primary-border); border-radius: var(--radius-sm); color: var(--text); font-size: 13px; margin-bottom: 10px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                        <strong style="color: var(--primary);">Message from ${m.sender || 'Admin'}</strong>
+                        <span style="font-size: 11px; color: var(--muted);">${new Date(m.createdAt).toLocaleTimeString()}</span>
                     </div>
                     <div>${m.text}</div>
                 </div>
@@ -1436,217 +1532,5 @@ function renderDirectMessagesAndWarnings() {
         bannerContainer.style.display = "block";
     } else {
         bannerContainer.style.display = "none";
-    }
-}
-
-/* ==========================================================================
-   TOP UP & WALLET ACTIONS
-   ========================================================================== */
-function openTopUpModal() {
-    document.getElementById("topUpModal").classList.add("open");
-}
-
-function closeTopUpModal() {
-    document.getElementById("topUpModal").classList.remove("open");
-}
-
-async function executeQuickTopUp(amount, buttonEl = null) {
-    if (isGuest) {
-        alert("Please log in or register an account to add wallet credits.");
-        return showAuthScreen();
-    }
-    const action = async () => {
-        try {
-            const res = await fetch('/api/wallet/topup', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ amount })
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || 'Top up failed');
-
-            if (currentUser) currentUser.balance = data.balance;
-            updateWalletDisplay(data.balance);
-            alert(`Successfully added $${amount.toFixed(2)} to your balance!`);
-        } catch (err) {
-            alert("Top up error: " + err.message);
-        }
-    };
-
-    if (buttonEl) {
-        await runWithSpinner(buttonEl, "Processing...", action);
-    } else {
-        await action();
-    }
-}
-
-async function handleCustomTopUp(e) {
-    e.preventDefault();
-    if (isGuest) {
-        alert("Please log in or register an account to add wallet credits.");
-        closeTopUpModal();
-        return showAuthScreen();
-    }
-    const amtInput = document.getElementById("topUpAmountInput").value;
-    const amount = parseFloat(amtInput);
-    if (isNaN(amount) || amount <= 0) return alert("Please enter a valid amount.");
-    const submitBtn = e.target.querySelector('button[type="submit"]');
-
-    await runWithSpinner(submitBtn, "Processing...", async () => {
-        await executeQuickTopUp(amount);
-        closeTopUpModal();
-        document.getElementById("topUpAmountInput").value = "";
-    });
-}
-
-/* ==========================================================================
-   CONNECT / PAIR WHATSAPP
-   ========================================================================== */
-let botStatusPollTimer = null;
-
-async function loadBotStatus() {
-    try {
-        const res = await fetch('/api/bot/status');
-        if (!res.ok) return;
-        const data = await res.json();
-        updateBotStatusUI(data);
-    } catch (err) {
-        console.error("Failed to load bot status:", err);
-        updateBotStatusUI({ status: 'error' });
-    }
-}
-
-function updateBotStatusUI(data) {
-    const status = data.status || 'disconnected';
-    const badgeEl = document.getElementById("botStatusBadge");
-    const textEl = document.getElementById("botStatusText");
-    const phonesEl = document.getElementById("botConnectedPhonesText");
-    const uptimeEl = document.getElementById("botUptimeText");
-    const sessionsEl = document.getElementById("botSessionsCountText");
-
-    if (phonesEl) {
-        if (data.connectedPhones && data.connectedPhones.length > 0) {
-            phonesEl.textContent = data.connectedPhones.map(p => `+${p}`).join(', ');
-        } else {
-            phonesEl.textContent = 'None';
-        }
-    }
-
-    if (uptimeEl) uptimeEl.textContent = data.uptime || '--';
-    if (sessionsEl) sessionsEl.textContent = data.activeSessionsCount !== undefined ? data.activeSessionsCount : '0';
-
-    if (!badgeEl || !textEl) return;
-
-    if (status === 'connected') {
-        badgeEl.className = "badge badge-success";
-        textEl.textContent = "CONNECTED";
-    } else if (status === 'connecting') {
-        badgeEl.className = "badge badge-warning";
-        textEl.textContent = "CONNECTING...";
-    } else if (status === 'reconnecting') {
-        badgeEl.className = "badge badge-warning";
-        textEl.textContent = "RECONNECTING...";
-    } else if (status === 'error') {
-        badgeEl.className = "badge badge-danger";
-        textEl.textContent = "ERROR";
-    } else {
-        badgeEl.className = "badge badge-neutral";
-        textEl.textContent = "DISCONNECTED";
-    }
-}
-
-function startBotStatusPolling() {
-    stopBotStatusPolling();
-    loadBotStatus();
-    botStatusPollTimer = setInterval(loadBotStatus, 3000);
-}
-
-function stopBotStatusPolling() {
-    if (botStatusPollTimer) {
-        clearInterval(botStatusPollTimer);
-        botStatusPollTimer = null;
-    }
-}
-
-async function handlePairRequest(e) {
-    e.preventDefault();
-    const phone = document.getElementById("dashPhoneInput").value.trim();
-    const submitBtn = document.getElementById("dashPairSubmitBtn");
-    const resultBox = document.getElementById("dashPairResultBox");
-    const codeDisplay = document.getElementById("dashPairCodeDisplay");
-
-    updateBotStatusUI({ status: 'connecting' });
-    startBotStatusPolling();
-
-    try {
-        await runWithSpinner(submitBtn, "Generating code...", async () => {
-            const res = await fetch('/api/pair', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ phone })
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || 'Failed to request pairing code');
-
-            if (data.code) {
-                codeDisplay.textContent = data.code;
-                resultBox.style.display = "block";
-            } else if (data.status === 'connected') {
-                alert('This session is already connected!');
-            }
-            loadBotStatus();
-        });
-    } catch (err) {
-        alert("Pairing error: " + err.message);
-        loadBotStatus();
-    }
-}
-
-/* ==========================================================================
-   BOT SETTINGS
-   ========================================================================== */
-async function loadBotSettings() {
-    try {
-        const res = await fetch('/api/settings');
-        if (!res.ok) return;
-        const data = await res.json();
-
-        if (data.botname && document.getElementById("settingBotName")) document.getElementById("settingBotName").value = data.botname;
-        if (data.ownername && document.getElementById("settingOwnerName")) document.getElementById("settingOwnerName").value = data.ownername;
-        if (data.ownernumber && document.getElementById("settingOwnerNumber")) document.getElementById("settingOwnerNumber").value = data.ownernumber;
-        if (data.prefix && document.getElementById("settingPrefix")) document.getElementById("settingPrefix").value = data.prefix;
-        if (data.mode && document.getElementById("settingMode")) document.getElementById("settingMode").value = data.mode;
-    } catch (err) {
-        console.error("Failed to load bot settings:", err);
-    }
-}
-
-async function saveBotSettings(e) {
-    e.preventDefault();
-    if (isGuest) {
-        alert("Please log in to update bot settings.");
-        return showAuthScreen();
-    }
-    const botname = document.getElementById("settingBotName").value;
-    const ownername = document.getElementById("settingOwnerName").value;
-    const ownernumber = document.getElementById("settingOwnerNumber").value;
-    const prefix = document.getElementById("settingPrefix").value;
-    const mode = document.getElementById("settingMode").value;
-    const submitBtn = document.getElementById("saveBotSettingsBtn");
-
-    try {
-        await runWithSpinner(submitBtn, "Saving settings...", async () => {
-            const res = await fetch('/api/settings', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ botname, ownername, ownernumber, prefix, mode })
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || 'Failed to save settings');
-
-            alert("Bot settings updated successfully!");
-        });
-    } catch (err) {
-        alert("Error: " + err.message);
     }
 }
